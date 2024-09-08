@@ -1,4 +1,14 @@
-<script></script>
+<script>
+	let showModal = false; // controls the visibility of the popup
+
+	function openModal() {
+		showModal = true;
+	}
+
+	function closeModal() {
+		showModal = false;
+	}
+</script>
 
 <nav>
 	<ul>
@@ -18,15 +28,139 @@
 </nav>
 <div class="middle-container">
 	<h1 class="middle-left">User Management</h1>
-	<button class="middle-right">+ Group</button>
+	<button class="middle-right" on:click={openModal}>+ Group</button>
 </div>
 
+<!-- Popup modal -->
+{#if showModal}
+	<div class="modal-overlay" on:click={closeModal}></div>
+	<div class="modal">
+		<h2>Add Group</h2>
+		<form>
+			<div class="form-group">
+				<label for="groupName">Group Name:</label>
+				<input type="text" id="groupName" name="groupName" placeholder="Name" required />
+			</div>
+			<div class="modal-buttons">
+				<button type="button" on:click={closeModal}>ADD</button>
+				<button type="submit">CANCEL</button>
+			</div>
+		</form>
+	</div>
+{/if}
+
+<table id="users">
+	<tr>
+		<th> </th>
+		<th>Name</th>
+		<th>Email</th>
+		<th>Group</th>
+		<th>Password</th>
+		<th>Active</th>
+		<th>Action</th>
+		<th> </th>
+	</tr>
+	<tr>
+		<td> </td>
+		<td><input type="text" placeholder="Username" required /></td>
+		<td><input type="email" placeholder="Email" required /></td>
+		<td>
+			<select name="group" id="group">
+				<option value="PL_G1">PL_G1</option>
+				<option value="PM_G1">PM_G1</option>
+			</select>
+		</td>
+		<td><input type="password" placeholder="Password" required /></td>
+		<td>
+			<select name="accountStatus" id="accountStatus">
+				<option value="PL_G1">Active</option>
+				<option value="PM_G1">Disabled</option>
+			</select>
+		</td>
+		<td>
+			<button class="submit_button">SUBMIT</button>
+		</td>
+	</tr>
+	<tr>
+		<td> </td>
+		<td>Peter Lee</td>
+		<td>peter_lee@example.com</td>
+		<td><button class="superadmin">Super Admin</button></td>
+		<td>passwordhere</td>
+		<td> Active </td>
+		<td> edit </td>
+	</tr>
+</table>
+
 <style>
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.5);
+		z-index: 1;
+	}
+
+	.modal {
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		background-color: white;
+		padding: 20px;
+		width: 500px;
+		z-index: 2;
+		border-radius: 5px;
+	}
+
+	.modal h2 {
+		margin-bottom: 20px;
+		text-align: center;
+	}
+
+	.form-group {
+		display: flex;
+		align-items: center;
+		margin-bottom: 15px;
+	}
+
+	.form-group label {
+		width: 30%; /* Adjust the width based on your design */
+		margin-right: 10px;
+	}
+
+	.form-group input {
+		width: 70%; /* Adjust the width based on your design */
+		padding: 8px;
+		background-color: #f0f0f0;
+		border-radius: 5px;
+	}
+
+	.modal-buttons {
+		display: flex;
+		justify-content: center;
+		margin-top: 20px;
+		gap: 20px;
+	}
+
+	.modal-buttons button {
+		padding: 10px 40px 10px 40px;
+		cursor: pointer;
+		background-color: black;
+		color: #ffffff;
+		border: none;
+	}
+
 	nav {
 		display: flex;
 		background-color: black;
 		margin: 0;
 		color: #ffffff;
+		height: 100px;
+		align-items: center;
+		font-size: 1.5em;
 	}
 	nav ul {
 		display: flex;
@@ -55,16 +189,62 @@
 		align-items: center;
 		display: flex;
 		justify-content: space-between;
-        margin-top: 20px;
+		margin-top: 40px;
 	}
 	.middle-left {
 		margin-left: 70px;
 	}
 	.middle-right {
 		margin-right: 70px;
-        background-color: black;
-        color: #ffffff;
-        width: 140px;
-        height: 40px;
+		background-color: black;
+		color: #ffffff;
+		width: 140px;
+		height: 40px;
+	}
+	#users {
+		margin: auto;
+		width: 100%;
+		border-collapse: collapse;
+		text-align: center;
+	}
+	#users th {
+		background: #eff4fa;
+		color: #8f9bb3;
+		padding: 30px 20px 30px 20px;
+	}
+	#users td {
+		padding-top: 20px;
+		padding-bottom: 20px;
+	}
+	#users input {
+		background-color: #f0f0f0;
+		border: none;
+		/* height: 30px;
+		width: 193px; */
+		padding: 10px 15px;
+	}
+	#users select {
+		/* width: 128px;
+		height: 30px; */
+		background-color: #f0f0f0;
+		padding: 10px 30px;
+		border: none;
+	}
+	.submit_button {
+		background-color: black;
+		color: #ffffff;
+		height: 35px;
+		width: 116px;
+	}
+	.superadmin {
+		background-color: #0095ff;
+		color: #ffffff;
+		border: none;
+		border-radius: 10px;
+		padding: 10px 30px;
+	}
+	#users tr td:not(:first-child):not(:last-child) {
+		border-bottom: 1px solid lightgrey; /* Add grey border to the bottom */
+		padding-bottom: 20px;
 	}
 </style>

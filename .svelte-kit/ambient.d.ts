@@ -37,10 +37,14 @@ declare module '$env/static/private' {
 	export const ComSpec: string;
 	export const CUDA_PATH: string;
 	export const CUDA_PATH_V11_2: string;
+	export const CUDA_PATH_V11_3: string;
 	export const CUDA_PATH_V12_1: string;
+	export const DokanLibrary1: string;
+	export const DokanLibrary1_LibraryPath_x64: string;
+	export const DokanLibrary1_LibraryPath_x86: string;
 	export const DriverData: string;
 	export const EDITOR: string;
-	export const EFC_4004: string;
+	export const EFC_6820: string;
 	export const FPS_BROWSER_APP_PROFILE_STRING: string;
 	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GIT_ASKPASS: string;
@@ -79,6 +83,7 @@ declare module '$env/static/private' {
 	export const NPM_PREFIX_NPM_CLI_JS: string;
 	export const NUMBER_OF_PROCESSORS: string;
 	export const NVCUDASAMPLES11_2_ROOT: string;
+	export const NVCUDASAMPLES11_3_ROOT: string;
 	export const NVCUDASAMPLES_ROOT: string;
 	export const NVTOOLSEXT_PATH: string;
 	export const OneDrive: string;
@@ -113,9 +118,8 @@ declare module '$env/static/private' {
 	export const VSCODE_GIT_ASKPASS_NODE: string;
 	export const VSCODE_GIT_IPC_HANDLE: string;
 	export const VSCODE_INJECTION: string;
-	export const VSCODE_NONCE: string;
-	export const VSCODE_STABLE: string;
 	export const windir: string;
+	export const __PSLockDownPolicy: string;
 }
 
 /**
@@ -158,10 +162,14 @@ declare module '$env/dynamic/private' {
 		ComSpec: string;
 		CUDA_PATH: string;
 		CUDA_PATH_V11_2: string;
+		CUDA_PATH_V11_3: string;
 		CUDA_PATH_V12_1: string;
+		DokanLibrary1: string;
+		DokanLibrary1_LibraryPath_x64: string;
+		DokanLibrary1_LibraryPath_x86: string;
 		DriverData: string;
 		EDITOR: string;
-		EFC_4004: string;
+		EFC_6820: string;
 		FPS_BROWSER_APP_PROFILE_STRING: string;
 		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GIT_ASKPASS: string;
@@ -200,6 +208,7 @@ declare module '$env/dynamic/private' {
 		NPM_PREFIX_NPM_CLI_JS: string;
 		NUMBER_OF_PROCESSORS: string;
 		NVCUDASAMPLES11_2_ROOT: string;
+		NVCUDASAMPLES11_3_ROOT: string;
 		NVCUDASAMPLES_ROOT: string;
 		NVTOOLSEXT_PATH: string;
 		OneDrive: string;
@@ -234,9 +243,8 @@ declare module '$env/dynamic/private' {
 		VSCODE_GIT_ASKPASS_NODE: string;
 		VSCODE_GIT_IPC_HANDLE: string;
 		VSCODE_INJECTION: string;
-		VSCODE_NONCE: string;
-		VSCODE_STABLE: string;
 		windir: string;
+		__PSLockDownPolicy: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}
