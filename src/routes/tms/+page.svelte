@@ -1,13 +1,17 @@
 <script>
-	let showModal = false; // controls the visibility of the popup
+	// let showModal = false; // controls the visibility of the popup
 
-	function openModal() {
-		showModal = true;
-	}
+	// function openModal() {
+	// 	showModal = true;
+	// }
 
-	function closeModal() {
-		showModal = false;
-	}
+	// function closeModal() {
+	// 	showModal = false;
+	// }
+
+	import GroupModal from './GroupModal.svelte';
+	let showGroupModal = false;
+
 </script>
 
 <nav>
@@ -28,26 +32,25 @@
 </nav>
 <div class="middle-container">
 	<h1 class="middle-left">User Management</h1>
-	<button class="middle-right" on:click={openModal}>+ Group</button>
+	<button class="middle-right" on:click={() => (showGroupModal = true)} >+ Group</button>
 </div>
 
-<!-- Popup modal -->
-{#if showModal}
-	<div class="modal-overlay" on:click={closeModal}></div>
-	<div class="modal">
+<GroupModal bind:showGroupModal>
+	<div>
 		<h2>Add Group</h2>
 		<form>
 			<div class="form-group">
 				<label for="groupName">Group Name:</label>
-				<input type="text" id="groupName" name="groupName" placeholder="Name" required />
+				<input type="text" id="groupName" name="groupName" placeholder="Name" />
 			</div>
 			<div class="modal-buttons">
-				<button type="button" on:click={closeModal}>ADD</button>
-				<button type="submit">CANCEL</button>
+				<button type="button">ADD</button>
+				<button type="submit" on:click={() => (showGroupModal = false)}>CANCEL</button>
 			</div>
 		</form>
 	</div>
-{/if}
+</GroupModal>
+
 
 <table id="users">
 	<tr>
@@ -92,33 +95,15 @@
 	</tr>
 </table>
 
+
+
 <style>
-	.modal-overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background-color: rgba(0, 0, 0, 0.5);
-		z-index: 1;
-	}
 
-	.modal {
-		position: fixed;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		background-color: white;
-		padding: 20px;
-		width: 500px;
-		z-index: 2;
-		border-radius: 5px;
-	}
 
-	.modal h2 {
+	/* .modal h2 {
 		margin-bottom: 20px;
 		text-align: center;
-	}
+	} */
 
 	.form-group {
 		display: flex;
