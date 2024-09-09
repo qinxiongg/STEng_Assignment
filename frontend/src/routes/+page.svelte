@@ -4,7 +4,7 @@
 <div class="login-container">
 	<h1>LOGIN</h1>
 	<div class="login">
-		<form method="POST" action="?/login">
+		<form  action="?/login" method="POST">
 			<label for="uname"></label>
 			<input type="text" placeholder="Username" name="uname" required />
 
