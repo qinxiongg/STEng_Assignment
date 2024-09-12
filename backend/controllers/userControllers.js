@@ -48,22 +48,25 @@ const authController = async (req, res) => {
 };
 
 // Get all users from database
-const fetchUsers = async (req, res) => {
-  const users_list = await query("SELECT * FROM accounts", [
-    username,
-    email,
-    password,
-    accountStatus,
-  ]);
+const getUsers = async (req, res) => {
+  try {
+    const users_list = await query("SELECT * FROM accounts");
 
-  // use toast for database error????
-  if (error)
+    res.json(users_list);
+  } catch (error) {
+    console.log("error:", error);
+    // use toast for database error????
     return res.status(500).json({ message: "Error querying from database" });
-
-  res.json(users_list);
+  }
 };
+
+// Add new users to database when input field is submitted
+const addnewUsers = async (req, res) => {
+  
+}
 
 module.exports = {
   authController,
-  fetchUsers,
+  getUsers,
+  addnewUsers,
 };

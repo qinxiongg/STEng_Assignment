@@ -1,0 +1,1 @@
+1. Protected routes: when the admin remove rights from the user, the user should be redirected when he click on something or refresh the page.

@@ -1,11 +1,63 @@
 <script>
 	import GroupModal from './GroupModal.svelte';
 	let showGroupModal = false;
+
+	const API_URL = import.meta.env.VITE_API_URL;
+	console.log(API_URL);
+
+	let users_list = [];
+
+	///////////////////////////////////////////////////////////////
+	// Fetch users function
+	async function fetchUsers() {
+		try {
+			const response = await fetch(`${API_URL}/users`);
+			if (response.ok) {
+				users_list = await response.json();
+			} else {
+				console.error('Unable to fetch users');
+			}
+		} catch (error) {
+			console.error('Error fetching users:', error);
+		}
+	}
+
+	// fetchUsers(); <--remove this?
+
+	// Add new users functions
+	async function registerUser(event) {
+		event.preventDefault();
+
+		try {
+			const response = await fetch(`${API_URL}/addnewuser`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(newUser)
+			});
+			
+			
+
+		}
+	}
+
+
+	/////////////////////////////////////////////////////////////
+
+	import { onMount } from 'svelte';
+	onMount(() => {
+		fetchUsers();
+	});
+
+
+
 </script>
 
+<!-- Maybe move the navbar to layout???-->
 <nav>
 	<ul>
-		<li class="nav-left">Hello, User</li>
+		<li class="nav-left">Hello, User</li> <!-- TODO: use JWT token to show user's name-->
 		<div class="nav-center">
 			<li>
 				<a href="/applications">Applications</a>
@@ -53,31 +105,34 @@
 		<th> </th>
 	</tr>
 
-		<tr>
-			<td> </td>
-			<td><input type="text" placeholder="Username" required /></td>
-			<td><input type="email" placeholder="Email" required /></td>
-			<td>
-				<select name="group" id="group">
-					<!-- change hardcoded group to values retrieved from db -->
-					<option value="PL_G1">Admin</option>
-					<option value="PM_G1">User</option>
-					<option value="PM_G1">PL</option>
-					<option value="PM_G1">PM</option>
-					<option value="PM_G1">Dev</option>
-				</select>
-			</td>
-			<td><input type="password" placeholder="Password" required /></td>
-			<td>
-				<select name="accountStatus" id="accountStatus">
-					<option value="PL_G1">Active</option>
-					<option value="PM_G1">Disabled</option>
-				</select>
-			</td>
-			<td>
-				<button class="submit_button">SUBMIT</button>
-			</td>
-		</tr>
+	<tr>
+		<td> </td>
+		<td><input type="text" placeholder="Username" required /></td>
+		<td><input type="email" placeholder="Email" required /></td>
+		<td>
+			<select name="group" id="group">
+				<!-- change hardcoded group to values retrieved from db -->
+				<option value="PL_G1">Admin</option>
+				<option value="PM_G1">User</option>
+				<option value="PM_G1">PL</option>
+				<option value="PM_G1">PM</option>
+				<option value="PM_G1">Dev</option>
+			</select>
+		</td>
+		<td><input type="password" placeholder="Password" required /></td>
+		<td>
+			<select name="accountStatus" id="accountStatus">
+				<option value="PL_G1">Active</option>
+				<option value="PM_G1">Disabled</option>
+			</select>
+		</td>
+		<td>
+			<button class="submit_button">SUBMIT</button>
+		</td>
+		<td>
+
+		</td>
+	</tr>
 	<tr>
 		<td> </td>
 		<td>Peter Lee</td>
@@ -86,7 +141,24 @@
 		<td>passwordhere</td>
 		<td> Active </td>
 		<td> edit </td>
+		<td> </td>
 	</tr>
+
+	<!-- Loop through users array and display them -->
+	{#each users_list as user}
+		<tr>
+			<td> </td>
+			<td>{user.username}</td>
+			<td>{user.email}</td>
+			<td>insert something</td>
+			<!--usergroup-->
+			<td>{user.password}</td>
+			<td>{user.accountStatus}</td>
+			<td>Edit</td>
+			<!--edit button-->
+			<td> </td>
+		</tr>
+	{/each}
 </table>
 
 <style>

@@ -2,16 +2,19 @@
 	import axios from 'axios';
 	import { goto } from '$app/navigation';
 
+	const API_URL = import.meta.env.VITE_API_URL;
+	console.log(API_URL);
+
 	let username = '';
 	let password = '';
-	let errorMessage = '';
+	let errorMessage = ''; // TODO: error message using toast 
 
 	const handleSubmit = async (event) => {
 		event.preventDefault(); // Prevent default form submission
 
 		try {
 			const response = await axios.post(
-				'http://localhost:3000/api/login',
+				`${API_URL}/login`,
 				{
 					username: username,
 					password: password
