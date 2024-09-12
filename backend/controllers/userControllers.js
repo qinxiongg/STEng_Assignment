@@ -16,10 +16,10 @@ const authController = async (req, res) => {
   }
 
   try {
-    const results = await query(
-      "SELECT * FROM accounts WHERE username = ? and password = ?",
-      [username, password]
-    );
+    // TODO: implement password check
+    const results = await query("SELECT * FROM accounts WHERE username = ?", [
+      username,
+    ]);
 
     if (results.length > 0) {
       const user = results[0]; //takes the first and only row
@@ -47,12 +47,12 @@ const authController = async (req, res) => {
   }
 };
 
-// Get all users from database
+// Fetch all users from database
 const getUsers = async (req, res) => {
   try {
     const users_list = await query("SELECT * FROM accounts");
 
-    res.json(users_list);
+    res.json({ users_list });
   } catch (error) {
     console.log("error:", error);
     // use toast for database error????
@@ -62,8 +62,27 @@ const getUsers = async (req, res) => {
 
 // Add new users to database when input field is submitted
 const addnewUsers = async (req, res) => {
-  
-}
+  const { username, email, password, active } = req.body;
+
+  if (!username || !email || !password || !active) {
+    return res.status(400).json({ message: "Please enter your credentials" });
+  }
+
+  try {
+    const results = await query(
+      "INSERT INTO accounts (username, password, email, accountStatus) VALUES (?, ?, ?, ?)",
+      [username, password, email, active]
+    );
+
+    return res.status(201).json({ message: "New user added successfully" });
+  } catch (error) {
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(400).json({ message: "Username already exist" });
+    }
+    console.error("Error when adding new user:", error);
+    return res.status(500).json({ message: "Database query error" });
+  }
+};
 
 module.exports = {
   authController,

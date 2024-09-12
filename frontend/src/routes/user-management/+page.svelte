@@ -2,23 +2,35 @@
 	import GroupModal from './GroupModal.svelte';
 	let showGroupModal = false;
 
+	import { goto } from '$app/navigation';
+	import axios from 'axios';
+
 	const API_URL = import.meta.env.VITE_API_URL;
-	console.log(API_URL);
 
 	let users_list = [];
+	let errorMessage = '';
+
+	let newUser = {
+		username: '',
+		email: '',
+		group: '',
+		password: '',
+		active: 'Active'
+	};
 
 	///////////////////////////////////////////////////////////////
-	// Fetch users function
+	// Fetch users
 	async function fetchUsers() {
 		try {
-			const response = await fetch(`${API_URL}/users`);
-			if (response.ok) {
-				users_list = await response.json();
-			} else {
-				console.error('Unable to fetch users');
+			const response = await axios.get(`${API_URL}/users`);
+
+			if (response.status === 200) {
+				users_list = response.data.users_list;
+				console.log(users_list);
 			}
 		} catch (error) {
-			console.error('Error fetching users:', error);
+			console.error('Login error:', error);
+			errorMessage = 'An error occurred during login';
 		}
 	}
 
@@ -29,19 +41,28 @@
 		event.preventDefault();
 
 		try {
-			const response = await fetch(`${API_URL}/addnewuser`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(newUser)
-			});
-			
-			
+			const response = await axios.post(`${API_URL}/users`, newUser);
 
+			if (response.status === 201) {
+				const addedUser = response.data;
+
+				users_list = [addedUser, ...users_list];
+
+				// Clear form fields
+				newUser = {
+					username: '',
+					email: '',
+					group: '',
+					password: '',
+					active: 'Active'
+				};
+			} else {
+				console.error('Failed to add user');
+			}
+		} catch (error) {
+			console.error('Error adding user:', error);
 		}
 	}
-
 
 	/////////////////////////////////////////////////////////////
 
@@ -49,15 +70,13 @@
 	onMount(() => {
 		fetchUsers();
 	});
-
-
-
 </script>
 
 <!-- Maybe move the navbar to layout???-->
 <nav>
 	<ul>
-		<li class="nav-left">Hello, User</li> <!-- TODO: use JWT token to show user's name-->
+		<li class="nav-left">Hello, User</li>
+		<!-- TODO: use JWT token to show user's name-->
 		<div class="nav-center">
 			<li>
 				<a href="/applications">Applications</a>
@@ -107,10 +126,10 @@
 
 	<tr>
 		<td> </td>
-		<td><input type="text" placeholder="Username" required /></td>
-		<td><input type="email" placeholder="Email" required /></td>
+		<td><input type="text" bind:value={newUser.username} placeholder="Username" required /></td>
+		<td><input type="email" bind:value={newUser.email} placeholder="Email" required /></td>
 		<td>
-			<select name="group" id="group">
+			<select bind:value={newUser.group} name="group" id="group">
 				<!-- change hardcoded group to values retrieved from db -->
 				<option value="PL_G1">Admin</option>
 				<option value="PM_G1">User</option>
@@ -119,19 +138,24 @@
 				<option value="PM_G1">Dev</option>
 			</select>
 		</td>
-		<td><input type="password" placeholder="Password" required /></td>
+		<td
+			><input
+				type="password"
+				bind:value={newUser.password}
+				placeholder="Password"
+				required
+			/></td
+		>
 		<td>
-			<select name="accountStatus" id="accountStatus">
-				<option value="PL_G1">Active</option>
-				<option value="PM_G1">Disabled</option>
+			<select bind:value={newUser.active} name="accountStatus" id="accountStatus">
+				<option value="Active">Active</option>
+				<option value="Disabled">Disabled</option>
 			</select>
 		</td>
 		<td>
-			<button class="submit_button">SUBMIT</button>
+			<button type="submit" class="submit_button" on:click={registerUser}>SUBMIT</button>
 		</td>
-		<td>
-
-		</td>
+		<td> </td>
 	</tr>
 	<tr>
 		<td> </td>

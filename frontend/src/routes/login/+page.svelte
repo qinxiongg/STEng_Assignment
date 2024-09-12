@@ -27,9 +27,8 @@
 			// Redirect on successful login
 			if (response.status === 200) {
 				goto('/user-management'); // Redirect to a new page
-			} else {
-				errorMessage = 'Login failed';
-			}
+			} 
+			
 		} catch (error) {
 			console.error('Login error:', error);
 			errorMessage = 'An error occurred during login';
