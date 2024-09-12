@@ -5,7 +5,7 @@ const router = express.Router();
 const {
   authController,
   getUsers,
-  addnewUsers,
+  register,
 } = require("../controllers/userControllers");
 
 // import middleware
@@ -13,7 +13,7 @@ const { verifyTokenWithIPAndBrowser } = require("../middleware/authMiddleware");
 
 router.post("/login", authController);
 router.get("/users", getUsers);
-router.post("/users", addnewUsers);
+router.post("/users", register);
 
 // router.get("/profile", verifyTokenWithIPAndBrowser, getUserController);
 
