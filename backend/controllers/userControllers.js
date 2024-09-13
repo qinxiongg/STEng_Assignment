@@ -1,6 +1,6 @@
 const query = require("../config/database");
 const bcrypt = require("bcrypt");
-const { generateJWT } = require('../services/authService');
+const { generateJWT } = require("../services/authService");
 
 // TO-DO
 // JWT
@@ -10,7 +10,7 @@ const login = async (req, res) => {
   console.log("login called");
   const { username, password } = req.body;
   const ipAddress = req.ip;
-  const browserType = req.headers['user-agent'];
+  const browserType = req.headers["user-agent"];
 
   // Check if login input fields is mepty
   if (!username || !password) {
@@ -47,19 +47,17 @@ const login = async (req, res) => {
     }
 
     // Generate JWT
-    // const tokenPayload = {
-    //   username: user.username,
-    //   ipAddress: ipAddress,
-    //   browserType: browserType,
-    // };
+    const tokenPayload = {
+      username: user.username,
+      ipAddress: ipAddress,
+      browserType: browserType,
+    };
 
-    // const token = generateJWT(tokenPayload);
+    const token = generateJWT(tokenPayload);
 
     // if everything else is okay then login
     return res
-    .cookie("cookieName", 50, { maxAge: 900000, httpOnly: true })
-
-      // .cookie("authToken", tokenPayload, { maxAge: 3600000, httpOnly: true })
+      .cookie("authToken", token, { maxAge: 3600000, httpOnly: true })
       .status(200)
       .json({ message: "Successfully logged in" });
   } catch (error) {
@@ -104,7 +102,6 @@ const register = async (req, res) => {
     console.error("Error when adding new user:", error);
     return res.status(500).json({ message: "Database query error" });
   }
-  
 };
 
 module.exports = {
