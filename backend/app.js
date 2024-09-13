@@ -5,7 +5,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const userRoutes = require("./routes/userRoute.js");
-const session = require("express-session");
+// const session = require("express-session");
 
 // const {
 //   verifyTokenWithIPAndBrowser,
@@ -21,13 +21,13 @@ app.use(
   })
 );
 
-app.use(
-  session({
-    secret: "secret",
-    resave: true,
-    saveUninitialized: true,
-  })
-);
+// app.use(
+//   session({
+//     secret: "secret",
+//     resave: true,
+//     saveUninitialized: true,
+//   })
+// );
 
 dotenv.config();
 
