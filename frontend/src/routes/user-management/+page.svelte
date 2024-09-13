@@ -22,7 +22,7 @@
 	// Fetch users
 	async function fetchUsers() {
 		try {
-			const response = await axios.get(`${API_URL}/users`);
+			const response = await axios.get(`${API_URL}/users`, { withCredentials: true });
 
 			if (response.status === 200) {
 				users_list = response.data.users_list;
@@ -38,9 +38,10 @@
 
 	// Add new users functions
 	async function registerUser() {
-
 		try {
-			const response = await axios.post(`${API_URL}/users`, newUser);
+			const response = await axios.post(`${API_URL}/users`, newUser, {
+				withCredentials: true
+			});
 
 			if (response.status === 201) {
 				users_list = response.data.users_list;
@@ -177,7 +178,7 @@
 			<!--usergroup-->
 			<td>{user.password}</td>
 			<td>{user.accountStatus}</td>
-			<td>Edit</td>
+			<td><button type="submit">Edit</button></td>
 			<!--edit button-->
 			<td> </td>
 		</tr>

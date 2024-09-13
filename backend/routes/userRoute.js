@@ -1,19 +1,16 @@
 const express = require("express");
 const router = express.Router();
+const { login, getUsers, register } = require("../controllers/userControllers");
+const { authJWT } = require("../middleware/middlewares");
 
-// import controllers
-const {
-  login,
-  getUsers,
-  register,
-} = require("../controllers/userControllers");
-
-// import middleware
 // const { verifyTokenWithIPAndBrowser } = require("../middleware/authMiddleware");
 
+// Public routes
 router.post("/login", login);
-router.get("/users", getUsers);
-router.post("/users", register);
+
+// Private routes
+router.get("/users", authJWT, getUsers);
+router.post("/users", authJWT, register);
 
 // router.get("/profile", verifyTokenWithIPAndBrowser, getUserController);
 

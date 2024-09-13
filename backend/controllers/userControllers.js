@@ -57,7 +57,7 @@ const login = async (req, res) => {
 
     // if everything else is okay then login
     return res
-      .cookie("authToken", token, { maxAge: 3600000, httpOnly: true })
+      .cookie("authToken", token, { maxAge: 3600000, httpOnly: true,})
       .status(200)
       .json({ message: "Successfully logged in" });
   } catch (error) {

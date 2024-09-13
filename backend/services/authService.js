@@ -1,7 +1,9 @@
 const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
 
-require("dotenv").config();
+dotenv.config();
 const secretKey = process.env.JWT_SECRET;
+
 
 function generateJWT(tokenPayload) {
   return jwt.sign(tokenPayload, secretKey, { expiresIn: "1h" });
