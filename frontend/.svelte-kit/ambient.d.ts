@@ -27,9 +27,12 @@
  */
 declare module '$env/static/private' {
 	export const VITE_API_URL: string;
+	export const JWT_SECRET: string;
 	export const ACLOCAL_PATH: string;
 	export const ALLUSERSPROFILE: string;
 	export const APPDATA: string;
+	export const ChocolateyInstall: string;
+	export const ChocolateyLastPathUpdate: string;
 	export const CHROME_CRASHPAD_PIPE_NAME: string;
 	export const COLOR: string;
 	export const COLORTERM: string;
@@ -38,20 +41,11 @@ declare module '$env/static/private' {
 	export const COMPUTERNAME: string;
 	export const COMSPEC: string;
 	export const CONFIG_SITE: string;
-	export const CUDA_PATH: string;
-	export const CUDA_PATH_V11_2: string;
-	export const CUDA_PATH_V11_3: string;
-	export const CUDA_PATH_V12_1: string;
+	export const DEFLOGDIR: string;
 	export const DISPLAY: string;
-	export const DokanLibrary1: string;
-	export const DokanLibrary1_LibraryPath_x64: string;
-	export const DokanLibrary1_LibraryPath_x86: string;
 	export const DriverData: string;
 	export const EDITOR: string;
-	export const EFC_2772: string;
 	export const EXEPATH: string;
-	export const FPS_BROWSER_APP_PROFILE_STRING: string;
-	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GIT_ASKPASS: string;
 	export const HOME: string;
 	export const HOMEDRIVE: string;
@@ -66,6 +60,8 @@ declare module '$env/static/private' {
 	export const MINGW_CHOST: string;
 	export const MINGW_PACKAGE_PREFIX: string;
 	export const MINGW_PREFIX: string;
+	export const model: string;
+	export const MSYS: string;
 	export const MSYSTEM: string;
 	export const MSYSTEM_CARCH: string;
 	export const MSYSTEM_CHOST: string;
@@ -93,13 +89,8 @@ declare module '$env/static/private' {
 	export const npm_package_name: string;
 	export const npm_package_version: string;
 	export const NUMBER_OF_PROCESSORS: string;
-	export const NVCUDASAMPLES11_2_ROOT: string;
-	export const NVCUDASAMPLES11_3_ROOT: string;
-	export const NVCUDASAMPLES_ROOT: string;
-	export const NVTOOLSEXT_PATH: string;
 	export const OLDPWD: string;
 	export const OneDrive: string;
-	export const OneDriveCommercial: string;
 	export const ORIGINAL_PATH: string;
 	export const ORIGINAL_TEMP: string;
 	export const ORIGINAL_TMP: string;
@@ -122,6 +113,7 @@ declare module '$env/static/private' {
 	export const PSModulePath: string;
 	export const PUBLIC: string;
 	export const PWD: string;
+	export const serial: string;
 	export const SESSIONNAME: string;
 	export const SHELL: string;
 	export const SHLVL: string;
@@ -143,8 +135,8 @@ declare module '$env/static/private' {
 	export const VSCODE_GIT_ASKPASS_NODE: string;
 	export const VSCODE_GIT_IPC_HANDLE: string;
 	export const WINDIR: string;
+	export const ZES_ENABLE_SYSMAN: string;
 	export const _: string;
-	export const __PSLockDownPolicy: string;
 }
 
 /**
@@ -177,9 +169,12 @@ declare module '$env/static/public' {
 declare module '$env/dynamic/private' {
 	export const env: {
 		VITE_API_URL: string;
+		JWT_SECRET: string;
 		ACLOCAL_PATH: string;
 		ALLUSERSPROFILE: string;
 		APPDATA: string;
+		ChocolateyInstall: string;
+		ChocolateyLastPathUpdate: string;
 		CHROME_CRASHPAD_PIPE_NAME: string;
 		COLOR: string;
 		COLORTERM: string;
@@ -188,20 +183,11 @@ declare module '$env/dynamic/private' {
 		COMPUTERNAME: string;
 		COMSPEC: string;
 		CONFIG_SITE: string;
-		CUDA_PATH: string;
-		CUDA_PATH_V11_2: string;
-		CUDA_PATH_V11_3: string;
-		CUDA_PATH_V12_1: string;
+		DEFLOGDIR: string;
 		DISPLAY: string;
-		DokanLibrary1: string;
-		DokanLibrary1_LibraryPath_x64: string;
-		DokanLibrary1_LibraryPath_x86: string;
 		DriverData: string;
 		EDITOR: string;
-		EFC_2772: string;
 		EXEPATH: string;
-		FPS_BROWSER_APP_PROFILE_STRING: string;
-		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GIT_ASKPASS: string;
 		HOME: string;
 		HOMEDRIVE: string;
@@ -216,6 +202,8 @@ declare module '$env/dynamic/private' {
 		MINGW_CHOST: string;
 		MINGW_PACKAGE_PREFIX: string;
 		MINGW_PREFIX: string;
+		model: string;
+		MSYS: string;
 		MSYSTEM: string;
 		MSYSTEM_CARCH: string;
 		MSYSTEM_CHOST: string;
@@ -243,13 +231,8 @@ declare module '$env/dynamic/private' {
 		npm_package_name: string;
 		npm_package_version: string;
 		NUMBER_OF_PROCESSORS: string;
-		NVCUDASAMPLES11_2_ROOT: string;
-		NVCUDASAMPLES11_3_ROOT: string;
-		NVCUDASAMPLES_ROOT: string;
-		NVTOOLSEXT_PATH: string;
 		OLDPWD: string;
 		OneDrive: string;
-		OneDriveCommercial: string;
 		ORIGINAL_PATH: string;
 		ORIGINAL_TEMP: string;
 		ORIGINAL_TMP: string;
@@ -272,6 +255,7 @@ declare module '$env/dynamic/private' {
 		PSModulePath: string;
 		PUBLIC: string;
 		PWD: string;
+		serial: string;
 		SESSIONNAME: string;
 		SHELL: string;
 		SHLVL: string;
@@ -293,8 +277,8 @@ declare module '$env/dynamic/private' {
 		VSCODE_GIT_ASKPASS_NODE: string;
 		VSCODE_GIT_IPC_HANDLE: string;
 		WINDIR: string;
+		ZES_ENABLE_SYSMAN: string;
 		_: string;
-		__PSLockDownPolicy: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}

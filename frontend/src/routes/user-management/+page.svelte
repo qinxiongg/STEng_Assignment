@@ -29,7 +29,7 @@
 				console.log(users_list);
 			}
 		} catch (error) {
-			console.error('Login error:', error);
+			console.error('Error :', error);
 			errorMessage = 'An error occurred during login';
 		}
 	}
@@ -37,16 +37,13 @@
 	// fetchUsers(); <--remove this?
 
 	// Add new users functions
-	async function registerUser(event) {
-		event.preventDefault();
+	async function registerUser() {
 
 		try {
 			const response = await axios.post(`${API_URL}/users`, newUser);
 
 			if (response.status === 201) {
-				const addedUser = response.data;
-
-				users_list = [addedUser, ...users_list];
+				users_list = response.data.users_list;
 
 				// Clear form fields
 				newUser = {
@@ -56,6 +53,8 @@
 					password: '',
 					active: 'Active'
 				};
+
+				fetchUsers();
 			} else {
 				console.error('Failed to add user');
 			}

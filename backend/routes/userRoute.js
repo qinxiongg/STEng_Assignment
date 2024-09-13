@@ -3,15 +3,15 @@ const router = express.Router();
 
 // import controllers
 const {
-  authController,
+  login,
   getUsers,
   register,
 } = require("../controllers/userControllers");
 
 // import middleware
-const { verifyTokenWithIPAndBrowser } = require("../middleware/authMiddleware");
+// const { verifyTokenWithIPAndBrowser } = require("../middleware/authMiddleware");
 
-router.post("/login", authController);
+router.post("/login", login);
 router.get("/users", getUsers);
 router.post("/users", register);
 

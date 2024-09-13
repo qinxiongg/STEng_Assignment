@@ -7,10 +7,10 @@ const cookieParser = require("cookie-parser");
 const userRoutes = require("./routes/userRoute.js");
 const session = require("express-session");
 
-const {
-  verifyTokenWithIPAndBrowser,
-} = require("./middleware/authMiddleware.js");
-const { authController } = require("./controllers/userControllers.js");
+// const {
+//   verifyTokenWithIPAndBrowser,
+// } = require("./middleware/authMiddleware.js");
+const { login } = require("./controllers/userControllers.js");
 
 const port = 3000;
 

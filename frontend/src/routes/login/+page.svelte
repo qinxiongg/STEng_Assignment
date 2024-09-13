@@ -7,11 +7,9 @@
 
 	let username = '';
 	let password = '';
-	let errorMessage = ''; // TODO: error message using toast 
+	let errorMessage = ''; // TODO: error message using toast
 
-	const handleSubmit = async (event) => {
-		event.preventDefault(); // Prevent default form submission
-
+	const handleSubmit = async () => {
 		try {
 			const response = await axios.post(
 				`${API_URL}/login`,
@@ -27,8 +25,7 @@
 			// Redirect on successful login
 			if (response.status === 200) {
 				goto('/user-management'); // Redirect to a new page
-			} 
-			
+			}
 		} catch (error) {
 			console.error('Login error:', error);
 			errorMessage = 'An error occurred during login';
@@ -99,4 +96,3 @@
 		width: 100%;
 	}
 </style>
-	
