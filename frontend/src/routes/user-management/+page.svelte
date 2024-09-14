@@ -35,6 +35,7 @@
 	}
 
 	// Add new users functions
+
 	async function registerUser() {
 		try {
 			const response = await axios.post(`${API_URL}/users`, newUser, {
@@ -60,6 +61,25 @@
 		} catch (error) {
 			console.error('Error adding user:', error);
 		}
+	}
+
+	// Add group
+	let groupName = '';
+
+	async function addNewGroup() {
+		try {
+			const response = await axios.post(`${API_URL}/group`, {groupName}, {
+				withCredentials: true
+			});
+
+			if (response.status === 201) {
+				groupName = '';
+				
+			}
+		} catch (error){
+			console.log(error);
+		} 
+		
 	}
 
 	/////////////////////////////////////////////////////////////
@@ -97,16 +117,16 @@
 <Modal bind:showModal>
 	<div>
 		<h2>Add Group</h2>
-		<form>
-			<div class="form-group">
-				<label for="groupName">Group Name:</label>
-				<input type="text" id="groupName" name="groupName" placeholder="Name" />
-			</div>
-			<div class="modal-buttons">
-				<button type="button">ADD</button>
-				<button type="submit" on:click={() => (showModal = false)} <on:click></on:click>>CANCEL</button>
-			</div>
-		</form>
+		<div class="form-group">
+			<label for="groupName">Group Name:</label>
+			<input type="text" bind:value={groupName} id="groupName" name="groupName" placeholder="Name" />
+		</div>
+		<div class="modal-buttons">
+			<button type="submit" on:click={addNewGroup}>ADD</button>
+			<button type="button" on:click={() => {
+				showModal = false;
+				console.log(showModal); // This should print `false` in the console
+			}}>CANCEL</button>		</div>
 	</div>
 </Modal>
 

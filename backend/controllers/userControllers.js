@@ -96,9 +96,9 @@ const register = async (req, res) => {
     const hashedpassword = await bcrypt.hash(password, 10);
 
     const results = await query(
-      "INSERT INTO accounts (username, password, email, accountStatus) VALUES (?, ?, ?, ?)",
-      [username, hashedpassword, email, active]
+      "INSERT INTO accounts (username, password, email, accountStatus) VALUES (?, ?, ?, ?)"
     );
+    [username, hashedpassword, email, active];
 
     return res.status(201).json({ message: "New user added successfully" });
   } catch (error) {
@@ -110,8 +110,27 @@ const register = async (req, res) => {
   }
 };
 
+const addGroup = async (req, res) => {
+  const { groupName } = req.body;
+
+  if (!groupName) {
+    return res.status(401).json({ message: "Enter group name" });
+  }
+  try {
+    const result = await query("INSERT INTO user_group (usergroup) VALUES (?)", [
+      groupName,
+    ]);
+    return res.status(201).json({ message: "Successfully added group" });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Error adding group to database", error });
+  }
+};
+
 module.exports = {
   login,
   getUsers,
   register,
+  addGroup,
 };

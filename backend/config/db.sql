@@ -19,7 +19,7 @@ INSERT INTO `accounts` (`username`, `password`, `email`) VALUES ('test', 'test',
 -- Create usergroup table
 USE `nodelogin`;
 
-CREATE TABLE IF NOT EXISTS `usergroup` (
+CREATE TABLE IF NOT EXISTS `user_group` (
 `usergroup` varchar(50) NOT NULL,
 `username` varchar(50) DEFAULT '',
 PRIMARY KEY (usergroup, username)
