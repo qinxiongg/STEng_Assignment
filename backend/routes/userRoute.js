@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { login, getUsers, register } = require("../controllers/userControllers");
-const { authJWT } = require("../middleware/middlewares");
+const { authenticateJWT } = require("../middleware/middlewares");
 
 // const { verifyTokenWithIPAndBrowser } = require("../middleware/authMiddleware");
 
@@ -9,8 +9,8 @@ const { authJWT } = require("../middleware/middlewares");
 router.post("/login", login);
 
 // Private routes
-router.get("/users", authJWT, getUsers);
-router.post("/users", authJWT, register);
+router.get("/users", authenticateJWT, getUsers);
+router.post("/users", authenticateJWT, register);
 
 // router.get("/profile", verifyTokenWithIPAndBrowser, getUserController);
 

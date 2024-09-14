@@ -34,8 +34,6 @@
 		}
 	}
 
-	// fetchUsers(); <--remove this?
-
 	// Add new users functions
 	async function registerUser() {
 		try {

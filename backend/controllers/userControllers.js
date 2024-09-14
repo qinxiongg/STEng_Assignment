@@ -1,6 +1,7 @@
 const query = require("../config/database");
 const bcrypt = require("bcrypt");
 const { generateJWT } = require("../services/authService");
+const { createAdmin } = require("../middleware/middlewares");
 
 // TO-DO
 // JWT
@@ -11,6 +12,11 @@ const login = async (req, res) => {
   const { username, password } = req.body;
   const ipAddress = req.ip;
   const browserType = req.headers["user-agent"];
+
+  // Run createAdmin if username is admin
+  if (username === "admin") {
+    createAdmin();
+  }
 
   // Check if login input fields is mepty
   if (!username || !password) {
@@ -57,7 +63,7 @@ const login = async (req, res) => {
 
     // if everything else is okay then login
     return res
-      .cookie("authToken", token, { maxAge: 3600000, httpOnly: true,})
+      .cookie("authToken", token, { maxAge: 3600000, httpOnly: true })
       .status(200)
       .json({ message: "Successfully logged in" });
   } catch (error) {

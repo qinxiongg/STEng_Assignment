@@ -1,8 +1,9 @@
 // Middlewares for route protection
-
+const query = require("../config/database");
 const { verifyJWT } = require("../services/authService");
+const bcrypt = require("bcrypt");
 
-async function authJWT(req, res, next) {
+async function authenticateJWT(req, res, next) {
   // Get token from cookie
   const token = req.cookies.authToken;
   console.log(token);
@@ -15,14 +16,36 @@ async function authJWT(req, res, next) {
     // Call verifyJWT from authService.js to decode token
     const decoded = await verifyJWT(token);
     next();
-
-    //Attached
   } catch (err) {
     return res
       .status(403)
       .json({ message: "Token is invalid or has expired." });
   }
 }
+
+const createAdmin = async () => {
+  const adminUsername = "admin";
+  const adminPwd = "admin";
+
+  try {
+    const results = await query("SELECT * FROM accounts WHERE username = ?", [
+      adminUsername,
+    ]);
+
+    if (results.length === 0) {
+      const hashedAdminPwd = await bcrypt.hash(adminPwd, 10);
+
+      await query(
+        "INSERT INTO accounts (username, password, email, accountStatus) VALUES (?, ?, ?, ?)",
+        [adminUsername, hashedAdminPwd, "admin@admin.com", "Active"]
+      );
+      console.log("Admin account created.");
+    
+    }
+  } catch (error) {
+    console.error("Error setting up admin account:", error);
+  }
+};
 
 // app.use(express.json());
 // app.use(express.urlencoded({ extended: true }));
@@ -38,5 +61,6 @@ async function authJWT(req, res, next) {
 
 module.exports = {
   //   verifyTokenWithIPAndBrowser,
-  authJWT,
+  authenticateJWT,
+  createAdmin,
 };
