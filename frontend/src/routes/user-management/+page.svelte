@@ -1,6 +1,6 @@
 <script>
-	import GroupModal from './GroupModal.svelte';
-	let showGroupModal = false;
+	import Modal from './GroupModal.svelte';
+	let showModal = false;
 
 	import { goto } from '$app/navigation';
 	import axios from 'axios';
@@ -90,11 +90,11 @@
 </nav>
 <div class="middle-container">
 	<h1 class="middle-left">User Management</h1>
-	<button class="middle-right" on:click={() => (showGroupModal = true)}>+ Group</button>
+	<button class="middle-right" on:click={() => (showModal = true)}>+ Group</button>
 </div>
 
 <!-- KIV: revisit this later -->
-<GroupModal bind:showGroupModal>
+<Modal bind:showModal>
 	<div>
 		<h2>Add Group</h2>
 		<form>
@@ -104,11 +104,11 @@
 			</div>
 			<div class="modal-buttons">
 				<button type="button">ADD</button>
-				<button type="submit" on:click={() => (showGroupModal = false)}>CANCEL</button>
+				<button type="submit" on:click={() => (showModal = false)} <on:click></on:click>>CANCEL</button>
 			</div>
 		</form>
 	</div>
-</GroupModal>
+</Modal>
 
 <table id="users">
 	<tr>
@@ -153,16 +153,6 @@
 		<td>
 			<button type="submit" class="submit_button" on:click={registerUser}>SUBMIT</button>
 		</td>
-		<td> </td>
-	</tr>
-	<tr>
-		<td> </td>
-		<td>Peter Lee</td>
-		<td>peter_lee@example.com</td>
-		<td><button class="superadmin">Super Admin</button></td>
-		<td>passwordhere</td>
-		<td> Active </td>
-		<td> edit </td>
 		<td> </td>
 	</tr>
 

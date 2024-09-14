@@ -1,22 +1,36 @@
 <script>
-	export let showGroupModal; //boolean
+	import { onMount } from "svelte";
+	export let showModal; //boolean
 
-	let dialog; // HTML dialog Element
+	let dialog;
 
-	$: if (dialog && showGroupModal) dialog.showModal();
+	$: if (dialog && showModal) dialog.showModal();
+
+	function closeModal() {
+		dialog.close();
+		showModal = false;
+	}
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
 <dialog
 	bind:this={dialog}
-	on:close={() => (showGroupModal = false)}
+	on:close={() => (showModal = false)}
 	on:click|self={() => dialog.close()}
 >
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div on:click|stopPropagation>
 		<slot></slot>
 	</div>
 </dialog>
 
 <style>
+	dialog {
+		max-width: 32em;
+		border-radius: 0.2em;
+		border: none;
+		padding: 0;
+	}
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.3);
 	}
@@ -25,8 +39,8 @@
 	}
 	dialog[open] {
 		animation: zoom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        border: none;
-    }
+		border: none;
+	}
 	@keyframes zoom {
 		from {
 			transform: scale(0.95);
