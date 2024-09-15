@@ -247,12 +247,14 @@
 			<td> </td>
 			<td>{user.username}</td>
 			<td>{user.email}</td>
-			<td>insert something</td>
-			<!--usergroup-->
+			<td
+				>{#each user.usergroupsConcat.split(',') as group}
+					<span class="group-tag">{group}</span>
+				{/each}
+			</td>
 			<td>{user.password}</td>
 			<td>{user.accountStatus}</td>
 			<td><button type="submit">Edit</button></td>
-			<!--edit button-->
 			<td> </td>
 		</tr>
 	{/each}
@@ -390,5 +392,13 @@
 	#users tr td:not(:first-child):not(:last-child) {
 		border-bottom: 1px solid lightgrey; /* Add grey border to the bottom */
 		padding-bottom: 20px;
+	}
+
+	.group-tag {
+		background-color: #e0e0e0;
+		padding: 5px;
+		margin-right: 5px;
+		border-radius: 5px;
+		display: inline-block;
 	}
 </style>

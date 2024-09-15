@@ -74,7 +74,12 @@ const login = async (req, res) => {
 // Fetch all users from database
 const getUsers = async (req, res) => {
   try {
-    const users_list = await query("SELECT * FROM accounts");
+    const users_list =
+      await query(`SELECT a.username, a.email, a.password, a.accountStatus, 
+      GROUP_CONCAT(u.usergroup) AS usergroupsConcat
+      FROM accounts a
+      LEFT JOIN user_group u ON a.username = u.username
+      GROUP BY a.username`);
 
     res.json({ users_list });
   } catch (error) {
