@@ -89,16 +89,23 @@ const register = async (req, res) => {
   const { username, email, group, password, active } = req.body;
 
   if (!username || !email || !password || !active || !group) {
-    return res.status(400).json({ message: "Please enter your credentials" });
+    return res
+      .status(400)
+      .json({ message: "Please enter the required fields" });
   }
 
   try {
     const hashedpassword = await bcrypt.hash(password, 10);
 
-    const results = await query(
-      "INSERT INTO accounts (username, password, email, accountStatus) VALUES (?, ?, ?, ?)"
+    await query(
+      "INSERT INTO accounts (username, password, email, accountStatus) VALUES (?, ?, ?, ?)",
+      [username, hashedpassword, email, active]
     );
-    [username, hashedpassword, email, active];
+
+    await query("INSERT INTO user_group(usergroup, username) VALUES (?, ?)", [
+      group,
+      username,
+    ]);
 
     return res.status(201).json({ message: "New user added successfully" });
   } catch (error) {

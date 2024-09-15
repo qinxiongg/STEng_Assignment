@@ -1,5 +1,5 @@
 <script>
-	import Modal from '../../lib/Modal.svelte';
+	import Modal from './Modal.svelte';
 	let showModal = false;
 
 	import { goto } from '$app/navigation';
@@ -99,6 +99,38 @@
 		}
 	}
 
+	// // Edit user data
+	// let updatingUser = null;
+	// let updatedUser = {
+	// 	username: '',
+	// 	email: '',
+	// 	group: '',
+	// 	password: '',
+	// 	active: ''
+	// };
+
+	// function startEditingUser(user) {
+	// 	updatingUser = user.id;
+	// 	updatedUser = { ...user };
+	// }
+
+	// async function updateUser() {
+	// 	try {
+	// 		await axios.patch(`${API_URL}/updateuser`, updatedUser, {
+	// 			withCredentials: true
+	// 		});
+	// 		updatingUser = null;
+	// 		fetchUsers();
+
+	// 		if (response.status === 200) {
+	// 		}
+	// 	} catch (error) {}
+	// }
+
+	// function cancelEdit() {
+	// 	updatingUser = null;
+	// }
+
 	/////////////////////////////////////////////////////////////
 
 	import { onMount } from 'svelte';
@@ -183,7 +215,7 @@
 		</td>
 		<td
 			><input
-				type="password"	
+				type="password"
 				bind:value={newUser.password}
 				placeholder="Password"
 				required
@@ -204,6 +236,14 @@
 	<!-- Loop through users array and display them -->
 	{#each users_list as user}
 		<tr>
+			<!-- {#if updatingUser === user.id}
+			<td><input bind:value={updatedUser.username}/></td>
+			<td><input bind:value={updatedUser.email}/></td>
+			<td><select bind:value={updatedUser.group}>
+
+			</select></td>
+			
+			{:else} -->
 			<td> </td>
 			<td>{user.username}</td>
 			<td>{user.email}</td>
