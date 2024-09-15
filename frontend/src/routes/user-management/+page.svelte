@@ -1,5 +1,5 @@
 <script>
-	import Modal from './GroupModal.svelte';
+	import Modal from '../../lib/Modal.svelte';
 	let showModal = false;
 
 	import { goto } from '$app/navigation';
@@ -68,7 +68,7 @@
 
 	async function addNewGroup() {
 		try {
-			const response = await axios.post(`${API_URL}/group`, {groupName}, {
+			const response = await axios.post(`${API_URL}/groups`, {groupName}, {
 				withCredentials: true
 			});
 

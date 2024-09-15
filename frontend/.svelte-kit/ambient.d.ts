@@ -48,7 +48,7 @@ declare module '$env/static/private' {
 	export const DokanLibrary1_LibraryPath_x86: string;
 	export const DriverData: string;
 	export const EDITOR: string;
-	export const EFC_18020: string;
+	export const EFC_10980: string;
 	export const EXEPATH: string;
 	export const FPS_BROWSER_APP_PROFILE_STRING: string;
 	export const FPS_BROWSER_USER_PROFILE_STRING: string;
@@ -144,6 +144,7 @@ declare module '$env/static/private' {
 	export const VSCODE_GIT_IPC_HANDLE: string;
 	export const WINDIR: string;
 	export const _: string;
+	export const __COMPAT_LAYER: string;
 	export const __PSLockDownPolicy: string;
 }
 
@@ -198,7 +199,7 @@ declare module '$env/dynamic/private' {
 		DokanLibrary1_LibraryPath_x86: string;
 		DriverData: string;
 		EDITOR: string;
-		EFC_18020: string;
+		EFC_10980: string;
 		EXEPATH: string;
 		FPS_BROWSER_APP_PROFILE_STRING: string;
 		FPS_BROWSER_USER_PROFILE_STRING: string;
@@ -294,6 +295,7 @@ declare module '$env/dynamic/private' {
 		VSCODE_GIT_IPC_HANDLE: string;
 		WINDIR: string;
 		_: string;
+		__COMPAT_LAYER: string;
 		__PSLockDownPolicy: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;

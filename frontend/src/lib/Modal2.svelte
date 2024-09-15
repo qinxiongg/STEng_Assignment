@@ -1,15 +1,16 @@
-<script>
-	import { onMount } from "svelte";
-	export let showModal; //boolean
+<script lang="ts">
+	import { onMount } from 'svelte';
 
-	let dialog;
+	export let showModal: boolean; // boolean
+
+	let dialog: HTMLDialogElement; // HTMLDialogElement
 
 	$: if (dialog && showModal) dialog.showModal();
+	$: if (dialog && !showModal) dialog.close();
 
-	function closeModal() {
-		dialog.close();
-		showModal = false;
-	}
+	onMount(() => {
+		console.log(`Modal created`);
+	});
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
@@ -20,7 +21,12 @@
 >
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div on:click|stopPropagation>
-		<slot></slot>
+		<slot name="header" />
+		<!-- <hr /> -->
+		<slot />
+		<!-- <hr /> -->
+		<!-- svelte-ignore a11y-autofocus -->
+		<!-- <button autofocus on:click={() => dialog.close()}>close modal</button> -->
 	</div>
 </dialog>
 
@@ -35,11 +41,10 @@
 		background: rgba(0, 0, 0, 0.3);
 	}
 	dialog > div {
-		width: 500px;
+		padding: 1em;
 	}
 	dialog[open] {
 		animation: zoom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-		border: none;
 	}
 	@keyframes zoom {
 		from {
@@ -59,10 +64,8 @@
 		to {
 			opacity: 1;
 		}
-		button {
-			display: flex;
-			justify-content: center;
-			gap: 20px;
-		}
+	}
+	button {
+		display: block;
 	}
 </style>
