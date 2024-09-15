@@ -1,6 +1,6 @@
 const query = require("../config/database");
 const bcrypt = require("bcrypt");
-const { generateJWT } = require("../services/authService");
+const { generateJWT, verifyJWT } = require("../services/authService");
 const { createAdmin } = require("../middleware/middlewares");
 
 // TO-DO
@@ -150,10 +150,28 @@ const getGroups = async (req, res) => {
   }
 };
 
+const getUserInfo = async(req, res) => {
+  const token = req.cookies.authToken;
+  if (!token)
+    return res
+      .status(401)
+      .json({ message: "No token provided for username display " });
+  try {
+    const decoded = await verifyJWT(token);
+    res.status(200).json({ username: decoded.username });
+  } catch (error) {
+    res.status(403).json({ message: "Invalid token" });
+  }
+};
+
+const profile = async (req, res) => {};
+
 module.exports = {
   login,
   getUsers,
   register,
   addGroups,
   getGroups,
+  getUserInfo,
+  profile,
 };

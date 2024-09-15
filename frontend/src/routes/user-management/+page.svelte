@@ -131,10 +131,26 @@
 	// 	updatingUser = null;
 	// }
 
+	let loggedinUser = '';
+
+	async function fetchUserInfo() {
+		try {
+			const response = await axios.get(`${API_URL}/userinfo`, { withCredentials: true });
+			if (response.status === 200) {
+				loggedinUser = response.data.username;
+			}
+		} catch (error) {
+			console.error('Error fetching user info:', error);
+		}
+	}
+
+	async function editProfile() {}
+
 	/////////////////////////////////////////////////////////////
 
 	import { onMount } from 'svelte';
 	onMount(() => {
+		fetchUserInfo();
 		fetchUsers();
 		getAllGroups();
 	});
@@ -143,7 +159,7 @@
 <!-- Maybe move the navbar to layout???-->
 <nav>
 	<ul>
-		<li class="nav-left">Hello, User</li>
+		<li class="nav-left">Hello, {loggedinUser}</li>
 		<!-- TODO: use JWT token to show user's name-->
 		<div class="nav-center">
 			<li>
@@ -162,6 +178,26 @@
 	<h1 class="middle-left">User Management</h1>
 	<button class="middle-right" on:click={() => (showModal = true)}>+ Group</button>
 </div>
+
+<Modal bind:showModal>
+	<div>
+		<h2>Profile</h2>
+		<div class="form-group">
+			<label for="profile_uname">Username:</label>
+			<input type="text" bind:value={loggedinUser} name="groupName" />
+		</div>
+		<div class="modal-buttons">
+			<button type="submit" on:click={editProfile}>ADD</button>
+			<button
+				type="button"
+				on:click={() => {
+					showModal = false;
+					console.log(showModal); // This should print `false` in the console
+				}}>CANCEL</button
+			>
+		</div>
+	</div>
+</Modal>
 
 <!-- KIV: revisit this later -->
 <Modal bind:showModal>
