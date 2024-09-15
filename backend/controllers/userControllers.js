@@ -84,11 +84,11 @@ const getUsers = async (req, res) => {
   }
 };
 
-// Add new users to database when input field is submitted
+// Add new user to database when input field is submitted
 const register = async (req, res) => {
-  const { username, email, password, active } = req.body;
+  const { username, email, group, password, active } = req.body;
 
-  if (!username || !email || !password || !active) {
+  if (!username || !email || !password || !active || !group) {
     return res.status(400).json({ message: "Please enter your credentials" });
   }
 
@@ -130,7 +130,12 @@ const addGroups = async (req, res) => {
 };
 
 const getGroups = async (req, res) => {
-  const userGroups = await query("SELECT DISTINCT usergroup from user_group")
+  try {
+    const userGroups = await query("SELECT DISTINCT usergroup from user_group");
+    res.json({ userGroups });
+  } catch (error) {
+    res.status(500).json({ message: "Database query error" });
+  }
 };
 
 module.exports = {

@@ -68,18 +68,35 @@
 
 	async function addNewGroup() {
 		try {
-			const response = await axios.post(`${API_URL}/groups`, {groupName}, {
-				withCredentials: true
-			});
+			const response = await axios.post(
+				`${API_URL}/groups`,
+				{ groupName },
+				{
+					withCredentials: true
+				}
+			);
 
 			if (response.status === 201) {
 				groupName = '';
-				
 			}
-		} catch (error){
+		} catch (error) {
 			console.log(error);
-		} 
-		
+		}
+	}
+
+	let userGroups_list = [];
+
+	async function getAllGroups() {
+		try {
+			const response = await axios.get(`${API_URL}/groups`, { withCredentials: true });
+
+			if (response.status === 200) {
+				userGroups_list = response.data.userGroups;
+				console.log(userGroups_list);
+			}
+		} catch (error) {
+			console.error('Error:', error);
+		}
 	}
 
 	/////////////////////////////////////////////////////////////
@@ -87,6 +104,7 @@
 	import { onMount } from 'svelte';
 	onMount(() => {
 		fetchUsers();
+		getAllGroups();
 	});
 </script>
 
@@ -119,14 +137,24 @@
 		<h2>Add Group</h2>
 		<div class="form-group">
 			<label for="groupName">Group Name:</label>
-			<input type="text" bind:value={groupName} id="groupName" name="groupName" placeholder="Name" />
+			<input
+				type="text"
+				bind:value={groupName}
+				id="groupName"
+				name="groupName"
+				placeholder="Name"
+			/>
 		</div>
 		<div class="modal-buttons">
 			<button type="submit" on:click={addNewGroup}>ADD</button>
-			<button type="button" on:click={() => {
-				showModal = false;
-				console.log(showModal); // This should print `false` in the console
-			}}>CANCEL</button>		</div>
+			<button
+				type="button"
+				on:click={() => {
+					showModal = false;
+					console.log(showModal); // This should print `false` in the console
+				}}>CANCEL</button
+			>
+		</div>
 	</div>
 </Modal>
 
@@ -148,17 +176,14 @@
 		<td><input type="email" bind:value={newUser.email} placeholder="Email" required /></td>
 		<td>
 			<select bind:value={newUser.group} name="group" id="group">
-				<!-- change hardcoded group to values retrieved from db -->
-				<option value="PL_G1">Admin</option>
-				<option value="PM_G1">User</option>
-				<option value="PM_G1">PL</option>
-				<option value="PM_G1">PM</option>
-				<option value="PM_G1">Dev</option>
+				{#each userGroups_list as group}
+					<option value={group.usergroup}>{group.usergroup}</option>
+				{/each}
 			</select>
 		</td>
 		<td
 			><input
-				type="password"
+				type="password"	
 				bind:value={newUser.password}
 				placeholder="Password"
 				required
