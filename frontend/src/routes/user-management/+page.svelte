@@ -170,7 +170,7 @@
 			</li>
 		</div>
 		<li class="nav-right">
-			<a href="/editprofile">Edit Profile</a>
+			<a on:click={() => (showModal = true)} >Edit Profile</a>
 		</li>
 	</ul>
 </nav>
