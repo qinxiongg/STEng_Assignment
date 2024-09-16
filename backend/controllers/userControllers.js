@@ -241,6 +241,45 @@ const updateUserProfile = async (req, res) => {
       .json({ message: "Unable to update profile", error: error.message });
   }
 };
+
+// const editUser = async (req, user) => {
+//   const { id } = req.params;
+//   const { email, password, group, accountStatus } = req.body;
+
+//   if (!email && !password && !group && !accountStatus) {
+//     return res.status(400).json({ message: "No fields to update" });
+//   }
+
+//   try {
+//     if (email) {
+//       await query("UPDATE accounts SET email = ? WHERE username = ?", [email, id]);
+//     }
+//     if (password) {
+//       const hashedPassword = await bcrypt.hash(password, 10);
+//       await query("UPDATE accounts SET password = ? WHERE username = ?", [
+//         hashedPassword,
+//         id,
+//       ]);
+//     }
+//     if (group) {
+//       await query("UPDATE user_group SET usergroup = ? WHERE username = ?", [
+//         group,
+//         id,
+//       ]);
+//     }
+//     if (accountStatus) {
+//       await query("UPDATE accounts SET accountStatus = ? WHERE username = ?", [
+//         accountStatus,
+//         id,
+//       ]);
+//     }
+//     return res.status(200).json({ message: "User updated successfully" });
+//   } catch (error) {
+//     console.error("Error updating user:", error);
+//     return res.status(500).json({ message: "Database query error" });
+//   }
+// };
+
 module.exports = {
   login,
   getUsers,
@@ -250,4 +289,5 @@ module.exports = {
   getUsername,
   getUserProfile,
   updateUserProfile,
+  // editUser,
 };

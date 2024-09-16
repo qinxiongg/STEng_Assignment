@@ -133,38 +133,6 @@
 		}
 	}
 
-	// // Edit user data
-	// let updatingUser = null;
-	// let updatedUser = {
-	// 	username: '',
-	// 	email: '',
-	// 	group: '',
-	// 	password: '',
-	// 	active: ''
-	// };
-
-	// function startEditingUser(user) {
-	// 	updatingUser = user.id;
-	// 	updatedUser = { ...user };
-	// }
-
-	// async function updateUser() {
-	// 	try {
-	// 		await axios.patch(`${API_URL}/updateuser`, updatedUser, {
-	// 			withCredentials: true
-	// 		});
-	// 		updatingUser = null;
-	// 		fetchUsers();
-
-	// 		if (response.status === 200) {
-	// 		}
-	// 	} catch (error) {}
-	// }
-
-	// function cancelEdit() {
-	// 	updatingUser = null;
-	// }
-
 	let loggedinUser = '';
 
 	async function fetchUserInfo() {
@@ -224,6 +192,49 @@
 			} catch (error) {
 				console.error('Error updating profile:', error);
 			}
+	}
+
+	// edit user's credential
+	let editingUserId = null; // To track the user being edited
+	let editedUser = {
+		email: '',
+		password: '',
+		accountStatus: ''
+	};
+
+	// Enter edit mode for the selected user
+	function editUser(user) {
+		editingUserId = user.username;
+		editedUser = { ...user }; // Clone the user data for editing
+	}
+
+	// Save the changes made to the user
+	async function saveChanges(userId) {
+		try {
+			const response = await axios.patch(`${API_URL}/users/${userId}`, editedUser, {
+				withCredentials: true
+			});
+
+			if (response.status === 200) {
+				// Update the users list with the edited user
+				const updatedUserIndex = users_list.findIndex((user) => user.username === userId);
+				if (updatedUserIndex !== -1) {
+					users_list[updatedUserIndex] = { ...editedUser, id: userId };
+				}
+
+				console.log("userid:", editingUserId);
+
+				// Exit edit mode
+				editingUserId = null;
+			}
+		} catch (error) {
+			console.error('Error updating user:', error);
+		}
+	}
+
+	// Cancel the editing process
+	function cancelEdit() {
+		editingUserId = null; // Exit edit mode without saving
 	}
 
 	/////////////////////////////////////////////////////////////
@@ -342,7 +353,6 @@
 					<option value={group.usergroup}>{group.usergroup}</option>
 				{/each}
 			</select>
-			<!-- {/if} -->
 			<div>
 				{#each selectedGroups as group}
 					<span class="selected-group">
@@ -374,29 +384,60 @@
 		<td> </td>
 	</tr>
 
-	<!-- Loop through users array and display them -->
 	{#each users_list as user}
 		<tr>
-			<!-- {#if updatingUser === user.id}
-			<td><input bind:value={updatedUser.username}/></td>
-			<td><input bind:value={updatedUser.email}/></td>
-			<td><select bind:value={updatedUser.group}>
-
-			</select></td>
-			
-			{:else} -->
-			<td> </td>
+			<td></td>
 			<td>{user.username}</td>
-			<td>{user.email}</td>
-			<td
-				>{#each user.usergroupsConcat.split(',') as group}
-					<span class="group-tag">{group}</span>
-				{/each}
+
+			<td>
+				{#if editingUserId === user.username}
+					<input type="email" bind:value={editedUser.email} />
+				{:else}
+					{user.email}
+				{/if}
 			</td>
-			<td>{user.password}</td>
-			<td>{user.accountStatus}</td>
-			<td><button type="submit">Edit</button></td>
-			<td> </td>
+
+			<td>
+				{#if editingUserId === user.username}
+					<select bind:value={editedUser.usergroup}>
+						{#each userGroups_list as group}
+							<option value={group.usergroup}>{group.usergroup}</option>
+						{/each}
+					</select>
+				{:else}
+					{#each user.usergroupsConcat.split(',') as group}
+						<span class="group-tag">{group}</span>
+					{/each}
+				{/if}
+			</td>
+
+			<td>
+				{#if editingUserId === user.username}
+					<input type="password" bind:value={editedUser.password} />
+				{:else}
+					{user.password}
+				{/if}
+			</td>
+
+			<td>
+				{#if editingUserId === user.username}
+					<select bind:value={editedUser.accountStatus}>
+						<option value="Active">Active</option>
+						<option value="Disabled">Disabled</option>
+					</select>
+				{:else}
+					{user.accountStatus}
+				{/if}
+			</td>
+
+			<td>
+				{#if editingUserId === user.username}
+					<button on:click={() => saveChanges(user.id)}>Save Changes</button>
+					<button on:click={cancelEdit}>Cancel</button>
+				{:else}
+					<button on:click={() => editUser(user)}>Edit</button>
+				{/if}
+			</td>
 		</tr>
 	{/each}
 </table>
