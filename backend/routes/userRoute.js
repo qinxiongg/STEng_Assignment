@@ -6,7 +6,9 @@ const {
   register,
   addGroups,
   getGroups,
-  getUserInfo,
+  getUsername,
+  getUserProfile,
+  updateUserProfile,
 } = require("../controllers/userControllers");
 const { authenticateJWT } = require("../middleware/middlewares");
 
@@ -20,7 +22,9 @@ router.get("/users", authenticateJWT, getUsers);
 router.post("/users", authenticateJWT, register);
 router.post("/groups", authenticateJWT, addGroups);
 router.get("/groups", authenticateJWT, getGroups);
-router.get("/userinfo", authenticateJWT, getUserInfo);
+router.get("/userinfo", authenticateJWT, getUsername);
+router.get("/profile", authenticateJWT, getUserProfile);
+router.patch("/profile", authenticateJWT, updateUserProfile);
 
 // router.get("/profile", verifyTokenWithIPAndBrowser, getUserController);
 

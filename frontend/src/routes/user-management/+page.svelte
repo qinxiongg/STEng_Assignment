@@ -1,6 +1,8 @@
 <script>
-	import Modal from './Modal.svelte';
+	import Modal from '../../lib/Modal.svelte';
+
 	let showModal = false;
+	let modalType = '';
 
 	import { goto } from '$app/navigation';
 	import axios from 'axios';
@@ -17,6 +19,16 @@
 		password: '',
 		active: 'Active'
 	};
+
+	function addGroupModal() {
+		modalType = 'addGroup';
+		showModal = true;
+	}
+
+	function editProfileModal() {
+		modalType = 'editProfile';
+		showModal = true;
+	}
 
 	///////////////////////////////////////////////////////////////
 	// Fetch users
@@ -144,7 +156,53 @@
 		}
 	}
 
-	async function editProfile() {}
+	let userProfile = {
+		username: '',
+		email: '',
+		password: ''
+	};
+
+	let originalProfile = {
+		username: '',
+		email: '',
+		password: ''
+	};
+
+	async function fetchUserProfile() {
+		try {
+			const response = await axios.get(`${API_URL}/profile`, { withCredentials: true });
+			if (response.status === 200) {
+				userProfile = response.data.profile;
+				originalProfile = { ...userProfile };
+			}
+		} catch (error) {
+			console.log('Error fetching user profile:', error);
+		}
+	}
+
+	async function editProfile() {
+		const updatedFields = {};
+
+		if (userProfile.email !== originalProfile.email) {
+			updatedFields.email = userProfile.email;
+		}
+
+		if (userProfile.password !== '') {
+			updatedFields.password = userProfile.password;
+		}
+
+		if (Object.keys(updatedFields).length > 0)
+			try {
+				const response = await axios.patch(`${API_URL}/profile`, updatedFields, {
+					withCredentials: true
+				});
+				if (response.status === 200) {
+					originalProfile = { ...userProfile };
+				}
+			} catch (error) {
+				console.error('Error updating profile:', error);
+			}
+	}
 
 	/////////////////////////////////////////////////////////////
 
@@ -153,6 +211,7 @@
 		fetchUserInfo();
 		fetchUsers();
 		getAllGroups();
+		fetchUserProfile();
 	});
 </script>
 
@@ -170,60 +229,66 @@
 			</li>
 		</div>
 		<li class="nav-right">
-			<a on:click={() => (showModal = true)} >Edit Profile</a>
+			<a on:click={editProfileModal}>Edit Profile</a>
 		</li>
 	</ul>
 </nav>
 <div class="middle-container">
 	<h1 class="middle-left">User Management</h1>
-	<button class="middle-right" on:click={() => (showModal = true)}>+ Group</button>
+	<button class="middle-right" on:click={addGroupModal}>+ Group</button>
 </div>
 
 <Modal bind:showModal>
-	<div>
-		<h2>Profile</h2>
-		<div class="form-group">
-			<label for="profile_uname">Username:</label>
-			<input type="text" bind:value={loggedinUser} name="groupName" />
-		</div>
-		<div class="modal-buttons">
-			<button type="submit" on:click={editProfile}>ADD</button>
-			<button
-				type="button"
-				on:click={() => {
-					showModal = false;
-					console.log(showModal); // This should print `false` in the console
-				}}>CANCEL</button
-			>
-		</div>
-	</div>
-</Modal>
+	{#if modalType === 'editProfile'}
+		<div>
+			<h2>Edit Profile</h2>
+			<div class="form-group">
+				<label for="username">Username:</label>
+				<input type="text" bind:value={loggedinUser} readonly name="groupName" />
 
-<!-- KIV: revisit this later -->
-<Modal bind:showModal>
-	<div>
-		<h2>Add Group</h2>
-		<div class="form-group">
-			<label for="groupName">Group Name:</label>
-			<input
-				type="text"
-				bind:value={groupName}
-				id="groupName"
-				name="groupName"
-				placeholder="Name"
-			/>
+				<label for="email">Email:</label>
+				<input type="text" bind:value={userProfile.email} name="email" />
+
+				<label for="groupName">Password:</label>
+				<input type="password" bind:value={userProfile.password} name="password" />
+			</div>
+			<div class="modal-buttons">
+				<button type="submit" on:click={editProfile}>SAVE CHANGES</button>
+				<button
+					type="button"
+					on:click={() => {
+						showModal = false;
+						console.log(showModal); // This should print `false` in the console
+					}}>CANCEL</button
+				>
+			</div>
 		</div>
-		<div class="modal-buttons">
-			<button type="submit" on:click={addNewGroup}>ADD</button>
-			<button
-				type="button"
-				on:click={() => {
-					showModal = false;
-					console.log(showModal); // This should print `false` in the console
-				}}>CANCEL</button
-			>
+	{/if}
+	{#if modalType === 'addGroup'}
+		<div>
+			<h2>Add Group</h2>
+			<div class="form-group">
+				<label for="groupName">Group Name:</label>
+				<input
+					type="text"
+					bind:value={groupName}
+					id="groupName"
+					name="groupName"
+					placeholder="Name"
+				/>
+			</div>
+			<div class="modal-buttons">
+				<button type="submit" on:click={addNewGroup}>ADD</button>
+				<button
+					type="button"
+					on:click={() => {
+						showModal = false;
+						console.log(showModal); // This should print `false` in the console
+					}}>CANCEL</button
+				>
+			</div>
 		</div>
-	</div>
+	{/if}
 </Modal>
 
 <table id="users">
@@ -304,6 +369,7 @@
 
 	.form-group {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		margin-bottom: 15px;
 	}

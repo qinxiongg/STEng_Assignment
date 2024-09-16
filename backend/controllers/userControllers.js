@@ -150,7 +150,7 @@ const getGroups = async (req, res) => {
   }
 };
 
-const getUserInfo = async(req, res) => {
+const getUsername = async (req, res) => {
   const token = req.cookies.authToken;
   if (!token)
     return res
@@ -164,14 +164,88 @@ const getUserInfo = async(req, res) => {
   }
 };
 
-const profile = async (req, res) => {};
+const getUserProfile = async (req, res) => {
+  const token = req.cookies.authToken;
+  if (!token)
+    return res
+      .status(401)
+      .json({ message: "No token provided for user profile" });
+  try {
+    const decoded = await verifyJWT(token);
+    const username = decoded.username;
+    const result = await query(
+      "SELECT username, email, password FROM accounts WHERE username = ?",
+      [username]
+    );
+    res.json({ profile: result[0] });
+  } catch (error) {
+    res.status(403).json({ message: "Invalid token" });
+  }
+};
 
+const updateUserProfile = async (req, res) => {
+  const token = req.cookies.authToken;
+
+  if (!token) {
+    return res.status(401).json({ message: "No token provided" });
+  }
+
+  try {
+    const decoded = await verifyJWT(token);
+    const username = decoded.username;
+
+    const { email, password } = req.body;
+
+    let updateProfileQuery = "UPDATE accounts SET ";
+    const params = [];
+
+    if (email) {
+      updateProfileQuery += "email = ?, ";
+      params.push(email);
+    }
+
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      updateProfileQuery += "password = ?, ";
+      params.push(hashedPassword);
+    }
+
+    updateProfileQuery = updateProfileQuery.slice(0, -2);
+    updateProfileQuery += " WHERE username = ?";
+    params.push(username);
+
+    // const result = await query(
+    //   "UPDATE accounts SET email = ?, password = ? WHERE username = ?",
+    //   [email, hashedPassword, username]
+    // );
+
+    if (params.length > 1) {
+      // console.log(
+      //   "Executing query:",
+      //   updateProfileQuery,
+      //   "with params:",
+      //   params
+      // );
+
+      await query(updateProfileQuery, params);
+      return res.status(200).json({ message: "Profile updated successfully" });
+    } else {
+      return res.status(400).json({ message: "No fields to update" });
+    }
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return res
+      .status(500)
+      .json({ message: "Unable to update profile", error: error.message });
+  }
+};
 module.exports = {
   login,
   getUsers,
   register,
   addGroups,
   getGroups,
-  getUserInfo,
-  profile,
+  getUsername,
+  getUserProfile,
+  updateUserProfile,
 };
