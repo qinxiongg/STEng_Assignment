@@ -91,9 +91,9 @@ const getUsers = async (req, res) => {
 
 // Add new user to database when input field is submitted
 const register = async (req, res) => {
-  const { username, email, group, password, active } = req.body;
+  const { username, email, groups, password, active } = req.body;
 
-  if (!username || !email || !password || !active || !group) {
+  if (!username || !email || !password || !active || !groups) {
     return res
       .status(400)
       .json({ message: "Please enter the required fields" });
@@ -107,10 +107,12 @@ const register = async (req, res) => {
       [username, hashedpassword, email, active]
     );
 
-    await query("INSERT INTO user_group(usergroup, username) VALUES (?, ?)", [
-      group,
-      username,
-    ]);
+    for (const group of groups) {
+      await query("INSERT INTO user_group(usergroup, username) VALUES (?, ?)", [
+        group,
+        username,
+      ]);
+    }
 
     return res.status(201).json({ message: "New user added successfully" });
   } catch (error) {

@@ -33,18 +33,19 @@
 		showModal = true;
 	}
 
-	function toggleDropdown() {
-		showDropdown = !showDropdown;
-	}
+	// function toggleDropdown() {
+	// 	showDropdown = !showDropdown;
+	// }
 
 	function addGroupToSelected(group) {
 		if (!selectedGroups.includes(group)) {
 			selectedGroups = [...selectedGroups, group];
 		}
+		newUser.group = '';
 	}
 
 	function removeGroupFromSelected(group) {
-		selectedGroups = selectedGroups.filter(g => g !== group);
+		selectedGroups = selectedGroups.filter((g) => g !== group);
 	}
 
 	///////////////////////////////////////////////////////////////
@@ -67,9 +68,13 @@
 
 	async function registerUser() {
 		try {
-			const response = await axios.post(`${API_URL}/users`, newUser, {
-				withCredentials: true
-			});
+			const response = await axios.post(
+				`${API_URL}/users`,
+				{ ...newUser, groups: selectedGroups },
+				{
+					withCredentials: true
+				}
+			);
 
 			if (response.status === 201) {
 				users_list = response.data.users_list;
@@ -82,7 +87,7 @@
 					password: '',
 					active: 'Active'
 				};
-
+				selectedGroups = []; // Clear selected groups
 				fetchUsers();
 			} else {
 				console.error('Failed to add user');
@@ -325,11 +330,29 @@
 		<td><input type="text" bind:value={newUser.username} placeholder="Username" required /></td>
 		<td><input type="email" bind:value={newUser.email} placeholder="Email" required /></td>
 		<td>
-			<select bind:value={newUser.group} name="group" id="group">
+			<!-- <span on:click={toggleDropdown} class="dropdown-toggle">+ Add Groups</span>
+			{#if showDropdown} -->
+			<select
+				bind:value={newUser.group}
+				on:change={(e) => addGroupToSelected(e.target.value)}
+				name="group"
+				id="group"
+			>
 				{#each userGroups_list as group}
 					<option value={group.usergroup}>{group.usergroup}</option>
 				{/each}
 			</select>
+			<!-- {/if} -->
+			<div>
+				{#each selectedGroups as group}
+					<span class="selected-group">
+						{group}
+						<button type="button" on:click={() => removeGroupFromSelected(group)}
+							>X</button
+						>
+					</span>
+				{/each}
+			</div>
 		</td>
 		<td
 			><input
