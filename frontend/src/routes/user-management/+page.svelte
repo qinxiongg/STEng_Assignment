@@ -20,6 +20,9 @@
 		active: 'Active'
 	};
 
+	let selectedGroups = []; // Array to keep track of selected groups
+	let showDropdown = false;
+
 	function addGroupModal() {
 		modalType = 'addGroup';
 		showModal = true;
@@ -28,6 +31,20 @@
 	function editProfileModal() {
 		modalType = 'editProfile';
 		showModal = true;
+	}
+
+	function toggleDropdown() {
+		showDropdown = !showDropdown;
+	}
+
+	function addGroupToSelected(group) {
+		if (!selectedGroups.includes(group)) {
+			selectedGroups = [...selectedGroups, group];
+		}
+	}
+
+	function removeGroupFromSelected(group) {
+		selectedGroups = selectedGroups.filter(g => g !== group);
 	}
 
 	///////////////////////////////////////////////////////////////
