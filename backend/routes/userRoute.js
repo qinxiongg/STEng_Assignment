@@ -21,7 +21,7 @@ router.post("/login", login);
 // Private routes
 router.get("/users", authenticateJWT, getUsers);
 router.post("/users", authenticateJWT, register);
-router.post("/editprofile", authenticateJWT, editUser);
+router.post("/profile", authenticateJWT, editUser);
 
 router.post("/groups", authenticateJWT, addGroups);
 router.get("/groups", authenticateJWT, getGroups);

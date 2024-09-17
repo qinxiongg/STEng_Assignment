@@ -1,6 +1,7 @@
 <script>
 	import axios from 'axios';
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 	console.log(API_URL);
@@ -9,7 +10,7 @@
 	let password = '';
 	let errorMessage = ''; // TODO: error message using toast
 
-	const handleSubmit = async () => {
+	async function handleSubmit() {
 		try {
 			const response = await axios.post(
 				`${API_URL}/login`,
@@ -21,7 +22,6 @@
 					withCredentials: true
 				}
 			);
-
 			// Redirect on successful login
 			if (response.status === 200) {
 				goto('/user-management'); // Redirect to a new page
@@ -30,33 +30,31 @@
 			console.error('Login error:', error);
 			errorMessage = 'An error occurred during login';
 		}
-	};
+	}
+
+	onMount(async () => {
+		await handleSubmit;
+	});
 </script>
 
 <div class="login-container">
 	<h1>LOGIN</h1>
 	<div class="login">
-		<form on:submit={handleSubmit} method="POST">
-			<label for="username"></label>
-			<input
-				type="text"
-				bind:value={username}
-				placeholder="Username"
-				name="username"
-				required
-			/>
+		<!-- <form on:submit={handleSubmit}> -->
+		<label for="username"></label>
+		<input type="text" bind:value={username} placeholder="Username" name="username" required />
 
-			<label for="password"></label>
-			<input
-				type="password"
-				bind:value={password}
-				placeholder="Password"
-				name="password"
-				required
-			/>
+		<label for="password"></label>
+		<input
+			type="password"
+			bind:value={password}
+			placeholder="Password"
+			name="password"
+			required
+		/>
 
-			<button type="submit"><b>LOGIN</b></button>
-		</form>
+		<button type="submit" on:click={handleSubmit}><b>LOGIN</b></button>
+		<!-- </form> -->
 	</div>
 </div>
 

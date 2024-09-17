@@ -15,7 +15,7 @@ const login = async (req, res) => {
 
   // Run createAdmin if username is admin
   if (username === "admin") {
-    createAdmin();
+    await createAdmin();
   }
 
   // Check if login input fields is mepty
@@ -32,9 +32,10 @@ const login = async (req, res) => {
 
     // Check whether the username exist in the database
     if (results.length === 0) {
+
       return res
         .status(401)
-        .json({ message: "Invalid Username and/or Password." });
+        .json({ message: "Invalid credentials." });
     }
 
     // Take the first and only row of the queried results

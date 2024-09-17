@@ -25,11 +25,11 @@ async function authenticateJWT(req, res, next) {
 }
 
 // put checkgroup here and create another function to verify checkgroup
-async function checkgroup(userid, groupname) {
-  const username = req.body.username;
+// async function checkgroup(userid, groupname) {
+//   const username = req.body.username;
   
 
-}
+// }
 
 // move this to other file
 const createAdmin = async () => {

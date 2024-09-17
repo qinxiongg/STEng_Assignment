@@ -236,7 +236,7 @@
 	/////////////////////////////////////////////////////////////
 
 	import { onMount } from 'svelte';
-	onMount(async () => {
+	onMount( async () => {
 		await fetchUserInfo();
 		await fetchUsers();
 
