@@ -1,35 +1,83 @@
 // Middlewares for route protection
 const query = require("../config/database");
-const { verifyJWT } = require("../services/authService");
+const jwt = require("jsonwebtoken");
+const { verifyJWT } = require("../services/authService"); // change to jwt
+
 const bcrypt = require("bcrypt");
 
+const secretKey = process.env.JWT_SECRET;
+
+// Authenticate
 async function authenticateJWT(req, res, next) {
-  // Get token from cookie
   const token = req.cookies.authToken;
-  console.log(token);
-  console.log(req.cookies);
+
   if (!token) {
-    return res.status(401).json({ message: "Unauthorised. No token provided" });
+    return res.status(401).json({ message: "Access denied" });
   }
 
   try {
-    // Call verifyJWT from authService.js to decode token
-    const decoded = await verifyJWT(token);
+    const decoded = jwt.verify(token, secretKey);
 
-    next();
-  } catch (err) {
-    return res
-      .status(403)
-      .json({ message: "Token is invalid or has expired." });
+    const currentIP = req.ip;
+    const currentBrowser = req.header["user-agent"];
+    const checkUserStatus = await checkUserAccStatus(decoded.username);
+
+    if (
+      currentIP == decoded.ipAddress &&
+      currentBrowser == decoded.browserType &&
+      checkUserStatus
+    ) {
+      req.user = decoded; //make user data readily available
+      next();
+    } else {
+      return res.status(401).json({ message: "Access denied." });
+    }
+  } catch (error) {
+    return res.status(403).json({ message: "Access denied." });
   }
 }
 
-// put checkgroup here and create another function to verify checkgroup
-// async function checkgroup(userid, groupname) {
-//   const username = req.body.username;
-  
+// Check if user is in authorised group
+const Checkgroup = async (userid, groupname) => {
+  try {
+    const result = await query(
+      `SELECT 1
+      FROM user_group
+      WHERE username = ? AND usergroup = ?
+      LIMIT 1`,
+      [userid, groupname]
+    );
+    return row[0].count > 0; // return true
+  } catch (error) {
+    console.error("Unable to query database");
+    res.status(500).json({ message: error });
+  }
+};
 
-// }
+// Check if user's account status is active or disabled
+const checkUserAccStatus = async (username) => {
+  try {
+    const results = await query(
+      `SELECT accountStatus
+      FROM accounts
+      WHERE username = ?`,
+      [username]
+    );
+
+    if (results.length === 0) {
+      console.error("User not found", error);
+    }
+
+    if (results[0].accountStatus === "Active") {
+      return results.length > 0; // return true if status is active
+    }
+  } catch (error) {
+    console.error("Error checking user's account status", error);
+    return res
+      .status(500)
+      .json({ message: "Error checking user's account status" });
+  }
+};
 
 // move this to other file
 const createAdmin = async () => {
@@ -49,30 +97,47 @@ const createAdmin = async () => {
         [adminUsername, hashedAdminPwd, "admin@admin.com", "Active"]
       );
       console.log("Admin account created.");
-    
     }
   } catch (error) {
     console.error("Error setting up admin account:", error);
   }
 };
 
+// Middleware to protect routes and check group
+const verifyTokenWithIPAndBrowser =
+  (requiredGroup) => async (req, res, next) => {
+    const token = req.cookies.token;
 
+    if (!token) {
+      return res.status(403).json({ message: "Access denied" });
+    }
 
+    try {
+      const decoded = jwt.verify(token, secretKey);
 
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
-// app.use(express.static(path.join(__dirname, "static")));
+      const currentIP = req.ip;
+      const currentBrowser = req.header["user-agent"];
+      const checkUserStatus = await checkUserAccStatus(decoded.username);
+      const checkUserGroup = await Checkgroup(decoded.username, groupname);
 
-// const verifyTokenWithIPAndBrowser = (req, res, next) => {
-//     if (isValid(req)) {
-//         next(); //pass to next middleware or route handler
-//     } else {
-//         res.status(403).send('Unauthorised');
-//     }
-// };
+      if (
+        currentIP == decoded.ipAddress &&
+        currentBrowser == decoded.browserType &&
+        checkUserStatus &&
+        checkUserGroup
+      ) {
+        next();
+      } else {
+        res.clearCookie("token");
+        return res.status(401).json({ message: "Access denied." }); // TODO: redirect user back to login
+      }
+    } catch (error) {
+      res.status(401).json({ message: "Access denied." });
+    }
+  };
 
 module.exports = {
-  //   verifyTokenWithIPAndBrowser,
+  verifyTokenWithIPAndBrowser,
   authenticateJWT,
   createAdmin,
 };

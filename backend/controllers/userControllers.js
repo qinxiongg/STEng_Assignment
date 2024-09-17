@@ -56,8 +56,8 @@ const login = async (req, res) => {
     // Generate JWT
     const tokenPayload = {
       username: user.username,
-      ipAddress: ipAddress,
-      browserType: browserType,
+      ipAddress: req.ip,
+      browserType: req.header["user-agent"],
     };
 
     const token = generateJWT(tokenPayload);
@@ -179,9 +179,12 @@ const getUserProfile = async (req, res) => {
       .json({ message: "No token provided for user profile" });
   try {
     const decoded = await verifyJWT(token);
+    console.log(decoded);
     const username = decoded.username;
     const result = await query(
-      "SELECT username, email, password FROM accounts WHERE username = ?",
+      `SELECT username, email, password 
+      FROM accounts 
+      WHERE username = ?`,
       [username]
     );
     res.json({ profile: result[0] });
