@@ -15,6 +15,7 @@ async function authenticateJWT(req, res, next) {
   try {
     // Call verifyJWT from authService.js to decode token
     const decoded = await verifyJWT(token);
+
     next();
   } catch (err) {
     return res
@@ -23,6 +24,14 @@ async function authenticateJWT(req, res, next) {
   }
 }
 
+// put checkgroup here and create another function to verify checkgroup
+async function checkgroup(userid, groupname) {
+  const username = req.body.username;
+  
+
+}
+
+// move this to other file
 const createAdmin = async () => {
   const adminUsername = "admin";
   const adminPwd = "admin";
@@ -46,6 +55,9 @@ const createAdmin = async () => {
     console.error("Error setting up admin account:", error);
   }
 };
+
+
+
 
 // app.use(express.json());
 // app.use(express.urlencoded({ extended: true }));

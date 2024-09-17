@@ -74,14 +74,18 @@ const login = async (req, res) => {
 // Fetch all users from database
 const getUsers = async (req, res) => {
   try {
-    const users_list =
-      await query(`SELECT a.username, a.email, a.password, a.accountStatus, 
-      GROUP_CONCAT(u.usergroup) AS usergroupsConcat
-      FROM accounts a
-      LEFT JOIN user_group u ON a.username = u.username
-      GROUP BY a.username`);
+    const users_list = await query(`SELECT * from accounts`);
+    const groups = await query("SELECT * from user_group");
 
-    res.json({ users_list });
+    users_list.forEach((user) => {
+      user.usergroupConcat = groups
+        .filter((group) => group.username === user.username)
+        .map((group) => group.usergroup);
+    });
+
+    console.log(users_list);
+
+    return res.json({ users_list });
   } catch (error) {
     console.log("error:", error);
     // use toast for database error????
@@ -242,43 +246,46 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-// const editUser = async (req, user) => {
-//   const { id } = req.params;
-//   const { email, password, group, accountStatus } = req.body;
+  const editUser = async (req, res) => {
+    const { username, email, password, group, accountStatus } = req.body;
 
-//   if (!email && !password && !group && !accountStatus) {
-//     return res.status(400).json({ message: "No fields to update" });
-//   }
+    console.log(req.body)
+    if (!email && !password && !group && !accountStatus) {
+      return res.status(400).json({ message: "No fields to update" });
+    }
 
-//   try {
-//     if (email) {
-//       await query("UPDATE accounts SET email = ? WHERE username = ?", [email, id]);
-//     }
-//     if (password) {
-//       const hashedPassword = await bcrypt.hash(password, 10);
-//       await query("UPDATE accounts SET password = ? WHERE username = ?", [
-//         hashedPassword,
-//         id,
-//       ]);
-//     }
-//     if (group) {
-//       await query("UPDATE user_group SET usergroup = ? WHERE username = ?", [
-//         group,
-//         id,
-//       ]);
-//     }
-//     if (accountStatus) {
-//       await query("UPDATE accounts SET accountStatus = ? WHERE username = ?", [
-//         accountStatus,
-//         id,
-//       ]);
-//     }
-//     return res.status(200).json({ message: "User updated successfully" });
-//   } catch (error) {
-//     console.error("Error updating user:", error);
-//     return res.status(500).json({ message: "Database query error" });
-//   }
-// };
+    try {
+      if (email) {
+        await query("UPDATE accounts SET email = ? WHERE username = ?", [
+          email,
+          username,
+        ]);
+      }
+      if (password) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await query("UPDATE accounts SET password = ? WHERE username = ?", [
+          hashedPassword,
+          username,
+        ]);
+      }
+      if (group) {
+        await query("UPDATE user_group SET usergroup = ? WHERE username = ?", [
+          group,
+          username,
+        ]);
+      }
+      if (accountStatus) {
+        await query("UPDATE accounts SET accountStatus = ? WHERE username = ?", [
+          accountStatus,
+          username,
+        ]);
+      }
+      return res.status(200).json({ message: "User updated successfully" });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      return res.status(500).json({ message: "Database query error" });
+    }
+  };
 
 module.exports = {
   login,
@@ -289,5 +296,5 @@ module.exports = {
   getUsername,
   getUserProfile,
   updateUserProfile,
-  // editUser,
+  editUser,
 };

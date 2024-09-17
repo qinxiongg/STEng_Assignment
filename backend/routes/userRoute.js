@@ -9,7 +9,7 @@ const {
   getUsername,
   getUserProfile,
   updateUserProfile,
-  // editUser,
+  editUser,
 } = require("../controllers/userControllers");
 const { authenticateJWT } = require("../middleware/middlewares");
 
@@ -21,7 +21,7 @@ router.post("/login", login);
 // Private routes
 router.get("/users", authenticateJWT, getUsers);
 router.post("/users", authenticateJWT, register);
-// router.patch("/users/:id", authenticateJWT, editUser);
+router.post("/editprofile", authenticateJWT, editUser);
 
 router.post("/groups", authenticateJWT, addGroups);
 router.get("/groups", authenticateJWT, getGroups);

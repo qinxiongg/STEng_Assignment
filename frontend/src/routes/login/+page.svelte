@@ -36,7 +36,7 @@
 <div class="login-container">
 	<h1>LOGIN</h1>
 	<div class="login">
-		<form on:submit={handleSubmit}>
+		<form on:submit={handleSubmit} method="POST">
 			<label for="username"></label>
 			<input
 				type="text"

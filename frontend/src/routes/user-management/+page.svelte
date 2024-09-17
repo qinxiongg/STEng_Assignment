@@ -22,6 +22,7 @@
 
 	let selectedGroups = []; // Array to keep track of selected groups
 	let showDropdown = false;
+	let selectedGroupsEditUser = [];
 
 	function addGroupModal() {
 		modalType = 'addGroup';
@@ -32,10 +33,6 @@
 		modalType = 'editProfile';
 		showModal = true;
 	}
-
-	// function toggleDropdown() {
-	// 	showDropdown = !showDropdown;
-	// }
 
 	function addGroupToSelected(group) {
 		if (!selectedGroups.includes(group)) {
@@ -48,6 +45,21 @@
 		selectedGroups = selectedGroups.filter((g) => g !== group);
 	}
 
+	function EditUserGroup(group, index) {
+		console.log(users_list[index].usergroupConcat);
+		console.log(group);
+		console.log(index, users_list);
+		if (!users_list[index].usergroupConcat.includes(group)) {
+			users_list[index].usergroupConcat = [...users_list[index].usergroupConcat, group];
+		}
+	}
+
+	function removeUserGroup(group, index) {
+		users_list[index].usergroupConcat = users_list[index].usergroupConcat.filter(
+			(g) => g !== group
+		);
+	}
+
 	///////////////////////////////////////////////////////////////
 	// Fetch users
 	async function fetchUsers() {
@@ -56,7 +68,6 @@
 
 			if (response.status === 200) {
 				users_list = response.data.users_list;
-				console.log(users_list);
 			}
 		} catch (error) {
 			console.error('Error :', error);
@@ -88,7 +99,7 @@
 					active: 'Active'
 				};
 				selectedGroups = []; // Clear selected groups
-				fetchUsers();
+				await fetchUsers();
 			} else {
 				console.error('Failed to add user');
 			}
@@ -118,15 +129,15 @@
 		}
 	}
 
-	let userGroups_list = [];
+	let allUserGroups = [];
 
 	async function getAllGroups() {
 		try {
 			const response = await axios.get(`${API_URL}/groups`, { withCredentials: true });
 
 			if (response.status === 200) {
-				userGroups_list = response.data.userGroups;
-				console.log(userGroups_list);
+				allUserGroups = response.data.userGroups;
+				console.log(allUserGroups);
 			}
 		} catch (error) {
 			console.error('Error:', error);
@@ -194,36 +205,20 @@
 			}
 	}
 
-	// edit user's credential
 	let editingUserId = null; // To track the user being edited
-	let editedUser = {
-		email: '',
-		password: '',
-		accountStatus: ''
-	};
 
 	// Enter edit mode for the selected user
 	function editUser(user) {
 		editingUserId = user.username;
-		editedUser = { ...user }; // Clone the user data for editing
 	}
-
 	// Save the changes made to the user
-	async function saveChanges(userId) {
+	async function saveChanges(user) {
 		try {
-			const response = await axios.patch(`${API_URL}/users/${userId}`, editedUser, {
+			const response = await axios.post(`${API_URL}/editprofile`, user, {
 				withCredentials: true
 			});
 
 			if (response.status === 200) {
-				// Update the users list with the edited user
-				const updatedUserIndex = users_list.findIndex((user) => user.username === userId);
-				if (updatedUserIndex !== -1) {
-					users_list[updatedUserIndex] = { ...editedUser, id: userId };
-				}
-
-				console.log("userid:", editingUserId);
-
 				// Exit edit mode
 				editingUserId = null;
 			}
@@ -233,18 +228,20 @@
 	}
 
 	// Cancel the editing process
-	function cancelEdit() {
+	async function cancelEdit() {
 		editingUserId = null; // Exit edit mode without saving
+		await fetchUsers();
 	}
 
 	/////////////////////////////////////////////////////////////
 
 	import { onMount } from 'svelte';
-	onMount(() => {
-		fetchUserInfo();
-		fetchUsers();
-		getAllGroups();
-		fetchUserProfile();
+	onMount(async () => {
+		await fetchUserInfo();
+		await fetchUsers();
+
+		await getAllGroups();
+		await fetchUserProfile();
 	});
 </script>
 
@@ -291,7 +288,6 @@
 					type="button"
 					on:click={() => {
 						showModal = false;
-						console.log(showModal); // This should print `false` in the console
 					}}>CANCEL</button
 				>
 			</div>
@@ -316,7 +312,6 @@
 					type="button"
 					on:click={() => {
 						showModal = false;
-						console.log(showModal); // This should print `false` in the console
 					}}>CANCEL</button
 				>
 			</div>
@@ -341,15 +336,13 @@
 		<td><input type="text" bind:value={newUser.username} placeholder="Username" required /></td>
 		<td><input type="email" bind:value={newUser.email} placeholder="Email" required /></td>
 		<td>
-			<!-- <span on:click={toggleDropdown} class="dropdown-toggle">+ Add Groups</span>
-			{#if showDropdown} -->
 			<select
 				bind:value={newUser.group}
 				on:change={(e) => addGroupToSelected(e.target.value)}
 				name="group"
 				id="group"
 			>
-				{#each userGroups_list as group}
+				{#each allUserGroups as group}
 					<option value={group.usergroup}>{group.usergroup}</option>
 				{/each}
 			</select>
@@ -384,70 +377,66 @@
 		<td> </td>
 	</tr>
 
-	{#each users_list as user}
+	{#each users_list as user, index}
 		<tr>
 			<td></td>
 			<td>{user.username}</td>
 
-			<td>
-				{#if editingUserId === user.username}
-					<input type="email" bind:value={editedUser.email} />
-				{:else}
-					{user.email}
-				{/if}
-			</td>
-
-			<td>
-				{#if editingUserId === user.username}
-					<select bind:value={editedUser.usergroup}>
-						{#each userGroups_list as group}
-							<option value={group.usergroup}>{group.usergroup}</option>
-						{/each}
-					</select>
-				{:else}
-					{#each user.usergroupsConcat.split(',') as group}
-						<span class="group-tag">{group}</span>
-					{/each}
-				{/if}
-			</td>
-
-			<td>
-				{#if editingUserId === user.username}
-					<input type="password" bind:value={editedUser.password} />
-				{:else}
-					{user.password}
-				{/if}
-			</td>
-
-			<td>
-				{#if editingUserId === user.username}
-					<select bind:value={editedUser.accountStatus}>
+			{#if editingUserId === user.username}
+				<td><input type="email" bind:value={user.email} /></td>
+				<td>
+					<div>
+						<select
+							bind:value={user.usergroupSelected}
+							on:change={(e) => EditUserGroup(e.target.value, index)}
+							name="group"
+							id="group"
+						>
+							{#each allUserGroups as group}
+								<option value={group.usergroup}>{group.usergroup}</option>
+							{/each}
+						</select>
+						<div>
+							{#each user.usergroupConcat as group}
+								<span class="selected-group">
+									{group}
+									<button
+										type="button"
+										on:click={() => removeUserGroup(group, index)}>X</button
+									>
+								</span>
+							{/each}
+						</div>
+					</div>
+				</td>
+				<td> <input type="password" bind:value={user.password} /> </td>
+				<td>
+					<select bind:value={user.accountStatus}>
 						<option value="Active">Active</option>
 						<option value="Disabled">Disabled</option>
 					</select>
-				{:else}
-					{user.accountStatus}
-				{/if}
-			</td>
-
-			<td>
-				{#if editingUserId === user.username}
-					<button on:click={() => saveChanges(user.id)}>Save Changes</button>
+				</td>
+				<td>
+					<button on:click={() => saveChanges(user)}>Save Changes</button>
 					<button on:click={cancelEdit}>Cancel</button>
-				{:else}
-					<button on:click={() => editUser(user)}>Edit</button>
-				{/if}
-			</td>
+				</td>
+			{:else}
+				<td>{user.email}</td>
+				<td>
+					{#each user.usergroupConcat as group}
+						<span>{group}</span>
+					{/each}
+				</td>
+				<td> {user.password} </td>
+				<td> {user.accountStatus}</td>
+				<td> <button on:click={() => editUser(user)}>Edit</button> </td>
+			{/if}
+			<td></td>
 		</tr>
 	{/each}
 </table>
 
 <style>
-	/* .modal h2 {
-		margin-bottom: 20px;
-		text-align: center;
-	} */
-
 	.form-group {
 		display: flex;
 		flex-direction: column;
@@ -456,12 +445,12 @@
 	}
 
 	.form-group label {
-		width: 30%; /* Adjust the width based on your design */
+		width: 30%;
 		margin-right: 10px;
 	}
 
 	.form-group input {
-		width: 70%; /* Adjust the width based on your design */
+		width: 70%;
 		padding: 8px;
 		background-color: #f0f0f0;
 		border-radius: 5px;
