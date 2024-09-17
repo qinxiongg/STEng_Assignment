@@ -2,8 +2,9 @@
 const query = require("../config/database");
 const jwt = require("jsonwebtoken");
 const { verifyJWT } = require("../services/authService"); // change to jwt
+var bcrypt = require("bcryptjs");
 
-const bcrypt = require("bcrypt");
+// const bcrypt = require("bcrypt");
 
 const secretKey = process.env.JWT_SECRET;
 
@@ -17,11 +18,9 @@ async function authenticateJWT(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, secretKey);
-
     const currentIP = req.ip;
-    const currentBrowser = req.header["user-agent"];
+    const currentBrowser = req.headers["user-agent"];
     const checkUserStatus = await checkUserAccStatus(decoded.username);
-
     if (
       currentIP == decoded.ipAddress &&
       currentBrowser == decoded.browserType &&
@@ -41,13 +40,12 @@ async function authenticateJWT(req, res, next) {
 const Checkgroup = async (userid, groupname) => {
   try {
     const result = await query(
-      `SELECT 1
+      `SELECT COUNT(*) as count
       FROM user_group
-      WHERE username = ? AND usergroup = ?
-      LIMIT 1`,
+      WHERE username = ? AND usergroup = ?`,
       [userid, groupname]
     );
-    return row[0].count > 0; // return true
+    return result.length > 0; // return true
   } catch (error) {
     console.error("Unable to query database");
     res.status(500).json({ message: error });
@@ -63,14 +61,11 @@ const checkUserAccStatus = async (username) => {
       WHERE username = ?`,
       [username]
     );
-
     if (results.length === 0) {
       console.error("User not found", error);
     }
 
-    if (results[0].accountStatus === "Active") {
-      return results.length > 0; // return true if status is active
-    }
+    return results[0].accountStatus === "Active"; // return true if status is active
   } catch (error) {
     console.error("Error checking user's account status", error);
     return res
@@ -106,8 +101,7 @@ const createAdmin = async () => {
 // Middleware to protect routes and check group
 const verifyTokenWithIPAndBrowser =
   (requiredGroup) => async (req, res, next) => {
-    const token = req.cookies.token;
-
+    const token = req.cookies.authToken;
     if (!token) {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -116,9 +110,12 @@ const verifyTokenWithIPAndBrowser =
       const decoded = jwt.verify(token, secretKey);
 
       const currentIP = req.ip;
-      const currentBrowser = req.header["user-agent"];
+      const currentBrowser = req.headers["user-agent"];
       const checkUserStatus = await checkUserAccStatus(decoded.username);
-      const checkUserGroup = await Checkgroup(decoded.username, groupname);
+      const checkUserGroup = await Checkgroup(decoded.username, requiredGroup);
+      console.log(checkUserGroup, checkUserStatus);
+      // console.log(currentIP == decoded.ipAddress);
+      // console.log(currentBrowser == decoded.browserType);
 
       if (
         currentIP == decoded.ipAddress &&
@@ -128,7 +125,7 @@ const verifyTokenWithIPAndBrowser =
       ) {
         next();
       } else {
-        res.clearCookie("token");
+        // res.clearCookie("authToken");
         return res.status(401).json({ message: "Access denied." }); // TODO: redirect user back to login
       }
     } catch (error) {

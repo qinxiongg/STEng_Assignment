@@ -1,7 +1,8 @@
 const query = require("../config/database");
-const bcrypt = require("bcrypt");
+// const bcrypt = require("bcrypt");
 const { generateJWT, verifyJWT } = require("../services/authService");
 const { createAdmin } = require("../middleware/middlewares");
+var bcrypt = require("bcryptjs");
 
 // TO-DO
 // JWT
@@ -32,10 +33,7 @@ const login = async (req, res) => {
 
     // Check whether the username exist in the database
     if (results.length === 0) {
-
-      return res
-        .status(401)
-        .json({ message: "Invalid credentials." });
+      return res.status(401).json({ message: "Invalid credentials." });
     }
 
     // Take the first and only row of the queried results
@@ -57,7 +55,7 @@ const login = async (req, res) => {
     const tokenPayload = {
       username: user.username,
       ipAddress: req.ip,
-      browserType: req.header["user-agent"],
+      browserType: req.headers["user-agent"],
     };
 
     const token = generateJWT(tokenPayload);
@@ -250,46 +248,46 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-  const editUser = async (req, res) => {
-    const { username, email, password, group, accountStatus } = req.body;
+const editUser = async (req, res) => {
+  const { username, email, password, group, accountStatus } = req.body;
 
-    console.log(req.body)
-    if (!email && !password && !group && !accountStatus) {
-      return res.status(400).json({ message: "No fields to update" });
-    }
+  console.log(req.body);
+  if (!email && !password && !group && !accountStatus) {
+    return res.status(400).json({ message: "No fields to update" });
+  }
 
-    try {
-      if (email) {
-        await query("UPDATE accounts SET email = ? WHERE username = ?", [
-          email,
-          username,
-        ]);
-      }
-      if (password) {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await query("UPDATE accounts SET password = ? WHERE username = ?", [
-          hashedPassword,
-          username,
-        ]);
-      }
-      if (group) {
-        await query("UPDATE user_group SET usergroup = ? WHERE username = ?", [
-          group,
-          username,
-        ]);
-      }
-      if (accountStatus) {
-        await query("UPDATE accounts SET accountStatus = ? WHERE username = ?", [
-          accountStatus,
-          username,
-        ]);
-      }
-      return res.status(200).json({ message: "User updated successfully" });
-    } catch (error) {
-      console.error("Error updating user:", error);
-      return res.status(500).json({ message: "Database query error" });
+  try {
+    if (email) {
+      await query("UPDATE accounts SET email = ? WHERE username = ?", [
+        email,
+        username,
+      ]);
     }
-  };
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await query("UPDATE accounts SET password = ? WHERE username = ?", [
+        hashedPassword,
+        username,
+      ]);
+    }
+    if (group) {
+      await query("UPDATE user_group SET usergroup = ? WHERE username = ?", [
+        group,
+        username,
+      ]);
+    }
+    if (accountStatus) {
+      await query("UPDATE accounts SET accountStatus = ? WHERE username = ?", [
+        accountStatus,
+        username,
+      ]);
+    }
+    return res.status(200).json({ message: "User updated successfully" });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return res.status(500).json({ message: "Database query error" });
+  }
+};
 
 module.exports = {
   login,

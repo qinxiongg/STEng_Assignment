@@ -98,6 +98,7 @@
 					password: '',
 					active: 'Active'
 				};
+
 				selectedGroups = []; // Clear selected groups
 				await fetchUsers();
 			} else {
@@ -113,13 +114,9 @@
 
 	async function addNewGroup() {
 		try {
-			const response = await axios.post(
-				`${API_URL}/groups`,
-				{ groupName },
-				{
-					withCredentials: true
-				}
-			);
+			const response = await axios.post(`${API_URL}/groups`, {groupName}, {
+				withCredentials: true
+			});
 
 			if (response.status === 201) {
 				groupName = '';
@@ -236,7 +233,7 @@
 	/////////////////////////////////////////////////////////////
 
 	import { onMount } from 'svelte';
-	onMount( async () => {
+	onMount(async () => {
 		await fetchUserInfo();
 		await fetchUsers();
 
