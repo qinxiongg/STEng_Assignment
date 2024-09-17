@@ -40,6 +40,7 @@
 <div class="login-container">
 	<h1>LOGIN</h1>
 	<div class="login">
+		<form>
 		<!-- <form on:submit={handleSubmit}> -->
 		<label for="username"></label>
 		<input type="text" bind:value={username} placeholder="Username" name="username" required />

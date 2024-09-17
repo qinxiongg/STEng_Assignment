@@ -1,11 +1,11 @@
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-
 dotenv.config();
 const secretKey = process.env.JWT_SECRET;
 
 // move to login
 function generateJWT(tokenPayload) {
+  console.log("secretKey", secretKey);
   return jwt.sign(tokenPayload, secretKey, { expiresIn: "1h" });
 }
 

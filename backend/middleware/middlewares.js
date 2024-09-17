@@ -45,7 +45,9 @@ const Checkgroup = async (userid, groupname) => {
       WHERE username = ? AND usergroup = ?`,
       [userid, groupname]
     );
-    return result.length > 0; // return true
+    const count = result[0].count;
+    return count > 0;
+    
   } catch (error) {
     console.error("Unable to query database");
     res.status(500).json({ message: error });
@@ -113,9 +115,6 @@ const verifyTokenWithIPAndBrowser =
       const currentBrowser = req.headers["user-agent"];
       const checkUserStatus = await checkUserAccStatus(decoded.username);
       const checkUserGroup = await Checkgroup(decoded.username, requiredGroup);
-      console.log(checkUserGroup, checkUserStatus);
-      // console.log(currentIP == decoded.ipAddress);
-      // console.log(currentBrowser == decoded.browserType);
 
       if (
         currentIP == decoded.ipAddress &&
@@ -125,7 +124,7 @@ const verifyTokenWithIPAndBrowser =
       ) {
         next();
       } else {
-        // res.clearCookie("authToken");
+        res.clearCookie("authToken");
         return res.status(401).json({ message: "Access denied." }); // TODO: redirect user back to login
       }
     } catch (error) {

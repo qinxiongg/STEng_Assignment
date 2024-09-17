@@ -89,6 +89,7 @@
 
 			if (response.status === 201) {
 				users_list = response.data.users_list;
+				await fetchUsers();
 
 				// Clear form fields
 				newUser = {
@@ -100,9 +101,6 @@
 				};
 
 				selectedGroups = []; // Clear selected groups
-				await fetchUsers();
-			} else {
-				console.error('Failed to add user');
 			}
 		} catch (error) {
 			console.error('Error adding user:', error);
@@ -114,9 +112,13 @@
 
 	async function addNewGroup() {
 		try {
-			const response = await axios.post(`${API_URL}/groups`, {groupName}, {
-				withCredentials: true
-			});
+			const response = await axios.post(
+				`${API_URL}/groups`,
+				{ groupName },
+				{
+					withCredentials: true
+				}
+			);
 
 			if (response.status === 201) {
 				groupName = '';
@@ -218,6 +220,7 @@
 			if (response.status === 200) {
 				// Exit edit mode
 				editingUserId = null;
+				await fetchUsers();
 			}
 		} catch (error) {
 			console.error('Error updating user:', error);
@@ -424,7 +427,7 @@
 						<span>{group}</span>
 					{/each}
 				</td>
-				<td> {user.password} </td>
+				<td> <input type="password" bind:value={user.password} readonly /></td>
 				<td> {user.accountStatus}</td>
 				<td> <button on:click={() => editUser(user)}>Edit</button> </td>
 			{/if}
