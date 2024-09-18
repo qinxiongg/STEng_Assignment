@@ -29,10 +29,10 @@ async function authenticateJWT(req, res, next) {
       req.user = decoded; //make user data readily available
       next();
     } else {
-      return res.status(403).json({ message: "Access denied." });
+      return res.status(403).json({ message: "Access denied" });
     }
   } catch (error) {
-    return res.status(403).json({ message: "Access denied." });
+    return res.status(403).json({ message: "Access denied" });
   }
 }
 
@@ -70,34 +70,34 @@ const checkUserAccStatus = async (username) => {
   } catch (error) {
     console.error("Error checking user's account status", error);
     return res
-      .status(500)
-      .json({ message: "Error checking user's account status" });
+      .status(403)
+      .json({ message: "Access denied12" });
   }
 };
 
-// move this to other file
-const createAdmin = async () => {
-  const adminUsername = "admin";
-  const adminPwd = "admin";
+// // move this to other file
+// const createAdmin = async () => {
+//   const adminUsername = "admin";
+//   const adminPwd = "admin123!!";
 
-  try {
-    const results = await query("SELECT * FROM accounts WHERE username = ?", [
-      adminUsername,
-    ]);
+//   try {
+//     const results = await query("SELECT * FROM accounts WHERE username = ?", [
+//       adminUsername,
+//     ]);
 
-    if (results.length === 0) {
-      const hashedAdminPwd = await bcrypt.hash(adminPwd, 10);
+//     if (results.length === 0) {
+//       const hashedAdminPwd = await bcrypt.hash(adminPwd, 10);
 
-      await query(
-        "INSERT INTO accounts (username, password, email, accountStatus) VALUES (?, ?, ?, ?)",
-        [adminUsername, hashedAdminPwd, "admin@admin.com", "Active"]
-      );
-      console.log("Admin account created.");
-    }
-  } catch (error) {
-    console.error("Error setting up admin account:", error);
-  }
-};
+//       await query(
+//         "INSERT INTO accounts (username, password, email, accountStatus) VALUES (?, ?, ?, ?)",
+//         [adminUsername, hashedAdminPwd, "admin@admin.com", "Active"]
+//       );
+//       console.log("Admin account created.");
+//     }
+//   } catch (error) {
+//     console.error("Error setting up admin account:", error);
+//   }
+// };
 
 // Middleware to protect routes and check group
 const verifyTokenWithIPAndBrowser =
@@ -134,6 +134,5 @@ const verifyTokenWithIPAndBrowser =
 module.exports = {
   verifyTokenWithIPAndBrowser,
   authenticateJWT,
-  createAdmin,
   Checkgroup,
 };

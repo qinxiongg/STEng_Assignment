@@ -3,8 +3,10 @@
 	import Modal from '../lib/Modal.svelte';
 	import axios from 'axios';
 	import { page } from '$app/stores';
-    import { goto } from '$app/navigation';
-
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+	import { authStore, userStore } from '$lib/authStore';
+	import { customAlert, handleError } from '$lib/errorHandler';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
@@ -27,28 +29,34 @@
 		password: ''
 	};
 
+	let newPassword;
+
 	function editProfileModal() {
 		modalType = 'editProfile';
 		showModal = true;
 	}
 
 	async function checkAdmin() {
-		console.log('123');
+		
+		console.log('checkadmin');
 		try {
-			console.log('1234');
 			const response = await axios.get(`${API_URL}/isAdmin`, { withCredentials: true });
-			console.log(response);
+			console.log(response.status);
+
 			if (response.status === 200) {
 				console.log('after status 200');
 				isAdmin = response.data.isAdmin;
+				authStore.set(response.data.isAdmin);
 			}
 			// console.log('isAdmin:', isAdmin);
 			if (!isAdmin) {
 				goto('/login');
 			}
 		} catch (error) {
+		
 			console.log('Error at checkadmin', error);
 		}
+
 	}
 
 	async function fetchUserInfo() {
@@ -65,7 +73,6 @@
 	async function fetchUserProfile() {
 		try {
 			const response = await axios.get(`${API_URL}/profile`, { withCredentials: true });
-			console.log('user profile:', response.data);
 			if (response.status === 200) {
 				userProfile = response.data.profile;
 				originalProfile = { ...userProfile };
@@ -75,15 +82,53 @@
 		}
 	}
 
-	import { onMount } from 'svelte';
+	async function editProfile() {
+
+		console.log("new password", newPassword);
+		if (newPassword) {
+			userProfile.password = newPassword;
+		} else {
+			userProfile.password = null;
+
+		}
+		console.log('userProfile pwd:', userProfile.password);
+		const updatedFields = {};
+
+		if (userProfile.email !== originalProfile.email) {
+			updatedFields.email = userProfile.email;
+		}
+
+		updatedFields.password = userProfile.password;
+
+		if (Object.keys(updatedFields).length > 0)
+			try {
+				const response = await axios.patch(`${API_URL}/profile`, updatedFields, {
+					withCredentials: true
+				});
+				if (response.status === 200) {
+					console.log('editprofile response:', response);
+					originalProfile = { ...userProfile };
+					customAlert(response.data.success);
+					newPassword = '';
+				}
+			} catch (error) {
+				if (error instanceof axios.AxiosError) {
+					handleError(error.response.data);
+				} else {
+					customError('An error occurred during adding group');
+				}
+			}
+	}
+
 	onMount(async () => {
+		console.log('onmount');
 		await checkAdmin();
 		await fetchUserInfo();
 		await fetchUserProfile();
 	});
 </script>
 
-<Toaster />
+<Toaster richColors/>
 
 {#if !$page.url.pathname.endsWith('/login')}
 	<Modal bind:showModal>
@@ -98,7 +143,12 @@
 					<input type="text" bind:value={userProfile.email} name="email" />
 
 					<label for="groupName">Password:</label>
-					<input type="password" bind:value={userProfile.password} name="password" />
+					<input
+						type="password"
+						bind:value={newPassword}
+						name="password"
+						placeholder="Enter your new password"
+					/>
 				</div>
 				<div class="modal-buttons">
 					<button type="submit" on:click={editProfile}>SAVE CHANGES</button>
@@ -115,12 +165,12 @@
 
 	<nav>
 		<ul>
-			<li class="nav-left">Hello, {loggedinUser}</li>
+			<li class="nav-left">Hello, {$userStore}</li>
 			<div class="nav-center">
 				<li>
 					<a href="/applications">Applications</a>
 				</li>
-				{#if isAdmin }
+				{#if $authStore}
 					<li>
 						<a href="/user-management">User Management</a>
 					</li>

@@ -1,7 +1,7 @@
 const query = require("../config/database");
 // const bcrypt = require("bcrypt");
 const { generateJWT, verifyJWT } = require("../services/authService");
-const { createAdmin, Checkgroup } = require("../middleware/middlewares");
+const { Checkgroup } = require("../middleware/middlewares");
 const jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
@@ -15,9 +15,9 @@ const login = async (req, res) => {
   const browserType = req.headers["user-agent"];
 
   // Run createAdmin if username is admin
-  if (username === "admin") {
-    await createAdmin();
-  }
+  // if (username === "admin") {
+  //   await createAdmin();
+  // }
 
   // Check if login input fields is mepty
   if (!username || !password) {
@@ -145,6 +145,7 @@ const register = async (req, res) => {
     if (error.code === "ER_DUP_ENTRY") {
       return res.status(409).json({ message: "Username already exist" });
     }
+    // change to "something went wrong"
 
     console.error("Error when adding new user:", error);
     return res.status(500).json({ message: "Database query error" });
@@ -210,6 +211,7 @@ const getUserProfile = async (req, res) => {
     return res
       .status(401)
       .json({ message: "No token provided for user profile" });
+
   try {
     const decoded = await verifyJWT(token);
     // console.log(decoded);
@@ -227,17 +229,33 @@ const getUserProfile = async (req, res) => {
 };
 
 const updateUserProfile = async (req, res) => {
+  console.log("update profile called");
   const token = req.cookies.authToken;
+
+  const { password } = req.body;
 
   if (!token) {
     return res.status(401).json({ message: "No token provided" });
+  }
+  console.log("password", password);
+  if (password && password.length > 0) {
+    const passwordRegex =
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,10}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message:
+          "password must be 8 - 10 characters long and contains alphabets, numbers and special characters",
+      });
+    }
   }
 
   try {
     const decoded = await verifyJWT(token);
     const username = decoded.username;
-
+    console.log;
     const { email, password } = req.body;
+
+    console.log("show edit profile", req.body);
 
     let updateProfileQuery = "UPDATE accounts SET ";
     const params = [];
@@ -257,29 +275,17 @@ const updateUserProfile = async (req, res) => {
     updateProfileQuery += " WHERE username = ?";
     params.push(username);
 
-    // const result = await query(
-    //   "UPDATE accounts SET email = ?, password = ? WHERE username = ?",
-    //   [email, hashedPassword, username]
-    // );
-
     if (params.length > 1) {
-      // console.log(
-      //   "Executing query:",
-      //   updateProfileQuery,
-      //   "with params:",
-      //   params
-      // );
-
       await query(updateProfileQuery, params);
-      return res.status(200).json({ message: "Profile updated successfully" });
+      return res.status(200).json({ success: "Profile updated successfully" });
     } else {
       return res.status(400).json({ message: "No fields to update" });
     }
   } catch (error) {
     console.error("Error updating profile:", error);
     return res
-      .status(500)
-      .json({ message: "Unable to update profile", error: error.message });
+      .status(403)
+      .json({ message: "Access denied", error: error.message });
   }
 };
 
@@ -288,8 +294,27 @@ const editUser = async (req, res) => {
     req.body;
 
   console.log(req.body);
-  if (!email && !password && !group && !accountStatus) {
+  if (!email && !password && !accountStatus) {
     return res.status(400).json({ message: "No fields to update" });
+  }
+  if (password) {
+    const passwordRegex =
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,10}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message:
+          "password must be 8 - 10 characters long and contains alphabets, numbers and special characters",
+      });
+    }
+  }
+
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (email) {
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        message: "Email format must match the pattern username@domain.com",
+      });
+    }
   }
 
   try {
@@ -323,7 +348,7 @@ const editUser = async (req, res) => {
         username,
       ]);
     }
-    return res.status(200).json({ message: "User updated successfully" });
+    return res.status(200).json({ success: "Credential successfully changed" });
   } catch (error) {
     console.error("Error updating user:", error);
     return res.status(500).json({ message: "Database query error" });
@@ -333,15 +358,13 @@ const editUser = async (req, res) => {
 // check if user is a admin
 const checkIsAdmin = async (req, res) => {
   const token = req.cookies.authToken;
+  console.log("token is ", token);
 
   try {
-    console.log(token);
     const decoded = await jwt.verify(token, secretKey);
     const username = decoded.username;
-    console.log(decoded);
     const isAdmin = await Checkgroup(username, "admin");
     console.log(isAdmin);
-
     return res.status(200).json({ isAdmin });
 
     // res.json({ isAdmin });

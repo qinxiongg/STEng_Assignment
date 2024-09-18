@@ -1,7 +1,7 @@
 <script>
 	import Modal from '../../lib/Modal.svelte';
-	import { customError, handleError } from '../../lib/errorHandler';
-
+	import { customError, handleError, customAlert } from '../../lib/errorHandler';
+	import { authStore } from '$lib/authStore';
 	import { goto } from '$app/navigation';
 	import axios from 'axios';
 
@@ -13,6 +13,8 @@
 	let users_list = [];
 	let errorMessage = '';
 
+	let newPassword = '';
+
 	let newUser = {
 		username: '',
 		email: '',
@@ -22,7 +24,7 @@
 	};
 
 	let selectedGroups = []; // Array to keep track of selected groups
-	let showDropdown = false;
+	// let showDropdown = false;
 	let selectedGroupsEditUser = [];
 
 	// Check if user is admin
@@ -31,16 +33,16 @@
 	async function checkAdmin() {
 		try {
 			const response = await axios.get(`${API_URL}/isAdmin`, { withCredentials: true });
-			console.log(response);
 			if (response.status === 200) {
 				isAdmin = response.data.isAdmin;
+				console.log('user management: is admin: ', isAdmin);
+				authStore.set(response.data.isAdmin);
 			}
 			// console.log('isAdmin:', isAdmin);
 			if (!isAdmin) {
 				goto('/applications');
 			}
 		} catch (error) {
-			
 			console.error('Error:', error);
 		}
 	}
@@ -136,6 +138,7 @@
 
 	async function addNewGroup() {
 		try {
+
 			const response = await axios.post(
 				`${API_URL}/groups`,
 				{ groupName },
@@ -148,6 +151,7 @@
 				groupName = '';
 			}
 		} catch (error) {
+			console.log("add group error:",error);
 			if (error instanceof axios.AxiosError) {
 				handleError(error.response.data);
 			} else {
@@ -209,29 +213,33 @@
 		}
 	}
 
-	async function editProfile() {
-		const updatedFields = {};
+	// async function editProfile() {
+	// 	const updatedFields = {};
 
-		if (userProfile.email !== originalProfile.email) {
-			updatedFields.email = userProfile.email;
-		}
+	// 	if (userProfile.email !== originalProfile.email) {
+	// 		updatedFields.email = userProfile.email;
+	// 	}
 
-		if (userProfile.password !== '') {
-			updatedFields.password = userProfile.password;
-		}
+	// 	if (userProfile.password !== '') {
+	// 		updatedFields.password = userProfile.password;
+	// 	}
 
-		if (Object.keys(updatedFields).length > 0)
-			try {
-				const response = await axios.patch(`${API_URL}/profile`, updatedFields, {
-					withCredentials: true
-				});
-				if (response.status === 200) {
-					originalProfile = { ...userProfile };
-				}
-			} catch (error) {
-				console.error('Error updating profile:', error);
-			}
-	}
+	// 	if (Object.keys(updatedFields).length > 0)
+	// 		try {
+	// 			const response = await axios.patch(`${API_URL}/profile`, updatedFields, {
+	// 				withCredentials: true
+	// 			});
+	// 			if (response.status === 200) {
+	// 				originalProfile = { ...userProfile };
+	// 			}
+	// 		} catch (error) {
+	// 			if (error instanceof axios.AxiosError) {
+	// 				handleError(error.response.data);
+	// 			} else {
+	// 				customError('An error occurred during adding group');
+	// 			}
+	// 		}
+	// }
 
 	let editingUserId = null; // To track the user being edited
 
@@ -240,19 +248,32 @@
 		editingUserId = user.username;
 	}
 	// Save the changes made to the user
-	async function saveChanges(user) {
+	async function saveChanges(user, newPassword) {
+		if (newPassword) {
+			user.password = newPassword;
+		} else {
+			user.password = null;
+		}
+
 		try {
 			const response = await axios.post(`${API_URL}/editprofile`, user, {
 				withCredentials: true
 			});
 
 			if (response.status === 200) {
+				console.log("edit user:",response); 
 				// Exit edit mode
 				editingUserId = null;
 				await fetchUsers();
+				
+				customAlert(response.data.success);
 			}
 		} catch (error) {
-			console.error('Error updating user:', error);
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				customError('An error occurred during adding group');
+			}
 		}
 	}
 
@@ -368,6 +389,7 @@
 		<td>
 			<select
 				bind:value={newUser.group}
+				on:click={getAllGroups}
 				on:change={(e) => addGroupToSelected(e.target.value)}
 				name="group"
 				id="group"
@@ -439,7 +461,7 @@
 						</div>
 					</div>
 				</td>
-				<td> <input type="password" bind:value={user.password} /> </td>
+				<td> <input type="password" bind:value={newPassword} placeholder="Enter new password" /> </td>
 				<td>
 					<select bind:value={user.accountStatus}>
 						<option value="Active">Active</option>
@@ -447,14 +469,14 @@
 					</select>
 				</td>
 				<td>
-					<button on:click={() => saveChanges(user)}>Save Changes</button>
+					<button on:click={() => saveChanges(user, newPassword)}>Save Changes</button>
 					<button on:click={cancelEdit}>Cancel</button>
 				</td>
 			{:else}
 				<td>{user.email}</td>
 				<td>
 					{#each user.usergroupConcat as group}
-						<span>{group}</span>
+						<span>{group}, </span>
 					{/each}
 				</td>
 				<td> <input type="password" bind:value={user.password} readonly /></td>
