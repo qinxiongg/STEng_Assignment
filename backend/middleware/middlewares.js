@@ -13,7 +13,7 @@ async function authenticateJWT(req, res, next) {
   const token = req.cookies.authToken;
 
   if (!token) {
-    return res.status(401).json({ message: "Access denied" });
+    return res.status(403).json({ message: "Access denied" });
   }
 
   try {
@@ -29,7 +29,7 @@ async function authenticateJWT(req, res, next) {
       req.user = decoded; //make user data readily available
       next();
     } else {
-      return res.status(401).json({ message: "Access denied." });
+      return res.status(403).json({ message: "Access denied." });
     }
   } catch (error) {
     return res.status(403).json({ message: "Access denied." });
@@ -47,7 +47,6 @@ const Checkgroup = async (userid, groupname) => {
     );
     const count = result[0].count;
     return count > 0;
-    
   } catch (error) {
     console.error("Unable to query database");
     res.status(500).json({ message: error });
@@ -125,10 +124,10 @@ const verifyTokenWithIPAndBrowser =
         next();
       } else {
         res.clearCookie("authToken");
-        return res.status(401).json({ message: "Access denied." }); // TODO: redirect user back to login
+        return res.status(403).json({ message: "Access denied" }); // TODO: redirect user back to login
       }
     } catch (error) {
-      res.status(401).json({ message: "Access denied." });
+      res.status(403).json({ message: "Access denied" });
     }
   };
 
@@ -136,4 +135,5 @@ module.exports = {
   verifyTokenWithIPAndBrowser,
   authenticateJWT,
   createAdmin,
+  Checkgroup,
 };

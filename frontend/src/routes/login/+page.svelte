@@ -2,6 +2,7 @@
 	import axios from 'axios';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { customError, handleError } from '../../lib/errorHandler';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 	console.log(API_URL);
@@ -24,23 +25,26 @@
 			);
 			// Redirect on successful login
 			if (response.status === 200) {
-				goto('/user-management'); // Redirect to a new page
+				goto('/applications'); // Redirect to a new page
 			}
 		} catch (error) {
-			console.error('Login error:', error);
-			errorMessage = 'An error occurred during login';
+			// console.error('Login error:', error);
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				customError('An error occurred during login');
+			}
 		}
 	}
 
-	onMount(async () => {
-		await handleSubmit;
-	});
+	// onMount(async () => {
+	// 	await handleSubmit;
+	// });
 </script>
 
 <div class="login-container">
 	<h1>LOGIN</h1>
 	<div class="login">
-		<form>
 		<!-- <form on:submit={handleSubmit}> -->
 		<label for="username"></label>
 		<input type="text" bind:value={username} placeholder="Username" name="username" required />

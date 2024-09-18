@@ -1,11 +1,12 @@
 <script>
 	import Modal from '../../lib/Modal.svelte';
-
-	let showModal = false;
-	let modalType = '';
+	import { customError, handleError } from '../../lib/errorHandler';
 
 	import { goto } from '$app/navigation';
 	import axios from 'axios';
+
+	let showModal = false;
+	let modalType = '';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
@@ -23,6 +24,26 @@
 	let selectedGroups = []; // Array to keep track of selected groups
 	let showDropdown = false;
 	let selectedGroupsEditUser = [];
+
+	// Check if user is admin
+	let isAdmin = false;
+
+	async function checkAdmin() {
+		try {
+			const response = await axios.get(`${API_URL}/isAdmin`, { withCredentials: true });
+			console.log(response);
+			if (response.status === 200) {
+				isAdmin = response.data.isAdmin;
+			}
+			// console.log('isAdmin:', isAdmin);
+			if (!isAdmin) {
+				goto('/applications');
+			}
+		} catch (error) {
+			
+			console.error('Error:', error);
+		}
+	}
 
 	function addGroupModal() {
 		modalType = 'addGroup';
@@ -88,7 +109,6 @@
 			);
 
 			if (response.status === 201) {
-				users_list = response.data.users_list;
 				await fetchUsers();
 
 				// Clear form fields
@@ -103,7 +123,11 @@
 				selectedGroups = []; // Clear selected groups
 			}
 		} catch (error) {
-			console.error('Error adding user:', error);
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				customError('An error occurred during registration');
+			}
 		}
 	}
 
@@ -124,7 +148,11 @@
 				groupName = '';
 			}
 		} catch (error) {
-			console.log(error);
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				customError('An error occurred during adding group');
+			}
 		}
 	}
 
@@ -171,6 +199,7 @@
 	async function fetchUserProfile() {
 		try {
 			const response = await axios.get(`${API_URL}/profile`, { withCredentials: true });
+			console.log('user profile:', response.data);
 			if (response.status === 200) {
 				userProfile = response.data.profile;
 				originalProfile = { ...userProfile };
@@ -237,32 +266,33 @@
 
 	import { onMount } from 'svelte';
 	onMount(async () => {
+		await checkAdmin();
 		await fetchUserInfo();
 		await fetchUsers();
-
 		await getAllGroups();
 		await fetchUserProfile();
 	});
 </script>
 
 <!-- Maybe move the navbar to layout???-->
-<nav>
+<!-- <nav>
 	<ul>
 		<li class="nav-left">Hello, {loggedinUser}</li>
-		<!-- TODO: use JWT token to show user's name-->
 		<div class="nav-center">
 			<li>
 				<a href="/applications">Applications</a>
 			</li>
-			<li>
-				<a href="/user-management">User Management</a>
-			</li>
+			{#if isAdmin === true}
+				<li>
+					<a href="/user-management">User Management</a>
+				</li>
+			{/if}
 		</div>
 		<li class="nav-right">
 			<a on:click={editProfileModal}>Edit Profile</a>
 		</li>
 	</ul>
-</nav>
+</nav> -->
 <div class="middle-container">
 	<h1 class="middle-left">User Management</h1>
 	<button class="middle-right" on:click={addGroupModal}>+ Group</button>
@@ -554,13 +584,7 @@
 		height: 35px;
 		width: 116px;
 	}
-	.superadmin {
-		background-color: #0095ff;
-		color: #ffffff;
-		border: none;
-		border-radius: 10px;
-		padding: 10px 30px;
-	}
+
 	#users tr td:not(:first-child):not(:last-child) {
 		border-bottom: 1px solid lightgrey; /* Add grey border to the bottom */
 		padding-bottom: 20px;

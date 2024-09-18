@@ -17,6 +17,7 @@ router.get("/groups", authenticateJWT, userController.getGroups);
 router.get("/userinfo", authenticateJWT, userController.getUsername);
 router.get("/profile", authenticateJWT, userController.getUserProfile);
 router.patch("/profile", authenticateJWT, userController.updateUserProfile);
+router.get("/isAdmin", userController.checkIsAdmin);
 
 // router.get("/profile", verifyTokenWithIPAndBrowser, getUserController);
 

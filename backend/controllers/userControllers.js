@@ -1,11 +1,11 @@
 const query = require("../config/database");
 // const bcrypt = require("bcrypt");
 const { generateJWT, verifyJWT } = require("../services/authService");
-const { createAdmin } = require("../middleware/middlewares");
+const { createAdmin, Checkgroup } = require("../middleware/middlewares");
+const jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
-// TO-DO
-// JWT
+const secretKey = process.env.JWT_SECRET;
 
 // authenicate login
 const login = async (req, res) => {
@@ -41,14 +41,12 @@ const login = async (req, res) => {
 
     // Check if queried account is disabled
     if (user.accountStatus === "Disabled") {
-      return res.status(403).json({ message: "Account is disabled." });
+      return res.status(403).json({ message: "" });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      return res
-        .status(401)
-        .json({ message: "Invalid Username and/or Password." });
+      return res.status(401).json({ message: "Invalid credentials." });
     }
 
     // Generate JWT
@@ -66,7 +64,7 @@ const login = async (req, res) => {
       .status(200)
       .json({ message: "Successfully logged in" });
   } catch (error) {
-    return res.status(500).json({ message: "Unable to connect to database." });
+    return res.status(500).json({ message: "Error." });
   }
 };
 
@@ -82,11 +80,11 @@ const getUsers = async (req, res) => {
         .map((group) => group.usergroup);
     });
 
-    console.log(users_list);
+    // console.log(users_list);
 
     return res.json({ users_list });
   } catch (error) {
-    console.log("error:", error);
+    // console.log("error:", error);
     // use toast for database error????
     return res.status(500).json({ message: "Error querying from database" });
   }
@@ -96,10 +94,35 @@ const getUsers = async (req, res) => {
 const register = async (req, res) => {
   const { username, email, groups, password, active } = req.body;
 
-  if (!username || !email || !password || !active || !groups) {
+  if (!username || !password || !active) {
     return res
       .status(400)
       .json({ message: "Please enter the required fields" });
+  }
+
+  const usernameRegex = /^[^\s]{1,50}$/;
+  if (!usernameRegex.test(username)) {
+    return res.status(400).json({
+      message: "Username must be 1-50 characters long and contains no spaces",
+    });
+  }
+
+  const passwordRegex =
+    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,10}$/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      message:
+        "password must be 8 - 10 characters long and contains alphabets, numbers and special characters",
+    });
+  }
+
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (email) {
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        message: "Email format must match the pattern username@domain.com",
+      });
+    }
   }
 
   try {
@@ -122,6 +145,7 @@ const register = async (req, res) => {
     if (error.code === "ER_DUP_ENTRY") {
       return res.status(409).json({ message: "Username already exist" });
     }
+
     console.error("Error when adding new user:", error);
     return res.status(500).json({ message: "Database query error" });
   }
@@ -133,6 +157,17 @@ const addGroups = async (req, res) => {
   if (!groupName) {
     return res.status(401).json({ message: "Enter group name" });
   }
+
+  // Check if group already exist
+  const groupExist = await query(
+    "SELECT * FROM user_group WHERE usergroup = ?",
+    [groupName]
+  );
+
+  if (groupExist.length > 0) {
+    return res.status(409).json({ message: "Group already exist" });
+  }
+
   try {
     const result = await query(
       "INSERT INTO user_group (usergroup) VALUES (?)",
@@ -177,7 +212,7 @@ const getUserProfile = async (req, res) => {
       .json({ message: "No token provided for user profile" });
   try {
     const decoded = await verifyJWT(token);
-    console.log(decoded);
+    // console.log(decoded);
     const username = decoded.username;
     const result = await query(
       `SELECT username, email, password 
@@ -249,7 +284,8 @@ const updateUserProfile = async (req, res) => {
 };
 
 const editUser = async (req, res) => {
-  const { username, email, password, group, accountStatus } = req.body;
+  const { username, email, password, usergroupConcat, accountStatus } =
+    req.body;
 
   console.log(req.body);
   if (!email && !password && !group && !accountStatus) {
@@ -270,11 +306,16 @@ const editUser = async (req, res) => {
         username,
       ]);
     }
-    if (group) {
-      await query("UPDATE user_group SET usergroup = ? WHERE username = ?", [
-        group,
-        username,
-      ]);
+    if (usergroupConcat) {
+      await query("DELETE FROM user_group WHERE username = ?", [username]);
+
+      //loop
+      for (const group of usergroupConcat) {
+        await query(
+          "INSERT INTO user_group(usergroup, username) VALUES (?, ?)",
+          [group, username]
+        );
+      }
     }
     if (accountStatus) {
       await query("UPDATE accounts SET accountStatus = ? WHERE username = ?", [
@@ -289,6 +330,26 @@ const editUser = async (req, res) => {
   }
 };
 
+// check if user is a admin
+const checkIsAdmin = async (req, res) => {
+  const token = req.cookies.authToken;
+
+  try {
+    console.log(token);
+    const decoded = await jwt.verify(token, secretKey);
+    const username = decoded.username;
+    console.log(decoded);
+    const isAdmin = await Checkgroup(username, "admin");
+    console.log(isAdmin);
+
+    return res.status(200).json({ isAdmin });
+
+    // res.json({ isAdmin });
+  } catch (error) {
+    res.status(401).json({ message: "Access denied" });
+  }
+};
+
 module.exports = {
   login,
   getUsers,
@@ -299,4 +360,5 @@ module.exports = {
   getUserProfile,
   updateUserProfile,
   editUser,
+  checkIsAdmin,
 };
