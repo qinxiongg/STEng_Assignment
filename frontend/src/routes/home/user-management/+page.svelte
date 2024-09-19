@@ -1,7 +1,7 @@
 <script>
-	import Modal from '../../lib/Modal.svelte';
-	import { customError, handleError, customAlert } from '../../lib/errorHandler';
-	import { authStore } from '$lib/authStore';
+	import Modal from '$lib/Modal.svelte';
+	import { customError, handleError, customAlert } from '$lib/errorHandler';
+	import { authStore } from '$lib/stores';
 	import { goto } from '$app/navigation';
 	import axios from 'axios';
 
@@ -11,8 +11,6 @@
 	const API_URL = import.meta.env.VITE_API_URL;
 
 	let users_list = [];
-	let errorMessage = '';
-
 	let newPassword = '';
 
 	let newUser = {
@@ -23,24 +21,23 @@
 		active: 'Active'
 	};
 
-	let selectedGroups = []; // Array to keep track of selected groups
-	// let showDropdown = false;
+	let selectedGroups = [];
 	let selectedGroupsEditUser = [];
 
-	// Check if user is admin
+	// Set isAdmin to false by default
 	let isAdmin = false;
 
-	async function checkAdmin() {
+	async function checkIsAdmin() {
 		try {
-			const response = await axios.get(`${API_URL}/isAdmin`, { withCredentials: true });
+			const response = await axios.get(`${API_URL}/isAdmin`
+			, { withCredentials: true });
+
 			if (response.status === 200) {
 				isAdmin = response.data.isAdmin;
-				console.log('user management: is admin: ', isAdmin);
 				authStore.set(response.data.isAdmin);
 			}
-			// console.log('isAdmin:', isAdmin);
 			if (!isAdmin) {
-				goto('/applications');
+				goto('/home/applications');
 			}
 		} catch (error) {
 			console.error('Error:', error);
@@ -94,7 +91,6 @@
 			}
 		} catch (error) {
 			console.error('Error :', error);
-			errorMessage = 'An error occurred during login';
 		}
 	}
 
@@ -138,7 +134,6 @@
 
 	async function addNewGroup() {
 		try {
-
 			const response = await axios.post(
 				`${API_URL}/groups`,
 				{ groupName },
@@ -151,7 +146,7 @@
 				groupName = '';
 			}
 		} catch (error) {
-			console.log("add group error:",error);
+			console.log('add group error:', error);
 			if (error instanceof axios.AxiosError) {
 				handleError(error.response.data);
 			} else {
@@ -261,11 +256,11 @@
 			});
 
 			if (response.status === 200) {
-				console.log("edit user:",response); 
+				console.log('edit user:', response);
 				// Exit edit mode
 				editingUserId = null;
 				await fetchUsers();
-				
+
 				customAlert(response.data.success);
 			}
 		} catch (error) {
@@ -287,7 +282,7 @@
 
 	import { onMount } from 'svelte';
 	onMount(async () => {
-		await checkAdmin();
+		await checkIsAdmin();
 		await fetchUserInfo();
 		await fetchUsers();
 		await getAllGroups();
@@ -461,7 +456,13 @@
 						</div>
 					</div>
 				</td>
-				<td> <input type="password" bind:value={newPassword} placeholder="Enter new password" /> </td>
+				<td>
+					<input
+						type="password"
+						bind:value={newPassword}
+						placeholder="Enter new password"
+					/>
+				</td>
 				<td>
 					<select bind:value={user.accountStatus}>
 						<option value="Active">Active</option>
