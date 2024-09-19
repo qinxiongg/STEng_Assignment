@@ -9,7 +9,7 @@ router.post("/login", userController.login);
 // Protected routes
 router.get("/isAdmin", authenticateJWT, userController.checkIsAdmin);
 router.get("/users", verifyTokenWithIPAndBrowser("admin"), userController.getUsers);
-router.post("/users", verifyTokenWithIPAndBrowser("admin"), userController.register);
+router.post("/createUser", verifyTokenWithIPAndBrowser("admin"), userController.createUser);
 router.post("/editprofile", verifyTokenWithIPAndBrowser("admin"), userController.editUser);
 router.post("/groups", verifyTokenWithIPAndBrowser("admin"), userController.addGroups);
 router.get("/groups", authenticateJWT, userController.getGroups);

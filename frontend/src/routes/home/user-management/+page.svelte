@@ -49,11 +49,6 @@
 		showModal = true;
 	}
 
-	function editProfileModal() {
-		modalType = 'editProfile';
-		showModal = true;
-	}
-
 	function addGroupToSelected(group) {
 		if (!selectedGroups.includes(group)) {
 			selectedGroups = [...selectedGroups, group];
@@ -96,10 +91,10 @@
 
 	// Add new users functions
 
-	async function registerUser() {
+	async function createUser() {
 		try {
 			const response = await axios.post(
-				`${API_URL}/users`,
+				`${API_URL}/createUser`,
 				{ ...newUser, groups: selectedGroups },
 				{
 					withCredentials: true
@@ -117,8 +112,9 @@
 					password: '',
 					active: 'Active'
 				};
-
+				
 				selectedGroups = []; // Clear selected groups
+				customAlert(response.data.success);
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -290,25 +286,6 @@
 	});
 </script>
 
-<!-- Maybe move the navbar to layout???-->
-<!-- <nav>
-	<ul>
-		<li class="nav-left">Hello, {loggedinUser}</li>
-		<div class="nav-center">
-			<li>
-				<a href="/applications">Applications</a>
-			</li>
-			{#if isAdmin === true}
-				<li>
-					<a href="/user-management">User Management</a>
-				</li>
-			{/if}
-		</div>
-		<li class="nav-right">
-			<a on:click={editProfileModal}>Edit Profile</a>
-		</li>
-	</ul>
-</nav> -->
 <div class="middle-container">
 	<h1 class="middle-left">User Management</h1>
 	<button class="middle-right" on:click={addGroupModal}>+ Group</button>
@@ -419,7 +396,7 @@
 			</select>
 		</td>
 		<td>
-			<button type="submit" class="submit_button" on:click={registerUser}>SUBMIT</button>
+			<button type="submit" class="submit_button" on:click={createUser}>SUBMIT</button>
 		</td>
 		<td> </td>
 	</tr>

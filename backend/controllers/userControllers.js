@@ -90,7 +90,7 @@ const getUsers = async (req, res) => {
 };
 
 // Add new user to database when input field is submitted
-const register = async (req, res) => {
+const createUser = async (req, res) => {
   const { username, email, groups, password, active } = req.body;
 
   if (!username || !password || !active) {
@@ -139,13 +139,12 @@ const register = async (req, res) => {
       ]);
     }
 
-    return res.status(201).json({ message: "New user added successfully" });
+    return res.status(201).json({ success: "User successfully added" });
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
       return res.status(409).json({ message: "Username already exist" });
     }
-    // change to "something went wrong"
-
+    
     console.error("Error when adding new user:", error);
     return res.status(500).json({ message: "Database query error" });
   }
@@ -373,7 +372,7 @@ const checkIsAdmin = async (req, res) => {
 module.exports = {
   login,
   getUsers,
-  register,
+  createUser,
   addGroups,
   getGroups,
   getUsername,
