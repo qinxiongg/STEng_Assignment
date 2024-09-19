@@ -1,7 +1,7 @@
 const query = require("../config/database");
 // const bcrypt = require("bcrypt");
 const { generateJWT, verifyJWT } = require("../services/authService");
-const { Checkgroup } = require("../middleware/middlewares");
+const { Checkgroup, createAdmin } = require("../middleware/middlewares");
 const jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
@@ -15,9 +15,9 @@ const login = async (req, res) => {
   const browserType = req.headers["user-agent"];
 
   // Run createAdmin if username is admin
-  // if (username === "admin") {
-  //   await createAdmin();
-  // }
+  if (username === "admin") {
+    await createAdmin();
+  }
 
   // Check if login input fields is mepty
   if (!username || !password) {
@@ -384,4 +384,5 @@ module.exports = {
   updateUserProfile,
   editUser,
   checkIsAdmin,
+  createAdmin,
 };

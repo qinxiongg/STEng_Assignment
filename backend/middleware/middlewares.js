@@ -69,35 +69,33 @@ const checkUserAccStatus = async (username) => {
     return results[0].accountStatus === "Active"; // return true if status is active
   } catch (error) {
     console.error("Error checking user's account status", error);
-    return res
-      .status(403)
-      .json({ message: "Access denied12" });
+    return res.status(403).json({ message: "Access denied12" });
   }
 };
 
-// // move this to other file
-// const createAdmin = async () => {
-//   const adminUsername = "admin";
-//   const adminPwd = "admin123!!";
+// move this to other file
+const createAdmin = async () => {
+  const adminUsername = "admin";
+  const adminPwd = "admin123!!";
 
-//   try {
-//     const results = await query("SELECT * FROM accounts WHERE username = ?", [
-//       adminUsername,
-//     ]);
+  try {
+    const results = await query("SELECT * FROM accounts WHERE username = ?", [
+      adminUsername,
+    ]);
 
-//     if (results.length === 0) {
-//       const hashedAdminPwd = await bcrypt.hash(adminPwd, 10);
+    if (results.length === 0) {
+      const hashedAdminPwd = await bcrypt.hash(adminPwd, 10);
 
-//       await query(
-//         "INSERT INTO accounts (username, password, email, accountStatus) VALUES (?, ?, ?, ?)",
-//         [adminUsername, hashedAdminPwd, "admin@admin.com", "Active"]
-//       );
-//       console.log("Admin account created.");
-//     }
-//   } catch (error) {
-//     console.error("Error setting up admin account:", error);
-//   }
-// };
+      await query(
+        "INSERT INTO accounts (username, password, email, accountStatus) VALUES (?, ?, ?, ?)",
+        [adminUsername, hashedAdminPwd, "admin@admin.com", "Active"]
+      );
+      console.log("Admin account created.");
+    }
+  } catch (error) {
+    console.error("Error setting up admin account:", error);
+  }
+};
 
 // Middleware to protect routes and check group
 const verifyTokenWithIPAndBrowser =
@@ -135,4 +133,5 @@ module.exports = {
   verifyTokenWithIPAndBrowser,
   authenticateJWT,
   Checkgroup,
+  createAdmin,
 };
