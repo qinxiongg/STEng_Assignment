@@ -144,13 +144,13 @@ const createUser = async (req, res) => {
     if (error.code === "ER_DUP_ENTRY") {
       return res.status(409).json({ message: "Username already exist" });
     }
-    
+
     console.error("Error when adding new user:", error);
     return res.status(500).json({ message: "Database query error" });
   }
 };
 
-const addGroups = async (req, res) => {
+const addNewGroup = async (req, res) => {
   const { groupName } = req.body;
 
   if (!groupName) {
@@ -168,11 +168,8 @@ const addGroups = async (req, res) => {
   }
 
   try {
-    const result = await query(
-      "INSERT INTO user_group (usergroup) VALUES (?)",
-      [groupName]
-    );
-    return res.status(201).json({ message: "Successfully added group" });
+    await query("INSERT INTO user_group (usergroup) VALUES (?)", [groupName]);
+    return res.status(201).json({ success: "Successfully added group" });
   } catch (error) {
     return res
       .status(500)
@@ -291,7 +288,6 @@ const editUser = async (req, res) => {
   const { username, email, password, usergroupConcat, accountStatus } =
     req.body;
 
-  console.log(req.body);
   if (!email && !password && !accountStatus) {
     return res.status(400).json({ message: "No fields to update" });
   }
@@ -346,9 +342,10 @@ const editUser = async (req, res) => {
         username,
       ]);
     }
-    return res.status(200).json({ success: "Credential successfully changed" });
+    return res
+      .status(200)
+      .json({ success: "Credentials successfully changed" });
   } catch (error) {
-    console.error("Error updating user:", error);
     return res.status(500).json({ message: "Database query error" });
   }
 };
@@ -373,7 +370,7 @@ module.exports = {
   login,
   getUsers,
   createUser,
-  addGroups,
+  addNewGroup,
   getGroups,
   getUsername,
   getUserProfile,

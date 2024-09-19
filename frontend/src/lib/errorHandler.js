@@ -8,7 +8,7 @@ export function customError(error) {
 }
 
 export function customAlert(success) {
-  toast.success(`${success || "Something went wrong!!!"}`);
+  toast.success(`${success || "Something went wrong!"}`);
 }
 ;
 

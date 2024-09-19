@@ -29,8 +29,7 @@
 
 	async function checkIsAdmin() {
 		try {
-			const response = await axios.get(`${API_URL}/isAdmin`
-			, { withCredentials: true });
+			const response = await axios.get(`${API_URL}/isAdmin`, { withCredentials: true });
 
 			if (response.status === 200) {
 				isAdmin = response.data.isAdmin;
@@ -112,7 +111,7 @@
 					password: '',
 					active: 'Active'
 				};
-				
+
 				selectedGroups = []; // Clear selected groups
 				customAlert(response.data.success);
 			}
@@ -131,7 +130,7 @@
 	async function addNewGroup() {
 		try {
 			const response = await axios.post(
-				`${API_URL}/groups`,
+				`${API_URL}/addNewGroup`,
 				{ groupName },
 				{
 					withCredentials: true
@@ -140,9 +139,9 @@
 
 			if (response.status === 201) {
 				groupName = '';
+				customAlert(response.data.success);
 			}
 		} catch (error) {
-			console.log('add group error:', error);
 			if (error instanceof axios.AxiosError) {
 				handleError(error.response.data);
 			} else {
@@ -204,34 +203,6 @@
 		}
 	}
 
-	// async function editProfile() {
-	// 	const updatedFields = {};
-
-	// 	if (userProfile.email !== originalProfile.email) {
-	// 		updatedFields.email = userProfile.email;
-	// 	}
-
-	// 	if (userProfile.password !== '') {
-	// 		updatedFields.password = userProfile.password;
-	// 	}
-
-	// 	if (Object.keys(updatedFields).length > 0)
-	// 		try {
-	// 			const response = await axios.patch(`${API_URL}/profile`, updatedFields, {
-	// 				withCredentials: true
-	// 			});
-	// 			if (response.status === 200) {
-	// 				originalProfile = { ...userProfile };
-	// 			}
-	// 		} catch (error) {
-	// 			if (error instanceof axios.AxiosError) {
-	// 				handleError(error.response.data);
-	// 			} else {
-	// 				customError('An error occurred during adding group');
-	// 			}
-	// 		}
-	// }
-
 	let editingUserId = null; // To track the user being edited
 
 	// Enter edit mode for the selected user
@@ -247,7 +218,7 @@
 		}
 
 		try {
-			const response = await axios.post(`${API_URL}/editprofile`, user, {
+			const response = await axios.post(`${API_URL}/editUser`, user, {
 				withCredentials: true
 			});
 
