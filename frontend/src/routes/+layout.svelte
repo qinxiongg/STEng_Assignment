@@ -1,16 +1,15 @@
 <script>
-	import { Toaster, toast } from 'svelte-sonner';
-	import Modal from '../lib/Modal.svelte';
 	import axios from 'axios';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { Toaster, toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
-	import { authStore, userStore } from '$lib/authStore';
+	import Modal from '$lib/Modal.svelte';
+	import { authStore, userStore } from '$lib/stores';
 	import { customAlert, handleError } from '$lib/errorHandler';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
-	// Check if user is admin
 	let isAdmin = false;
 	let loggedinUser = '';
 
@@ -36,9 +35,8 @@
 		showModal = true;
 	}
 
-	async function checkAdmin() {
+	async function checkIsAdmin() {
 		
-		console.log('checkadmin');
 		try {
 			const response = await axios.get(`${API_URL}/isAdmin`, { withCredentials: true });
 			console.log(response.status);
@@ -53,8 +51,7 @@
 				goto('/login');
 			}
 		} catch (error) {
-		
-			console.log('Error at checkadmin', error);
+			console.log('Error at checkIsAdmin', error);
 		}
 
 	}
@@ -122,7 +119,7 @@
 
 	onMount(async () => {
 		console.log('onmount');
-		await checkAdmin();
+		await checkIsAdmin();
 		await fetchUserInfo();
 		await fetchUserProfile();
 	});
@@ -168,11 +165,11 @@
 			<li class="nav-left">Hello, {$userStore}</li>
 			<div class="nav-center">
 				<li>
-					<a href="/applications">Applications</a>
+					<a href="/home/applications">Applications</a>
 				</li>
 				{#if $authStore}
 					<li>
-						<a href="/user-management">User Management</a>
+						<a href="/home/user-management">User Management</a>
 					</li>
 				{/if}
 			</div>

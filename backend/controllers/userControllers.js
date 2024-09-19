@@ -1,5 +1,4 @@
 const query = require("../config/database");
-// const bcrypt = require("bcrypt");
 const { generateJWT, verifyJWT } = require("../services/authService");
 const { Checkgroup } = require("../middleware/middlewares");
 const jwt = require("jsonwebtoken");
@@ -366,8 +365,6 @@ const checkIsAdmin = async (req, res) => {
     const isAdmin = await Checkgroup(username, "admin");
     console.log(isAdmin);
     return res.status(200).json({ isAdmin });
-
-    // res.json({ isAdmin });
   } catch (error) {
     res.status(401).json({ message: "Access denied" });
   }

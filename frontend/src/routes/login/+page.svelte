@@ -5,11 +5,9 @@
 	import { customError, handleError } from '../../lib/errorHandler';
 
 	const API_URL = import.meta.env.VITE_API_URL;
-	console.log(API_URL);
 
 	let username = '';
 	let password = '';
-	let errorMessage = ''; // TODO: error message using toast
 
 	async function handleSubmit() {
 		try {
@@ -23,12 +21,9 @@
 					withCredentials: true
 				}
 			);
-			// Redirect on successful login
-			if (response.status === 200) {
-				goto('/applications'); // Redirect to a new page
-			}
+
+			goto('/home/applications'); // Redirect to applications page
 		} catch (error) {
-			// console.error('Login error:', error);
 			if (error instanceof axios.AxiosError) {
 				handleError(error.response.data);
 			} else {
@@ -36,32 +31,14 @@
 			}
 		}
 	}
-
-	// onMount(async () => {
-	// 	await handleSubmit;
-	// });
-
-	
 </script>
 
 <div class="login-container">
 	<h1>LOGIN</h1>
-	<div class="login">
-		<!-- <form on:submit={handleSubmit}> -->
-		<label for="username"></label>
-		<input type="text" bind:value={username} placeholder="Username" name="username" required />
-
-		<label for="password"></label>
-		<input
-			type="password"
-			bind:value={password}
-			placeholder="Password"
-			name="password"
-			required
-		/>
-
+	<div class="login-form">
+		<input type="text" bind:value={username} placeholder="Username" />
+		<input type="password" bind:value={password} placeholder="Password" />
 		<button type="submit" on:click={handleSubmit}><b>LOGIN</b></button>
-		<!-- </form> -->
 	</div>
 </div>
 
@@ -72,16 +49,14 @@
 		justify-content: center;
 		min-height: 100vh;
 		flex-direction: column;
-		margin: 0;
 	}
 
-	.login {
+	.login-form {
 		text-align: center;
 		width: 25%;
 	}
 
 	input {
-		display: block;
 		width: 100%;
 		margin-bottom: 20px;
 		padding: 15px;

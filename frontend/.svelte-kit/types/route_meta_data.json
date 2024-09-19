@@ -1,6 +1,6 @@
 {
 	"/": [],
-	"/applications": [],
-	"/login": [],
-	"/user-management": []
+	"/home/applications": [],
+	"/home/user-management": [],
+	"/login": []
 }
