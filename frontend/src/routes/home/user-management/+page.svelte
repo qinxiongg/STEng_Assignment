@@ -5,13 +5,21 @@
 	import { goto } from '$app/navigation';
 	import axios from 'axios';
 
+	const API_URL = import.meta.env.VITE_API_URL;
+
 	let showModal = false;
 	let modalType = '';
 
-	const API_URL = import.meta.env.VITE_API_URL;
+	let selectedGroups = [];
+
+	// Set isAdmin to false by default
+	let isAdmin = false;
 
 	let users_list = [];
 	let newPassword = '';
+
+	// Add new groups
+	let newGroupName = '';
 
 	let newUser = {
 		username: '',
@@ -21,16 +29,27 @@
 		active: 'Active'
 	};
 
-	let selectedGroups = [];
-	let selectedGroupsEditUser = [];
+	let allUserGroups = [];
 
-	// Set isAdmin to false by default
-	let isAdmin = false;
+	let editingUserId = null; // To track the user being edited
+
+	let loggedinUser = '';
+
+	let userProfile = {
+		username: '',
+		email: '',
+		password: ''
+	};
+
+	let originalProfile = {
+		username: '',
+		email: '',
+		password: ''
+	};
 
 	async function checkIsAdmin() {
 		try {
-			const response = await axios.get(`${API_URL}/isAdmin`
-			, { withCredentials: true });
+			const response = await axios.get(`${API_URL}/checkIsAdmin`, { withCredentials: true });
 
 			if (response.status === 200) {
 				isAdmin = response.data.isAdmin;
@@ -49,11 +68,6 @@
 		showModal = true;
 	}
 
-	function editProfileModal() {
-		modalType = 'editProfile';
-		showModal = true;
-	}
-
 	function addGroupToSelected(group) {
 		if (!selectedGroups.includes(group)) {
 			selectedGroups = [...selectedGroups, group];
@@ -66,9 +80,6 @@
 	}
 
 	function EditUserGroup(group, index) {
-		console.log(users_list[index].usergroupConcat);
-		console.log(group);
-		console.log(index, users_list);
 		if (!users_list[index].usergroupConcat.includes(group)) {
 			users_list[index].usergroupConcat = [...users_list[index].usergroupConcat, group];
 		}
@@ -81,8 +92,7 @@
 	}
 
 	///////////////////////////////////////////////////////////////
-	// Fetch users
-	async function fetchUsers() {
+	async function getAllUsers() {
 		try {
 			const response = await axios.get(`${API_URL}/users`, { withCredentials: true });
 
@@ -94,12 +104,10 @@
 		}
 	}
 
-	// Add new users functions
-
-	async function registerUser() {
+	async function createUser() {
 		try {
 			const response = await axios.post(
-				`${API_URL}/users`,
+				`${API_URL}/createUser`,
 				{ ...newUser, groups: selectedGroups },
 				{
 					withCredentials: true
@@ -107,7 +115,7 @@
 			);
 
 			if (response.status === 201) {
-				await fetchUsers();
+				await getAllUsers();
 
 				// Clear form fields
 				newUser = {
@@ -119,6 +127,7 @@
 				};
 
 				selectedGroups = []; // Clear selected groups
+				customAlert(response.data.success);
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -129,24 +138,21 @@
 		}
 	}
 
-	// Add group
-	let groupName = '';
-
-	async function addNewGroup() {
+	async function addNewGroups() {
 		try {
 			const response = await axios.post(
-				`${API_URL}/groups`,
-				{ groupName },
+				`${API_URL}/addNewGroups`,
+				{ newGroupName },
 				{
 					withCredentials: true
 				}
 			);
 
 			if (response.status === 201) {
-				groupName = '';
+				newGroupName = '';
+				customAlert(response.data.success);
 			}
 		} catch (error) {
-			console.log('add group error:', error);
 			if (error instanceof axios.AxiosError) {
 				handleError(error.response.data);
 			} else {
@@ -155,47 +161,21 @@
 		}
 	}
 
-	let allUserGroups = [];
-
 	async function getAllGroups() {
 		try {
-			const response = await axios.get(`${API_URL}/groups`, { withCredentials: true });
+			const response = await axios.get(`${API_URL}/getAllGroups`, { withCredentials: true });
 
 			if (response.status === 200) {
 				allUserGroups = response.data.userGroups;
-				console.log(allUserGroups);
 			}
 		} catch (error) {
 			console.error('Error:', error);
 		}
 	}
 
-	let loggedinUser = '';
 
-	async function fetchUserInfo() {
-		try {
-			const response = await axios.get(`${API_URL}/userinfo`, { withCredentials: true });
-			if (response.status === 200) {
-				loggedinUser = response.data.username;
-			}
-		} catch (error) {
-			console.error('Error fetching user info:', error);
-		}
-	}
 
-	let userProfile = {
-		username: '',
-		email: '',
-		password: ''
-	};
-
-	let originalProfile = {
-		username: '',
-		email: '',
-		password: ''
-	};
-
-	async function fetchUserProfile() {
+	async function updateUserProfile() {
 		try {
 			const response = await axios.get(`${API_URL}/profile`, { withCredentials: true });
 			console.log('user profile:', response.data);
@@ -208,40 +188,12 @@
 		}
 	}
 
-	// async function editProfile() {
-	// 	const updatedFields = {};
-
-	// 	if (userProfile.email !== originalProfile.email) {
-	// 		updatedFields.email = userProfile.email;
-	// 	}
-
-	// 	if (userProfile.password !== '') {
-	// 		updatedFields.password = userProfile.password;
-	// 	}
-
-	// 	if (Object.keys(updatedFields).length > 0)
-	// 		try {
-	// 			const response = await axios.patch(`${API_URL}/profile`, updatedFields, {
-	// 				withCredentials: true
-	// 			});
-	// 			if (response.status === 200) {
-	// 				originalProfile = { ...userProfile };
-	// 			}
-	// 		} catch (error) {
-	// 			if (error instanceof axios.AxiosError) {
-	// 				handleError(error.response.data);
-	// 			} else {
-	// 				customError('An error occurred during adding group');
-	// 			}
-	// 		}
-	// }
-
-	let editingUserId = null; // To track the user being edited
-
 	// Enter edit mode for the selected user
 	function editUser(user) {
+		newPassword = '';
 		editingUserId = user.username;
 	}
+
 	// Save the changes made to the user
 	async function saveChanges(user, newPassword) {
 		if (newPassword) {
@@ -251,7 +203,7 @@
 		}
 
 		try {
-			const response = await axios.post(`${API_URL}/editprofile`, user, {
+			const response = await axios.post(`${API_URL}/editUser`, user, {
 				withCredentials: true
 			});
 
@@ -259,7 +211,7 @@
 				console.log('edit user:', response);
 				// Exit edit mode
 				editingUserId = null;
-				await fetchUsers();
+				await getAllUsers();
 
 				customAlert(response.data.success);
 			}
@@ -275,7 +227,8 @@
 	// Cancel the editing process
 	async function cancelEdit() {
 		editingUserId = null; // Exit edit mode without saving
-		await fetchUsers();
+		await getAllUsers();
+		newPassword = '';
 	}
 
 	/////////////////////////////////////////////////////////////
@@ -283,32 +236,13 @@
 	import { onMount } from 'svelte';
 	onMount(async () => {
 		await checkIsAdmin();
-		await fetchUserInfo();
-		await fetchUsers();
+		// await fetchUserInfo();
+		await getAllUsers();
 		await getAllGroups();
-		await fetchUserProfile();
+		await updateUserProfile();
 	});
 </script>
 
-<!-- Maybe move the navbar to layout???-->
-<!-- <nav>
-	<ul>
-		<li class="nav-left">Hello, {loggedinUser}</li>
-		<div class="nav-center">
-			<li>
-				<a href="/applications">Applications</a>
-			</li>
-			{#if isAdmin === true}
-				<li>
-					<a href="/user-management">User Management</a>
-				</li>
-			{/if}
-		</div>
-		<li class="nav-right">
-			<a on:click={editProfileModal}>Edit Profile</a>
-		</li>
-	</ul>
-</nav> -->
 <div class="middle-container">
 	<h1 class="middle-left">User Management</h1>
 	<button class="middle-right" on:click={addGroupModal}>+ Group</button>
@@ -320,12 +254,12 @@
 			<h2>Edit Profile</h2>
 			<div class="form-group">
 				<label for="username">Username:</label>
-				<input type="text" bind:value={loggedinUser} readonly name="groupName" />
+				<input type="text" bind:value={loggedinUser} readonly name="username" />
 
 				<label for="email">Email:</label>
 				<input type="text" bind:value={userProfile.email} name="email" />
 
-				<label for="groupName">Password:</label>
+				<label for="password">Password:</label>
 				<input type="password" bind:value={userProfile.password} name="password" />
 			</div>
 			<div class="modal-buttons">
@@ -340,20 +274,20 @@
 		</div>
 	{/if}
 	{#if modalType === 'addGroup'}
-		<div>
+		<div class="modal-title">
 			<h2>Add Group</h2>
 			<div class="form-group">
-				<label for="groupName">Group Name:</label>
+				<label for="newGroupName">Group Name:</label>
 				<input
 					type="text"
-					bind:value={groupName}
-					id="groupName"
-					name="groupName"
+					bind:value={newGroupName}
+					id="newGroupName"
+					name="newGroupName"
 					placeholder="Name"
 				/>
 			</div>
 			<div class="modal-buttons">
-				<button type="submit" on:click={addNewGroup}>ADD</button>
+				<button type="submit" on:click={addNewGroups}>ADD</button>
 				<button
 					type="button"
 					on:click={() => {
@@ -419,7 +353,7 @@
 			</select>
 		</td>
 		<td>
-			<button type="submit" class="submit_button" on:click={registerUser}>SUBMIT</button>
+			<button type="submit" class="submit_button" on:click={createUser}>SUBMIT</button>
 		</td>
 		<td> </td>
 	</tr>
@@ -435,10 +369,14 @@
 					<div>
 						<select
 							bind:value={user.usergroupSelected}
-							on:change={(e) => EditUserGroup(e.target.value, index)}
+							on:change={(e) => {
+								EditUserGroup(e.target.value, index);
+								user.usergroupSelected = '';
+							}}
 							name="group"
 							id="group"
 						>
+							<option value="" disabled selected hidden></option>
 							{#each allUserGroups as group}
 								<option value={group.usergroup}>{group.usergroup}</option>
 							{/each}
@@ -446,11 +384,12 @@
 						<div>
 							{#each user.usergroupConcat as group}
 								<span class="selected-group">
-									{group}
-									<button
-										type="button"
-										on:click={() => removeUserGroup(group, index)}>X</button
-									>
+									<span class="group-tag"
+										>{group}<button
+											type="button"
+											on:click={() => removeUserGroup(group, index)}>X</button
+										>
+									</span>
 								</span>
 							{/each}
 						</div>
@@ -477,7 +416,7 @@
 				<td>{user.email}</td>
 				<td>
 					{#each user.usergroupConcat as group}
-						<span>{group}, </span>
+						<span class="group-tag">{group}</span>
 					{/each}
 				</td>
 				<td> <input type="password" bind:value={user.password} readonly /></td>
@@ -490,11 +429,13 @@
 </table>
 
 <style>
+	.modal-title {
+		text-align: center;
+	}
 	.form-group {
 		display: flex;
-		flex-direction: column;
 		align-items: center;
-		margin-bottom: 15px;
+		margin: 15px 15px 15px 15px;
 	}
 
 	.form-group label {
@@ -513,6 +454,7 @@
 		display: flex;
 		justify-content: center;
 		margin-top: 20px;
+		margin-bottom: 20px;
 		gap: 20px;
 	}
 
@@ -522,39 +464,6 @@
 		background-color: black;
 		color: #ffffff;
 		border: none;
-	}
-
-	nav {
-		display: flex;
-		background-color: black;
-		margin: 0;
-		color: #ffffff;
-		height: 100px;
-		align-items: center;
-		font-size: 1.5em;
-	}
-	nav ul {
-		display: flex;
-		list-style: none;
-		color: #ffffff;
-		padding: 10px;
-		flex-grow: 1;
-		justify-content: space-between;
-	}
-	a {
-		text-decoration: none;
-		color: #ffffff;
-	}
-	.nav-left {
-		margin-left: 60px;
-	}
-	.nav-center {
-		display: flex;
-		justify-content: center;
-		gap: 20px;
-	}
-	.nav-right {
-		margin-right: 60px;
 	}
 	.middle-container {
 		align-items: center;
@@ -590,13 +499,11 @@
 	#users input {
 		background-color: #f0f0f0;
 		border: none;
-		/* height: 30px;
-		width: 193px; */
+
 		padding: 10px 15px;
 	}
 	#users select {
-		/* width: 128px;
-		height: 30px; */
+
 		background-color: #f0f0f0;
 		padding: 10px 30px;
 		border: none;
@@ -609,7 +516,7 @@
 	}
 
 	#users tr td:not(:first-child):not(:last-child) {
-		border-bottom: 1px solid lightgrey; /* Add grey border to the bottom */
+		border-bottom: 1px solid lightgrey;
 		padding-bottom: 20px;
 	}
 

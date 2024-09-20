@@ -75,7 +75,7 @@ const checkUserAccStatus = async (username) => {
   }
 };
 
-// // move this to other file
+// // COMMENT THIS OUT FOR NOW
 // const createAdmin = async () => {
 //   const adminUsername = "admin";
 //   const adminPwd = "admin123!!";
@@ -124,7 +124,7 @@ const verifyTokenWithIPAndBrowser =
         next();
       } else {
         res.clearCookie("authToken");
-        return res.status(403).json({ message: "Access denied" }); // TODO: redirect user back to login
+        return res.status(403).json({ message: "Access denied" });
       }
     } catch (error) {
       res.status(403).json({ message: "Access denied" });

@@ -6,12 +6,12 @@
 	import { onMount } from 'svelte';
 	import Modal from '$lib/Modal.svelte';
 	import { authStore, userStore } from '$lib/stores';
-	import { customAlert, handleError } from '$lib/errorHandler';
+	import { customAlert, handleError, customError } from '$lib/errorHandler';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
 	let isAdmin = false;
-	let loggedinUser = '';
+	let loggedinUsername;
 
 	let showModal = false;
 	let modalType = '';
@@ -36,40 +36,63 @@
 	}
 
 	async function checkIsAdmin() {
-		
 		try {
-			const response = await axios.get(`${API_URL}/isAdmin`, { withCredentials: true });
-			console.log(response.status);
+			const response = await axios.get(`${API_URL}/checkIsAdmin`, { withCredentials: true });
 
 			if (response.status === 200) {
-				console.log('after status 200');
 				isAdmin = response.data.isAdmin;
 				authStore.set(response.data.isAdmin);
 			}
-			// console.log('isAdmin:', isAdmin);
-			if (!isAdmin) {
-				goto('/login');
-			}
+
 		} catch (error) {
 			console.log('Error at checkIsAdmin', error);
 		}
-
 	}
 
-	async function fetchUserInfo() {
+	async function getUsername() {
 		try {
-			const response = await axios.get(`${API_URL}/userinfo`, { withCredentials: true });
+			const response = await axios.get(`${API_URL}/getUsername`, { withCredentials: true });
 			if (response.status === 200) {
-				loggedinUser = response.data.username;
+				// save retrieved username
+				userStore.set(response.data.username);
+
+				// save value from userStore to loggedinUsername
+				loggedinUsername = $userStore;
 			}
 		} catch (error) {
 			console.error('Error fetching user info:', error);
 		}
 	}
 
-	async function fetchUserProfile() {
+	async function logout() {
+		try {
+			const response = await axios.post(
+				`${API_URL}/logout`,
+				{},
+				{
+					withCredentials: true
+				}
+			);
+
+			if (response.status === 200) {
+				userStore.set('');
+				loggedinUsername = '';
+				goto('/login');
+				customAlert(response.data.success);
+			}
+		} catch (error) {
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				customError('An error occurred during logout');
+			}
+		}
+	}
+
+	async function getUserProfile() {
 		try {
 			const response = await axios.get(`${API_URL}/profile`, { withCredentials: true });
+
 			if (response.status === 200) {
 				userProfile = response.data.profile;
 				originalProfile = { ...userProfile };
@@ -79,16 +102,13 @@
 		}
 	}
 
-	async function editProfile() {
-
-		console.log("new password", newPassword);
+	async function updateUserProfile() {
 		if (newPassword) {
 			userProfile.password = newPassword;
 		} else {
 			userProfile.password = null;
-
 		}
-		console.log('userProfile pwd:', userProfile.password);
+
 		const updatedFields = {};
 
 		if (userProfile.email !== originalProfile.email) {
@@ -99,12 +119,12 @@
 
 		if (Object.keys(updatedFields).length > 0)
 			try {
-				const response = await axios.patch(`${API_URL}/profile`, updatedFields, {
+				const response = await axios.patch(`${API_URL}/updateUserProfile`, updatedFields, {
 					withCredentials: true
 				});
 				if (response.status === 200) {
-					console.log('editprofile response:', response);
 					originalProfile = { ...userProfile };
+
 					customAlert(response.data.success);
 					newPassword = '';
 				}
@@ -118,14 +138,13 @@
 	}
 
 	onMount(async () => {
-		console.log('onmount');
 		await checkIsAdmin();
-		await fetchUserInfo();
-		await fetchUserProfile();
+		await getUsername();
+		await getUserProfile();
 	});
 </script>
 
-<Toaster richColors/>
+<Toaster richColors />
 
 {#if !$page.url.pathname.endsWith('/login')}
 	<Modal bind:showModal>
@@ -134,7 +153,7 @@
 				<h2>Edit Profile</h2>
 				<div class="form-group">
 					<label for="username">Username:</label>
-					<input type="text" bind:value={loggedinUser} readonly name="groupName" />
+					<input type="text" bind:value={loggedinUsername} readonly name="groupName" />
 
 					<label for="email">Email:</label>
 					<input type="text" bind:value={userProfile.email} name="email" />
@@ -148,7 +167,7 @@
 					/>
 				</div>
 				<div class="modal-buttons">
-					<button type="submit" on:click={editProfile}>SAVE CHANGES</button>
+					<button type="submit" on:click={updateUserProfile}>SAVE CHANGES</button>
 					<button
 						type="button"
 						on:click={() => {
@@ -175,6 +194,7 @@
 			</div>
 			<li class="nav-right">
 				<a on:click={editProfileModal}>Edit Profile</a>
+				<a on:click={logout}>Log Out</a>
 			</li>
 		</ul>
 	</nav>
@@ -248,5 +268,6 @@
 	}
 	.nav-right {
 		margin-right: 60px;
+		cursor: pointer;
 	}
 </style>

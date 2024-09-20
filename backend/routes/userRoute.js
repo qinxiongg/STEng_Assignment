@@ -7,14 +7,18 @@ const { authenticateJWT, verifyTokenWithIPAndBrowser } = require("../middleware/
 router.post("/login", userController.login);
 
 // Protected routes
-router.get("/isAdmin", authenticateJWT, userController.checkIsAdmin);
-router.get("/users", verifyTokenWithIPAndBrowser("admin"), userController.getUsers);
-router.post("/users", verifyTokenWithIPAndBrowser("admin"), userController.register);
-router.post("/editprofile", verifyTokenWithIPAndBrowser("admin"), userController.editUser);
-router.post("/groups", verifyTokenWithIPAndBrowser("admin"), userController.addGroups);
-router.get("/groups", authenticateJWT, userController.getGroups);
-router.get("/userinfo", authenticateJWT, userController.getUsername);
+router.get("/checkIsAdmin", authenticateJWT, userController.checkIsAdmin);
+router.get("/users", verifyTokenWithIPAndBrowser("admin"), userController.getAllUsers);
+router.post("/createUser", verifyTokenWithIPAndBrowser("admin"), userController.createUser);
+router.post("/edituser", verifyTokenWithIPAndBrowser("admin"), userController.editUser);
+router.post("/addNewGroups", verifyTokenWithIPAndBrowser("admin"), userController.addNewGroups);
+
+router.get("/getAllGroups", authenticateJWT, userController.getAllGroups);
+router.get("/getUsername", authenticateJWT, userController.getUsername);
 router.get("/profile", authenticateJWT, userController.getUserProfile);
-router.patch("/profile", authenticateJWT, userController.updateUserProfile);
+router.patch("/updateUserProfile", authenticateJWT, userController.updateUserProfile);
+
+router.post("/logout", userController.logout);
+
 
 module.exports = router;

@@ -2,8 +2,8 @@
 	import axios from 'axios';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { customError, handleError } from '../../lib/errorHandler';
-
+	import { customError, handleError, customAlert } from '../../lib/errorHandler';
+	import {userStore} from '$lib/stores';
 	const API_URL = import.meta.env.VITE_API_URL;
 
 	let username = '';
@@ -22,7 +22,11 @@
 				}
 			);
 
-			goto('/home/applications'); // Redirect to applications page
+			if (response.status === 200) {
+				userStore.set(username);
+				customAlert(response.data.success);
+				goto('/home/applications');
+			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
 				handleError(error.response.data);

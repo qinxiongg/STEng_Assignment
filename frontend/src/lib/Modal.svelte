@@ -22,6 +22,9 @@
 </dialog>
 
 <style>
+	h2 {
+		text-align: center;
+	}
 	dialog {
 		max-width: 32em;
 		border-radius: 0.2em;

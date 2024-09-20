@@ -1,8 +1,10 @@
 const query = require("../config/database");
 const { generateJWT, verifyJWT } = require("../services/authService");
-const { Checkgroup } = require("../middleware/middlewares");
+const { Checkgroup} = require("../middleware/middlewares");
+// const { Checkgroup, createAdmin } = require("../middleware/middlewares");
 const jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
+require("express");
 
 const secretKey = process.env.JWT_SECRET;
 
@@ -13,7 +15,7 @@ const login = async (req, res) => {
   const ipAddress = req.ip;
   const browserType = req.headers["user-agent"];
 
-  // Run createAdmin if username is admin
+  // // Run createAdmin if username is admin
   // if (username === "admin") {
   //   await createAdmin();
   // }
@@ -57,18 +59,32 @@ const login = async (req, res) => {
 
     const token = generateJWT(tokenPayload);
 
-    // if everything else is okay then login
     return res
       .cookie("authToken", token, { maxAge: 3600000, httpOnly: true })
       .status(200)
-      .json({ message: "Successfully logged in" });
+      .json({ success: "Successfully logged in" });
   } catch (error) {
     return res.status(500).json({ message: "Error." });
   }
 };
 
+const logout = async (req, res) => {
+  try {
+
+    if (req.cookies.authToken) {
+      res.clearCookie("authToken", { path: "/", httpOnly: true });
+    } else {
+      console.log("no cookies found");
+    }
+
+    return res.status(200).json({ success: "Successfully logged out" });
+  } catch (error) {
+    return res.status(500).json({ message: "Error logging out" });
+  }
+};
+
 // Fetch all users from database
-const getUsers = async (req, res) => {
+const getAllUsers = async (req, res) => {
   try {
     const users_list = await query(`SELECT * from accounts`);
     const groups = await query("SELECT * from user_group");
@@ -79,18 +95,14 @@ const getUsers = async (req, res) => {
         .map((group) => group.usergroup);
     });
 
-    // console.log(users_list);
-
     return res.json({ users_list });
   } catch (error) {
-    // console.log("error:", error);
-    // use toast for database error????
     return res.status(500).json({ message: "Error querying from database" });
   }
 };
 
 // Add new user to database when input field is submitted
-const register = async (req, res) => {
+const createUser = async (req, res) => {
   const { username, email, groups, password, active } = req.body;
 
   if (!username || !password || !active) {
@@ -139,29 +151,28 @@ const register = async (req, res) => {
       ]);
     }
 
-    return res.status(201).json({ message: "New user added successfully" });
+    return res.status(201).json({ success: "New user successfully added" });
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
       return res.status(409).json({ message: "Username already exist" });
     }
-    // change to "something went wrong"
-
     console.error("Error when adding new user:", error);
     return res.status(500).json({ message: "Database query error" });
   }
 };
 
-const addGroups = async (req, res) => {
-  const { groupName } = req.body;
+const addNewGroups = async (req, res) => {
+  const { newGroupName } = req.body;
 
-  if (!groupName) {
+  if (!newGroupName) {
     return res.status(401).json({ message: "Enter group name" });
   }
 
   // Check if group already exist
   const groupExist = await query(
-    "SELECT * FROM user_group WHERE usergroup = ?",
-    [groupName]
+    `SELECT * FROM user_group 
+    WHERE usergroup = ?`,
+    [newGroupName]
   );
 
   if (groupExist.length > 0) {
@@ -169,11 +180,12 @@ const addGroups = async (req, res) => {
   }
 
   try {
-    const result = await query(
-      "INSERT INTO user_group (usergroup) VALUES (?)",
-      [groupName]
+    await query(
+      `INSERT INTO user_group (usergroup) 
+      VALUES (?)`,
+      [newGroupName]
     );
-    return res.status(201).json({ message: "Successfully added group" });
+    return res.status(201).json({ success: "Successfully added group" });
   } catch (error) {
     return res
       .status(500)
@@ -181,7 +193,7 @@ const addGroups = async (req, res) => {
   }
 };
 
-const getGroups = async (req, res) => {
+const getAllGroups = async (req, res) => {
   try {
     const userGroups = await query("SELECT DISTINCT usergroup from user_group");
     res.json({ userGroups });
@@ -349,7 +361,7 @@ const editUser = async (req, res) => {
     }
     return res.status(200).json({ success: "Credential successfully changed" });
   } catch (error) {
-    console.error("Error updating user:", error);
+
     return res.status(500).json({ message: "Database query error" });
   }
 };
@@ -372,13 +384,14 @@ const checkIsAdmin = async (req, res) => {
 
 module.exports = {
   login,
-  getUsers,
-  register,
-  addGroups,
-  getGroups,
+  getAllUsers,
+  createUser,
+  addNewGroups,
+  getAllGroups,
   getUsername,
   getUserProfile,
   updateUserProfile,
   editUser,
   checkIsAdmin,
+  logout,
 };

@@ -8,7 +8,7 @@
 	// Set authStore to true if user is admin 
 	async function checkIsAdmin() {
 		try {
-			const response = await axios.get(`${API_URL}/isAdmin`, { withCredentials: true });
+			const response = await axios.get(`${API_URL}/checkIsAdmin`, { withCredentials: true });
 			let isAdmin = false;
 
 			if (response.status === 200) {
@@ -24,21 +24,7 @@
 		}
 	}
 
-	async function fetchUserInfo() {
-		try {
-			const response = await axios.get(`${API_URL}/userinfo`, { withCredentials: true });
-			console.log('response:', response);
-			if (response.status === 200) {
-				userStore.set(response.data.username);
-				// console.log("userstore:",$userStore);
-			}
-		} catch (error) {
-			console.error('Error fetching user info:', error);
-		}
-	}
-
 	onMount(async () => {
 		await checkIsAdmin();
-		await fetchUserInfo();
 	});
 </script>
