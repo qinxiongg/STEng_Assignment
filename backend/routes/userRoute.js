@@ -5,6 +5,7 @@ const { authenticateJWT, verifyTokenWithIPAndBrowser } = require("../middleware/
 
 // Public routes
 router.post("/login", userController.login);
+router.post("/logout", userController.logout);
 
 // Protected routes
 router.get("/checkIsAdmin", authenticateJWT, userController.checkIsAdmin);
@@ -18,7 +19,6 @@ router.get("/getUsername", authenticateJWT, userController.getUsername);
 router.get("/profile", authenticateJWT, userController.getUserProfile);
 router.patch("/updateUserProfile", authenticateJWT, userController.updateUserProfile);
 
-router.post("/logout", userController.logout);
 
 
 module.exports = router;

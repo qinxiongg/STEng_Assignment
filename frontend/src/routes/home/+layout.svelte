@@ -146,9 +146,9 @@
 
 <Toaster richColors />
 
-{#if !$page.url.pathname.endsWith('/login')}
-	<Modal bind:showModal>
-		{#if modalType === 'editProfile'}
+<!-- {#if !$page.url.pathname.endsWith('/login')} -->
+<Modal bind:showModal>
+		<!-- {#if modalType === 'editProfile'} -->
 			<div>
 				<h2>Edit Profile</h2>
 				<div class="form-group">
@@ -176,8 +176,8 @@
 					>
 				</div>
 			</div>
-		{/if}
-	</Modal>
+		<!-- {/if} -->
+</Modal>
 
 	<nav>
 		<ul>
@@ -193,12 +193,13 @@
 				{/if}
 			</div>
 			<li class="nav-right">
+				
 				<a on:click={editProfileModal}>Edit Profile</a>
 				<a on:click={logout}>Log Out</a>
 			</li>
 		</ul>
 	</nav>
-{/if}
+<!-- {/if} -->
 
 <slot></slot>
 
