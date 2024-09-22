@@ -56,7 +56,7 @@
 				authStore.set(response.data.isAdmin);
 			}
 			if (!isAdmin) {
-				goto('/home/applications');
+				goto('/home/task-management');
 			}
 		} catch (error) {
 			console.error('Error:', error);
@@ -249,7 +249,7 @@
 </div>
 
 <Modal bind:showModal>
-	{#if modalType === 'editProfile'}
+	<!-- {#if modalType === 'editProfile'}
 		<div>
 			<h2>Edit Profile</h2>
 			<div class="form-group">
@@ -272,7 +272,7 @@
 				>
 			</div>
 		</div>
-	{/if}
+	{/if} -->
 	{#if modalType === 'addGroup'}
 		<div class="modal-title">
 			<h2>Add Group</h2>

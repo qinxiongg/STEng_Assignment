@@ -225,7 +225,6 @@ const getUserProfile = async (req, res) => {
 
   try {
     const decoded = await verifyJWT(token);
-    // console.log(decoded);
     const username = decoded.username;
     const result = await query(
       `SELECT username, email, password 
@@ -248,7 +247,7 @@ const updateUserProfile = async (req, res) => {
   if (!token) {
     return res.status(401).json({ message: "No token provided" });
   }
-  console.log("password", password);
+
   if (password && password.length > 0) {
     const passwordRegex =
       /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,10}$/;
@@ -263,10 +262,7 @@ const updateUserProfile = async (req, res) => {
   try {
     const decoded = await verifyJWT(token);
     const username = decoded.username;
-    console.log;
     const { email, password } = req.body;
-
-    console.log("show edit profile", req.body);
 
     let updateProfileQuery = "UPDATE accounts SET ";
     const params = [];
@@ -296,7 +292,7 @@ const updateUserProfile = async (req, res) => {
     console.error("Error updating profile:", error);
     return res
       .status(403)
-      .json({ message: "Access denied", error: error.message });
+      .json({ message: "Access denied"});
   }
 };
 
@@ -304,7 +300,6 @@ const editUser = async (req, res) => {
   const { username, email, password, usergroupConcat, accountStatus } =
     req.body;
 
-  console.log(req.body);
   if (!email && !password && !accountStatus) {
     return res.status(400).json({ message: "No fields to update" });
   }
@@ -369,13 +364,12 @@ const editUser = async (req, res) => {
 // check if user is a admin
 const checkIsAdmin = async (req, res) => {
   const token = req.cookies.authToken;
-  console.log("token is ", token);
 
   try {
     const decoded = await jwt.verify(token, secretKey);
     const username = decoded.username;
     const isAdmin = await Checkgroup(username, "admin");
-    console.log(isAdmin);
+
     return res.status(200).json({ isAdmin });
   } catch (error) {
     res.status(401).json({ message: "Access denied" });

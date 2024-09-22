@@ -10,7 +10,7 @@ export function customError(error) {
 export function customAlert(success) {
   toast.success(`${success || "Something went wrong!"}`);
 }
-;
+
 
 // Function to handle a general error message
 export function handleError(error) {

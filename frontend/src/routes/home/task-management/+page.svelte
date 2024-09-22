@@ -9,6 +9,24 @@
 
 	let showModal = false;
 
+	let newApp = {
+		appAcronym : null,
+		appRNumber : null,
+		appDesc : null,
+		appStartDate: null,
+		appEndDate: null,
+		appPermitCreate: null,
+		appPermitOpen: null,
+		appPermitToDo: null,
+		appPermitDoing: null,
+		appPermitDone: null
+	}
+
+	const createNewApplication = (req, res) => {
+		
+	}
+
+
 	function showCreateAppModal() {
 		showModal = true;
 	}
@@ -29,7 +47,7 @@
 			}
 
 			if (!isAdmin) {
-				goto('/home/applications');
+				goto('/home/task-management');
 			}
 		} catch (error) {
 			console.error('Error at checkIsAdmin:', error);
@@ -42,10 +60,13 @@
 </script>
 
 <Modal bind:showModal>
-	<div class="modal-title">
+	<form on:submit|preventDefault={createNewApplication}>
 		<h2>Create Application</h2>
+		<label for="appAcronym">
+			<input type="text" bind:value={newApp.appAcronym} placeholder="Name">
+		</label>
 		
-	</div>
+	</form>
 </Modal>
 
 <div class="middle-container">

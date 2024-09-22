@@ -2,14 +2,16 @@
 	import axios from 'axios';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { customError, handleError, customAlert } from '../../lib/errorHandler';
-	import {userStore} from '$lib/stores';
+	import { customError, handleError, customAlert } from '$lib/errorHandler';
+	import { userStore } from '$lib/stores';
+	import { Toaster } from 'svelte-sonner';
+	
 	const API_URL = import.meta.env.VITE_API_URL;
 
 	let username = '';
 	let password = '';
 
-	async function handleSubmit() {
+	async function login() {
 		try {
 			const response = await axios.post(
 				`${API_URL}/login`,
@@ -25,7 +27,7 @@
 			if (response.status === 200) {
 				userStore.set(username);
 				customAlert(response.data.success);
-				goto('/home/applications');
+				goto('/home/task-management');
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -37,12 +39,14 @@
 	}
 </script>
 
+<Toaster richColors />
+
 <div class="login-container">
 	<h1>LOGIN</h1>
 	<div class="login-form">
 		<input type="text" bind:value={username} placeholder="Username" />
 		<input type="password" bind:value={password} placeholder="Password" />
-		<button type="submit" on:click={handleSubmit}><b>LOGIN</b></button>
+		<button type="submit" on:click={login}>LOGIN</button>
 	</div>
 </div>
 
@@ -78,5 +82,6 @@
 		cursor: pointer;
 		background-color: black;
 		width: 100%;
+		font-weight: bold;
 	}
 </style>

@@ -184,7 +184,7 @@
 			<li class="nav-left">Hello, {$userStore}</li>
 			<div class="nav-center">
 				<li>
-					<a href="/home/applications">Applications</a>
+					<a href="/home/task-management">Applications</a>
 				</li>
 				{#if $authStore}
 					<li>
