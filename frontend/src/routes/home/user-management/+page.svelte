@@ -56,7 +56,7 @@
 				authStore.set(response.data.isAdmin);
 			}
 			if (!isAdmin) {
-				goto('/home/task-management');
+				goto('/home/applications');
 			}
 		} catch (error) {
 			console.error('Error:', error);

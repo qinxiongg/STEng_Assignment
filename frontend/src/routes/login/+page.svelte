@@ -27,7 +27,7 @@
 			if (response.status === 200) {
 				userStore.set(username);
 				customAlert(response.data.success);
-				goto('/home/task-management');
+				goto('/home/applications');
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {

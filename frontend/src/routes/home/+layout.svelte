@@ -184,7 +184,7 @@
 			<li class="nav-left">Hello, {$userStore}</li>
 			<div class="nav-center">
 				<li>
-					<a href="/home/task-management">Applications</a>
+					<a href="/home/applications">Applications</a>
 				</li>
 				{#if $authStore}
 					<li>
@@ -193,8 +193,14 @@
 				{/if}
 			</div>
 			<li class="nav-right">
-				
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-missing-attribute -->
 				<a on:click={editProfileModal}>Edit Profile</a>
+				
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<!-- svelte-ignore a11y-missing-attribute -->
 				<a on:click={logout}>Log Out</a>
 			</li>
 		</ul>
