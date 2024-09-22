@@ -16,9 +16,6 @@ PRIMARY KEY (`username`)
 DELETE FROM `accounts` WHERE `username` = 'test';
 INSERT INTO `accounts` (`username`, `password`, `email`) VALUES ('test', 'test', 'test@test.com');
 
--- Create usergroup table
-USE `nodelogin`;
-
 CREATE TABLE IF NOT EXISTS `user_group` (
 `usergroup` varchar(50) NOT NULL,
 `username` varchar(50) DEFAULT '',

@@ -26,17 +26,16 @@
 		text-align: center;
 	}
 	dialog {
-		max-width: 32em;
+		/* max-width: 32em; */
 		border-radius: 0.2em;
 		border: none;
 		padding: 0;
+		width: 620px;
 	}
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.3);
 	}
-	dialog > div {
-		width: 500px;
-	}
+
 	dialog[open] {
 		animation: zoom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 		border: none;

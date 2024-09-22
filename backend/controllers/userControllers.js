@@ -15,7 +15,7 @@ const login = async (req, res) => {
   const ipAddress = req.ip;
   const browserType = req.headers["user-agent"];
 
-  // // Run createAdmin if username is admin
+  // Run createAdmin if username is admin
   // if (username === "admin") {
   //   await createAdmin();
   // }

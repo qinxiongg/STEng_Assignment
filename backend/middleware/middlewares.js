@@ -1,7 +1,7 @@
 // Middlewares for route protection
 const query = require("../config/database");
 const jwt = require("jsonwebtoken");
-const {verifyJWT} = require("../services/authService") //remove this
+const { verifyJWT } = require("../services/authService"); //remove this
 var bcrypt = require("bcryptjs");
 
 // const bcrypt = require("bcrypt");
@@ -69,13 +69,11 @@ const checkUserAccStatus = async (username) => {
     return results[0].accountStatus === "Active"; // return true if status is active
   } catch (error) {
     console.error("Error checking user's account status", error);
-    return res
-      .status(403)
-      .json({ message: "Access denied12" });
+    return res.status(403).json({ message: "Access denied12" });
   }
 };
 
-// // COMMENT THIS OUT FOR NOW
+// Comment this out for now
 // const createAdmin = async () => {
 //   const adminUsername = "admin";
 //   const adminPwd = "admin123!!";
