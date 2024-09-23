@@ -4,7 +4,7 @@ const { Checkgroup} = require("../middleware/middlewares");
 // const { Checkgroup, createAdmin } = require("../middleware/middlewares");
 const jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
-require("express");
+
 
 const secretKey = process.env.JWT_SECRET;
 

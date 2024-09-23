@@ -1,0 +1,10 @@
+const express = require("express");
+const router = express.Router();
+const tmsController = require("../controllers/tmsController");
+const {authenticateJWT} = require("../middleware/middlewares");
+
+// Protected routes for task management
+router.post("/createApplication", authenticateJWT, tmsController.createApplication);
+router.get("/applications", authenticateJWT, tmsController.showAllApplications);
+
+module.exports = router;

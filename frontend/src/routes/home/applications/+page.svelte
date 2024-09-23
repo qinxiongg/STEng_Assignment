@@ -1,12 +1,11 @@
 <script>
 	import { onMount } from 'svelte';
 	import axios from 'axios';
-	import { goto } from '$app/navigation';
+	// import { goto } from '$app/navigation';
 	import { authStore, userStore } from '$lib/stores';
 	import Modal from '$lib/Modal.svelte';
 	import FaEdit from 'svelte-icons/fa/FaEdit.svelte';
 	import { customError, handleError, customAlert } from '$lib/errorHandler';
-
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
@@ -25,6 +24,8 @@
 		appPermitDoing: null,
 		appPermitDone: null
 	};
+
+	let applications = [];
 
 	// Set authStore to true if user is admin
 	async function checkIsAdmin() {
@@ -47,29 +48,45 @@
 				withCredentials: true
 			});
 
-			if (response.status === 200) {
-				
+			if (response.status === 201) {
 				// reset object values back to null
-				for(let key in newApplication) {
-					newApplication[key] =  null;
+				for (let key in newApplication) {
+					newApplication[key] = null;
 				}
-				customAlert(response.error.success);				 
+				customAlert(response.data.success);
 			}
-
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
 				handleError(error.response.data);
 			} else {
-				customError ("An error occurred when creating application.");
+				customError('An error occurred when creating application.');
 			}
 		}
 	}
 
 	async function editApplication() {}
 
-	onMount(async () => {
-		await checkIsAdmin();
-	});
+	// async function showAllApplications() {
+	// 	try {
+	// 		const response = await axios.get(`${API_URL}/applications`, { withCredentials: true });
+
+	// 		if (response.status === 200) {
+	// 			applications = response.data.result;
+	// 			console.log('applications', applications);
+	// 		}
+	// 	} catch (error) {
+	// 		if (error instanceof axios.AxiosError) {
+	// 			handleError(error.response);
+	// 		} else {
+	// 			customError('An error occurred when showing applications.');
+	// 		}
+	// 	}
+	// }
+
+	// onMount(async () => {
+	// 	await checkIsAdmin();
+	// 	await showAllApplications();
+	// });
 </script>
 
 <Modal bind:showModal>
@@ -83,7 +100,11 @@
 				</div>
 				<div class="form-group">
 					<label for="appRNumber">App R-Number</label>
-					<input type="text" bind:value={newApplication.appRNumber} placeholder="Number" />
+					<input
+						type="text"
+						bind:value={newApplication.appRNumber}
+						placeholder="Number"
+					/>
 				</div>
 				<div class="form-group">
 					<label for="appDesc">App Description</label>
@@ -99,23 +120,43 @@
 				</div>
 				<div class="form-group">
 					<label for="appPermitCreate">App Permit Create</label>
-					<input type="text" bind:value={newApplication.appPermitCreate} placeholder="Group" />
+					<input
+						type="text"
+						bind:value={newApplication.appPermitCreate}
+						placeholder="Group"
+					/>
 				</div>
 				<div class="form-group">
 					<label for="appPermitOpen">App Permit Open</label>
-					<input type="text" bind:value={newApplication.appPermitOpen} placeholder="Group" />
+					<input
+						type="text"
+						bind:value={newApplication.appPermitOpen}
+						placeholder="Group"
+					/>
 				</div>
 				<div class="form-group">
 					<label for="appPermitToDo">App Permit ToDo</label>
-					<input type="text" bind:value={newApplication.appPermitToDo} placeholder="Group" />
+					<input
+						type="text"
+						bind:value={newApplication.appPermitToDo}
+						placeholder="Group"
+					/>
 				</div>
 				<div class="form-group">
 					<label for="appPermitDoing">App Permit Doing</label>
-					<input type="text" bind:value={newApplication.appPermitDoing} placeholder="Group" />
+					<input
+						type="text"
+						bind:value={newApplication.appPermitDoing}
+						placeholder="Group"
+					/>
 				</div>
 				<div class="form-group">
 					<label for="appPermitDone">App Permit Done</label>
-					<input type="text" bind:value={newApplication.appPermitDone} placeholder="Group" />
+					<input
+						type="text"
+						bind:value={newApplication.appPermitDone}
+						placeholder="Group"
+					/>
 				</div>
 				<div class="modal-buttons">
 					<button type="submit">Create Application</button>
@@ -138,7 +179,11 @@
 				</div>
 				<div class="form-group">
 					<label for="appRNumber">App R-Number</label>
-					<input type="text" bind:value={newApplication.appRNumber} placeholder="Number" />
+					<input
+						type="text"
+						bind:value={newApplication.appRNumber}
+						placeholder="Number"
+					/>
 				</div>
 				<div class="form-group">
 					<label for="appDesc">App Description</label>
@@ -154,23 +199,43 @@
 				</div>
 				<div class="form-group">
 					<label for="appPermitCreate">App Permit Create</label>
-					<input type="text" bind:value={newApplication.appPermitCreate} placeholder="Group" />
+					<input
+						type="text"
+						bind:value={newApplication.appPermitCreate}
+						placeholder="Group"
+					/>
 				</div>
 				<div class="form-group">
 					<label for="appPermitOpen">App Permit Open</label>
-					<input type="text" bind:value={newApplication.appPermitOpen} placeholder="Group" />
+					<input
+						type="text"
+						bind:value={newApplication.appPermitOpen}
+						placeholder="Group"
+					/>
 				</div>
 				<div class="form-group">
 					<label for="appPermitToDo">App Permit ToDo</label>
-					<input type="text" bind:value={newApplication.appPermitToDo} placeholder="Group" />
+					<input
+						type="text"
+						bind:value={newApplication.appPermitToDo}
+						placeholder="Group"
+					/>
 				</div>
 				<div class="form-group">
 					<label for="appPermitDoing">App Permit Doing</label>
-					<input type="text" bind:value={newApplication.appPermitDoing} placeholder="Group" />
+					<input
+						type="text"
+						bind:value={newApplication.appPermitDoing}
+						placeholder="Group"
+					/>
 				</div>
 				<div class="form-group">
 					<label for="appPermitDone">App Permit Done</label>
-					<input type="text" bind:value={newApplication.appPermitDone} placeholder="Group" />
+					<input
+						type="text"
+						bind:value={newApplication.appPermitDone}
+						placeholder="Group"
+					/>
 				</div>
 				<div class="modal-buttons">
 					<button type="submit">Edit Application</button>
@@ -193,6 +258,9 @@
 		on:click={() => {
 			showModal = true;
 			modalType = 'createApplication';
+			for (let key in newApplication) {
+				newApplication[key] = null;
+			}
 		}}>+ CREATE APP</button
 	>
 </div>
@@ -203,6 +271,9 @@
 			on:click={() => {
 				showModal = true;
 				modalType = 'editApplication';
+				for (let key in newApplication) {
+					newApplication[key] = null;
+				}
 			}}><FaEdit /></button
 		>
 		<div class="applications-card-content">

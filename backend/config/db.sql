@@ -22,12 +22,12 @@ CREATE TABLE IF NOT EXISTS `user_group` (
 PRIMARY KEY (usergroup, username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXIST `Application` (
-    `App_Acronym` varchar(50) NOT NULL,
+CREATE TABLE IF NOT EXISTS `Application` (
+    `App_Acronym` varchar(50),
+    `App_Description` TEXT,
     `App_Rnumber` int NOT NULL,
     `App_startDate` int NOT NULL,
     `App_endDate` int NOT NULL,
-    `App_Description` varchar(250),
     `App_permit_Create` varchar(50) Default 'PL',
     `App_permit_Open` varchar(50),
     `App_permit_toDoList` varchar(50),
