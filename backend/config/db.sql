@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `Application` (
     `App_Rnumber` int NOT NULL,
     `App_startDate` int NOT NULL,
     `App_endDate` int NOT NULL,
-    `App_permit_Create` varchar(50) Default 'PL',
+    `App_permit_Create` varchar(50),
     `App_permit_Open` varchar(50),
     `App_permit_toDoList` varchar(50),
     `App_permit_Doing` varchar(50),

@@ -17,16 +17,6 @@ const createApplication = async (req, res) => {
 
   console.log(req.body);
 
-  // convert date to epoch timestamp
-  const startDate = new Date(appStartDate);
-  const epochStartDate = Math.floor(startDate.getTime() / 1000);
-
-  const endDate = new Date(appEndDate);
-  const epochEndDate = Math.floor(endDate.getTime() / 1000);
-
-  console.log("epochStartDate", epochStartDate);
-  console.log("epochEndDate", epochEndDate);
-
   try {
     await query(
       `INSERT INTO application
@@ -57,12 +47,15 @@ const createApplication = async (req, res) => {
 const showAllApplications = async (req, res) => {
   try {
     const result =
-    await query(`SELECT appAcronym, appDesc, epochStartDate, epochEndDate 
+      await query(`SELECT App_Acronym, App_Description, App_startDate, App_endDate 
                 FROM application`);
+          
     return res.status(200).json(result);
   } catch (error) {
     console.error("Error querying data from datbase.", error);
-    return res.status(500).json({message: "Unable to get application list from database."});
+    return res
+      .status(500)
+      .json({ message: "Unable to get application list from database." });
   }
 };
 

@@ -25,6 +25,9 @@
 		appPermitDone: null
 	};
 
+	let createAppStartDate = null;
+	let createAppEndDate = null;
+
 	let applications = [];
 
 	// Set authStore to true if user is admin
@@ -44,6 +47,13 @@
 
 	async function createApplication() {
 		try {
+			// convert date to epoch timestamp
+			const startDate = new Date(createAppStartDate);
+			newApplication.appStartDate = Math.floor(startDate.getTime() / 1000);
+
+			const endDate = new Date(createAppEndDate);
+			newApplication.appEndDate = Math.floor(endDate.getTime() / 1000);
+
 			const response = await axios.post(`${API_URL}/createApplication`, newApplication, {
 				withCredentials: true
 			});
@@ -66,27 +76,53 @@
 
 	async function editApplication() {}
 
-	// async function showAllApplications() {
-	// 	try {
-	// 		const response = await axios.get(`${API_URL}/applications`, { withCredentials: true });
+	async function showAllApplications() {
+		try {
+			const response = await axios.get(`${API_URL}/applications`, { withCredentials: true });
 
-	// 		if (response.status === 200) {
-	// 			applications = response.data.result;
-	// 			console.log('applications', applications);
-	// 		}
-	// 	} catch (error) {
-	// 		if (error instanceof axios.AxiosError) {
-	// 			handleError(error.response);
-	// 		} else {
-	// 			customError('An error occurred when showing applications.');
-	// 		}
-	// 	}
-	// }
+			if (response.status === 200) {
+				applications = response.data;
+				console.log("response:", applications);
 
-	// onMount(async () => {
-	// 	await checkIsAdmin();
-	// 	await showAllApplications();
-	// });
+				// Loop through retrieved data, convert date to string and map the value back
+				applications = applications.map((app) => {
+					console.log(" app (before conversion):", app);
+
+
+					app.App_startDate = new Date(app.App_startDate * 1000);
+					app.App_startDate = app.App_startDate.toLocaleDateString();
+					console.log("app.appStartDate",app.App_startDate);
+
+					app.App_endDate = new Date(app.App_endDate * 1000);
+					app.App_endDate = app.App_endDate.toLocaleDateString();
+					console.log("app.appEndDate", app.App_endDate);
+					
+					console.log(" app (after conversion):", app);
+
+
+					return {
+                    ...app,
+                    appStartDate: app.App_startDate,
+                    appEndDate: app.App_endDate
+                };
+
+				});
+
+				console.log("after conversion:", applications);
+			}
+		} catch (error) {
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response);
+			} else {
+				customError('An error occurred when showing applications.');
+			}
+		}
+	}
+
+	onMount(async () => {
+		await checkIsAdmin();
+		await showAllApplications();
+	});
 </script>
 
 <Modal bind:showModal>
@@ -191,11 +227,11 @@
 				</div>
 				<div class="form-group">
 					<label for="appStartDate">Start Date</label>
-					<input type="date" bind:value={newApplication.appStartDate} />
+					<input type="date" bind:value={createAppStartDate} />
 				</div>
 				<div class="form-group">
 					<label for="appEndDate">End Date</label>
-					<input type="date" bind:value={newApplication.appEndDate} />
+					<input type="date" bind:value={createAppEndDate} />
 				</div>
 				<div class="form-group">
 					<label for="appPermitCreate">App Permit Create</label>
@@ -346,8 +382,7 @@
 	}
 	.form-group {
 		display: flex;
-		/* align-items: center; */
-		/* flex-direction: column; */
+		align-items: center;
 		justify-content: space-between;
 	}
 	.form-group label {
