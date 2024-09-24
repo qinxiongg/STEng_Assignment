@@ -5,7 +5,7 @@ const createApplication = async (req, res) => {
   const {
     appAcronym,
     appRNumber,
-    appDesc,
+    appDescription,
     appStartDate,
     appEndDate,
     appPermitCreate,
@@ -14,8 +14,6 @@ const createApplication = async (req, res) => {
     appPermitDoing,
     appPermitDone,
   } = req.body;
-
-  console.log(req.body);
 
   try {
     await query(
@@ -26,10 +24,10 @@ const createApplication = async (req, res) => {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         appAcronym,
-        appDesc,
+        appDescription,
         appRNumber,
-        epochStartDate,
-        epochEndDate,
+        appStartDate,
+        appEndDate,
         appPermitCreate,
         appPermitOpen,
         appPermitToDo,
@@ -49,8 +47,15 @@ const showAllApplications = async (req, res) => {
     const result =
       await query(`SELECT App_Acronym, App_Description, App_startDate, App_endDate 
                 FROM application`);
-          
-    return res.status(200).json(result);
+
+    const result_mapped = result.map((app) => ({
+      appAcronym: app.App_Acronym,
+      appDescription: app.App_Description,
+      appStartDate: app.App_startDate,
+      appEndDate: app.App_endDate,
+    }));
+
+    return res.status(200).json(result_mapped);
   } catch (error) {
     console.error("Error querying data from datbase.", error);
     return res

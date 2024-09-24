@@ -469,10 +469,11 @@
 		align-items: center;
 		display: flex;
 		justify-content: space-between;
-		margin-top: 40px;
+		margin-top: 20px;
 	}
 	.middle-left {
 		margin-left: 70px;
+		font-size: 1.7em;
 	}
 	.middle-right {
 		margin-right: 70px;

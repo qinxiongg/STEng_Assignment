@@ -249,9 +249,9 @@
 		background-color: black;
 		margin: 0;
 		color: #ffffff;
-		height: 100px;
+		height: 80px;
 		align-items: center;
-		font-size: 1.5em;
+		font-size: 1.4em;
 	}
 	nav ul {
 		display: flex;

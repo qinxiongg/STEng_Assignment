@@ -34,15 +34,10 @@
 				isAdmin = response.data.isAdmin;
 				authStore.set(response.data.isAdmin);
 			}
-
 		} catch (error) {
 			console.error('Error at checkIsAdmin:', error);
 		}
 	}
-
-	async function createApplication() {}
-
-	async function editApplication() {}
 
 	onMount(async () => {
 		await checkIsAdmin();
@@ -60,7 +55,24 @@
 	>
 </div>
 <div class="kanban-container">
-
+	<div class="kanban">
+		<div class="kanban-header">
+			<h2>Open</h2>
+			<button class="createTaskButton">+ CREATE TASK</button>
+		</div>
+	</div>
+	<div class="kanban">
+		<h2>To do</h2>
+	</div>
+	<div class="kanban">
+		<h2>Doing</h2>
+	</div>
+	<div class="kanban">
+		<h2>Done</h2>
+	</div>
+	<div class="kanban">
+		<h2>Closed</h2>
+	</div>
 </div>
 
 <style>
@@ -68,10 +80,11 @@
 		align-items: center;
 		display: flex;
 		justify-content: space-between;
-		margin-top: 40px;
+		margin-top: 20px;
 	}
 	.middle-left {
 		margin-left: 70px;
+		font-size: 1.7em;
 	}
 	.middle-right {
 		margin-right: 70px;
@@ -80,5 +93,35 @@
 		width: 140px;
 		height: 40px;
 		cursor: pointer;
+	}
+	.kanban-container {
+		margin-top: 10px;
+		display: flex;
+		justify-content: space-evenly;
+		min-height: calc(100vh - 190px);
+	}
+	.kanban {
+		background-color: #d8d8d8;
+		width: 260px;
+		border-radius: 5px;
+		font-size: 0.7em;
+		margin-left: 10px;
+		margin-right: 10px;
+		margin-bottom: 20px;
+	}
+	.kanban-header {
+		display: flex;
+		justify-content: space-between;
+	}
+	.kanban h2 {
+		margin-left: 20px;
+	}
+	.createTaskButton {
+		width: 120px;
+		height: 30px;
+		align-self: center;
+		margin-right: 10px;
+		background-color: #000000;
+		color: #ffffff;
 	}
 </style>

@@ -15,7 +15,7 @@
 	let newApplication = {
 		appAcronym: null,
 		appRNumber: null,
-		appDesc: null,
+		appDescription: null,
 		appStartDate: null,
 		appEndDate: null,
 		appPermitCreate: null,
@@ -54,6 +54,7 @@
 			const endDate = new Date(createAppEndDate);
 			newApplication.appEndDate = Math.floor(endDate.getTime() / 1000);
 
+			console.log('new application', newApplication);
 			const response = await axios.post(`${API_URL}/createApplication`, newApplication, {
 				withCredentials: true
 			});
@@ -63,6 +64,7 @@
 				for (let key in newApplication) {
 					newApplication[key] = null;
 				}
+				showAllApplications();
 				customAlert(response.data.success);
 			}
 		} catch (error) {
@@ -82,33 +84,18 @@
 
 			if (response.status === 200) {
 				applications = response.data;
-				console.log("response:", applications);
+				console.log('response:', applications);
 
-				// Loop through retrieved data, convert date to string and map the value back
-				applications = applications.map((app) => {
-					console.log(" app (before conversion):", app);
+				for (let i = 0; i < applications.length; i++) {
+					const app = applications[i];
 
+					app.appStartDate = new Date(app.appStartDate * 1000);
+					app.appStartDate = app.appStartDate.toLocaleDateString();
 
-					app.App_startDate = new Date(app.App_startDate * 1000);
-					app.App_startDate = app.App_startDate.toLocaleDateString();
-					console.log("app.appStartDate",app.App_startDate);
-
-					app.App_endDate = new Date(app.App_endDate * 1000);
-					app.App_endDate = app.App_endDate.toLocaleDateString();
-					console.log("app.appEndDate", app.App_endDate);
-					
-					console.log(" app (after conversion):", app);
-
-
-					return {
-                    ...app,
-                    appStartDate: app.App_startDate,
-                    appEndDate: app.App_endDate
-                };
-
-				});
-
-				console.log("after conversion:", applications);
+					app.appEndDate = new Date(app.appEndDate * 1000);
+					app.appEndDate = app.appEndDate.toLocaleDateString();
+				}
+				console.log('applications', applications);
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -143,16 +130,19 @@
 					/>
 				</div>
 				<div class="form-group">
-					<label for="appDesc">App Description</label>
-					<textarea bind:value={newApplication.appDesc} placeholder="Description" />
+					<label for="appDescription">App Description</label>
+					<textarea
+						bind:value={newApplication.appDescription}
+						placeholder="Description"
+					/>
 				</div>
 				<div class="form-group">
 					<label for="appStartDate">Start Date</label>
-					<input type="date" bind:value={newApplication.appStartDate} />
+					<input type="date" bind:value={createAppStartDate} />
 				</div>
 				<div class="form-group">
 					<label for="appEndDate">End Date</label>
-					<input type="date" bind:value={newApplication.appEndDate} />
+					<input type="date" bind:value={createAppEndDate} />
 				</div>
 				<div class="form-group">
 					<label for="appPermitCreate">App Permit Create</label>
@@ -222,8 +212,11 @@
 					/>
 				</div>
 				<div class="form-group">
-					<label for="appDesc">App Description</label>
-					<textarea bind:value={newApplication.appDesc} placeholder="Description" />
+					<label for="appDescription">App Description</label>
+					<textarea
+						bind:value={newApplication.appDescription}
+						placeholder="Description"
+					/>
 				</div>
 				<div class="form-group">
 					<label for="appStartDate">Start Date</label>
@@ -300,74 +293,52 @@
 		}}>+ CREATE APP</button
 	>
 </div>
-<div class="applications-board">
-	<div class="applications-card">
-		<button
-			class="editApplication-Button"
-			on:click={() => {
-				showModal = true;
-				modalType = 'editApplication';
-				for (let key in newApplication) {
-					newApplication[key] = null;
-				}
-			}}><FaEdit /></button
-		>
-		<div class="applications-card-content">
-			<h3>App Name</h3>
-			<p>Task flow</p>
+<div class="application-container">
+	{#each applications as app}
+		<div class="application-card">
+			<button
+				class="editApplication-Button"
+				on:click={() => {
+					showModal = true;
+					modalType = 'editApplication';
+					for (let key in newApplication) {
+						newApplication[key] = null;
+					}
+				}}><FaEdit /></button
+			>
+			<div class="application-card-content">
+				<h3>App Name</h3>
+				<p>{app.appAcronym}</p>
+			</div>
+			<div class="application-card-content">
+				<h3>App Description</h3>
+				<p>
+					{app.appDescription}
+				</p>
+			</div>
+			<div class="application-card-content">
+				<h3>Start Date</h3>
+				<p>{app.appStartDate}</p>
+			</div>
+			<div class="application-card-content">
+				<h3>End Date</h3>
+				<p>{app.appEndDate}</p>
+			</div>
 		</div>
-		<div class="applications-card-content">
-			<h3>App Description</h3>
-			<p>
-				fdsfjknsfjnsfnsknfksnfksnfksnkfnskfnsknfksnfksnfksnfksnkfsn
-				fdsfjknsfjnsfnsknfksnfksnfksnkfnskfnsknfksnfksnfksnfksnkfsn
-				fdsfjknsfjnsfnsknfksnfksnfksnkfnskfnsknfksnfksnfksnfksnkfsn
-				fdsfjknsfjnsfnsknfksnfksnfksnkfnskfnsknfksnfksnfksnfksnkfsn
-			</p>
-		</div>
-		<div class="applications-card-content">
-			<h3>Start Date</h3>
-			<p>05/07/2024</p>
-		</div>
-		<div class="applications-card-content">
-			<h3>End Date</h3>
-			<p>11/07/2024</p>
-		</div>
-	</div>
-	<div class="applications-card">
-		<div class="applications-card-content">
-			<h3>App Name</h3>
-			<p>Task flow</p>
-		</div>
-		<div class="applications-card-content">
-			<h3>App Description</h3>
-			<p>
-				fdsfjknsfjnsfnsknfksnfksnfksnkfnskfnsknfksnfksnfksnfksnkfsn
-				fdsfjknsfjnsfnsknfksnfksnfksnkfnskfnsknfksnfksnfkseeeeeeeeeeeeeeeddddeeeeeeeeeeeeenfksnkfsn
-				fdsfjknsfjnsfnsknfksnfksnfksnkfnskfnsknfksnfksnfksnfksnkfsn
-				fdsfjknsfjnsfnsknfksnfksnfksnkfnskfnsknfksnfksnfksnfksnkfsn
-			</p>
-		</div>
-		<div class="applications-card-content">
-			<h3>Start Date</h3>
-			<p>05/07/2024</p>
-		</div>
-		<div class="applications-card-content">
-			<h3>End Date</h3>
-			<p>11/07/2024</p>
-		</div>
-	</div>
+	{/each}
 </div>
 
 <style>
+	
 	.middle-container {
 		align-items: center;
 		display: flex;
 		justify-content: space-between;
-		margin-top: 40px;
+		margin-top: 20px;
 	}
 	.middle-left {
 		margin-left: 70px;
+		font-size: 1.7em;
 	}
 	.middle-right {
 		margin-right: 70px;
@@ -426,12 +397,15 @@
 		height: 40px;
 		cursor: pointer;
 	}
-	.applications-board {
+	.application-container {
 		display: flex;
-		justify-content: space-evenly;
+		/* justify-content: space-evenly; */
+		justify-content: center;
 		margin-top: 10px;
+		flex-wrap: wrap; 
+		gap: 3rem;      
 	}
-	.applications-card {
+	.application-card {
 		background-color: #d8d8d8;
 		width: 600px;
 		height: 200px;
@@ -439,19 +413,21 @@
 		overflow: hidden;
 		position: relative;
 	}
-	.applications-card:hover {
+	.application-card:hover {
 		box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
 	}
-	.applications-card-content {
+	.application-card-content {
 		display: flex;
 		font-size: 0.7em;
 	}
-	.applications-card-content h3 {
+	.application-card-content h3 {
 		width: 120px;
 	}
-	.applications-card-content p {
+	.application-card-content p {
 		width: 440px;
 		overflow-wrap: break-word;
+		overflow-y: auto;
+		max-height: 450px;
 	}
 	.editApplication-Button {
 		width: 25px;
