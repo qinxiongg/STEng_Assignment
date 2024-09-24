@@ -1,12 +1,11 @@
 <script>
-	import { onMount } from "svelte";
+	import { onMount } from 'svelte';
 	export let showModal; //boolean
 
 	let dialog;
 
 	$: if (dialog && showModal) dialog.showModal();
 	$: if (dialog && !showModal) dialog.close();
-
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
@@ -22,15 +21,12 @@
 </dialog>
 
 <style>
-	h2 {
-		text-align: center;
-	}
 	dialog {
 		/* max-width: 32em; */
 		border-radius: 0.2em;
 		border: none;
 		padding: 0;
-		width: 620px;
+		width: 700px;
 	}
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.3);

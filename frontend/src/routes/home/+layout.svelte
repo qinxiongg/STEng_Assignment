@@ -43,7 +43,6 @@
 				isAdmin = response.data.isAdmin;
 				authStore.set(response.data.isAdmin);
 			}
-
 		} catch (error) {
 			console.log('Error at checkIsAdmin', error);
 		}
@@ -144,67 +143,67 @@
 	});
 </script>
 
-<Toaster richColors />
+<Toaster style="z-index: 12;" richColors />
 
 <!-- {#if !$page.url.pathname.endsWith('/login')} -->
 <Modal bind:showModal>
-		<!-- {#if modalType === 'editProfile'} -->
-			<div>
-				<h2>Edit Profile</h2>
-				<div class="form-group">
-					<label for="username">Username:</label>
-					<input type="text" bind:value={loggedinUsername} readonly name="groupName" />
+	<!-- {#if modalType === 'editProfile'} -->
+	<div>
+		<h2>Edit Profile</h2>
+		<div class="form-group">
+			<label for="username">Username:</label>
+			<input type="text" bind:value={loggedinUsername} readonly name="groupName" />
 
-					<label for="email">Email:</label>
-					<input type="text" bind:value={userProfile.email} name="email" />
+			<label for="email">Email:</label>
+			<input type="text" bind:value={userProfile.email} name="email" />
 
-					<label for="groupName">Password:</label>
-					<input
-						type="password"
-						bind:value={newPassword}
-						name="password"
-						placeholder="Enter your new password"
-					/>
-				</div>
-				<div class="modal-buttons">
-					<button type="submit" on:click={updateUserProfile}>SAVE CHANGES</button>
-					<button
-						type="button"
-						on:click={() => {
-							showModal = false;
-						}}>CANCEL</button
-					>
-				</div>
-			</div>
-		<!-- {/if} -->
+			<label for="groupName">Password:</label>
+			<input
+				type="password"
+				bind:value={newPassword}
+				name="password"
+				placeholder="Enter your new password"
+			/>
+		</div>
+		<div class="modal-buttons">
+			<button type="submit" on:click={updateUserProfile}>SAVE CHANGES</button>
+			<button
+				type="button"
+				on:click={() => {
+					showModal = false;
+				}}>CANCEL</button
+			>
+		</div>
+	</div>
+	<!-- {/if} -->
 </Modal>
 
-	<nav>
-		<ul>
-			<li class="nav-left">Hello, {$userStore}</li>
-			<div class="nav-center">
-				<li>
-					<a href="/home/applications">Applications</a>
-				</li>
-				{#if $authStore}
-					<li>
-						<a href="/home/user-management">User Management</a>
-					</li>
-				{/if}
-			</div>
-			<li class="nav-right">
-				<!-- svelte-ignore a11y-no-static-element-interactions -->
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<!-- svelte-ignore a11y-missing-attribute -->
-				<a on:click={editProfileModal}>Edit Profile</a>
-				
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<!-- svelte-ignore a11y-no-static-element-interactions -->
-				<!-- svelte-ignore a11y-missing-attribute -->
-				<a on:click={logout}>Log Out</a>
+<nav>
+	<ul>
+		<li class="nav-left">Hello, {$userStore}</li>
+		<div class="nav-center">
+			<li>
+				<a href="/home/applications">Applications</a>
 			</li>
-		</ul>
-	</nav>
+			{#if $authStore}
+				<li>
+					<a href="/home/user-management">User Management</a>
+				</li>
+			{/if}
+		</div>
+		<li class="nav-right">
+			<!-- svelte-ignore a11y-no-static-element-interactions -->
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<!-- svelte-ignore a11y-missing-attribute -->
+			<a on:click={editProfileModal}>Edit Profile</a>
+
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<!-- svelte-ignore a11y-no-static-element-interactions -->
+			<!-- svelte-ignore a11y-missing-attribute -->
+			<a on:click={logout}>Log Out</a>
+		</li>
+	</ul>
+</nav>
 <!-- {/if} -->
 
 <slot></slot>

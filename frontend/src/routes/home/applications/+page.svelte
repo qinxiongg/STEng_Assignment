@@ -12,6 +12,11 @@
 	let showModal = false;
 	let modalType = null;
 
+	let applications = [];
+	let selectedAppToEdit = null;
+	let createAppStartDate = null;
+	let createAppEndDate = null;
+
 	let newApplication = {
 		appAcronym: null,
 		appRNumber: null,
@@ -25,10 +30,23 @@
 		appPermitDone: null
 	};
 
-	let createAppStartDate = null;
-	let createAppEndDate = null;
 
-	let applications = [];
+	function editApplicationModal(app) {
+		selectedAppToEdit = { ...app }; // clone the app object clicked
+		console.log("selectedapp", selectedAppToEdit);
+
+		// Convert to YYYY/MM/DD for use as a placeholder in date input
+		// const startDateString = selectedAppToEdit.appStartDate;
+		const [startDay, startMonth, startYear] = selectedAppToEdit.appStartDate.split('/');
+		selectedAppToEdit.appStartDate = `${startYear}-${startMonth}-${startDay}`;
+
+		// const EndDateString = selectedAppToEdit.appEndDate;
+		const [endDay, endMonth, endYear] = selectedAppToEdit.appEndDate.split('/');
+		selectedAppToEdit.appEndDate = `${endYear}-${endMonth}-${endDay}`;
+		console.log("selectedapp2", selectedAppToEdit);
+
+		
+	}
 
 	// Set authStore to true if user is admin
 	async function checkIsAdmin() {
@@ -47,14 +65,21 @@
 
 	async function createApplication() {
 		try {
-			// convert date to epoch timestamp
+			// convert date object to yyyy-mm-dd
 			const startDate = new Date(createAppStartDate);
-			newApplication.appStartDate = Math.floor(startDate.getTime() / 1000);
+			const startYear = startDate.getFullYear();
+			const startMonth = String(startDate.getMonth() + 1).padStart(2, '0');
+			const startDay = String(startDate.getDate()).padStart(2,'0');
 
-			const endDate = new Date(createAppEndDate);
-			newApplication.appEndDate = Math.floor(endDate.getTime() / 1000);
+			create
+			
+			// convert date to epoch timestamp
+			// const startDate = new Date(createAppStartDate);
+			// newApplication.appStartDate = Math.floor(startDate.getTime() / 1000);
 
-			console.log('new application', newApplication);
+			// const endDate = new Date(createAppEndDate);
+			// newApplication.appEndDate = Math.floor(endDate.getTime() / 1000);
+
 			const response = await axios.post(`${API_URL}/createApplication`, newApplication, {
 				withCredentials: true
 			});
@@ -76,6 +101,12 @@
 		}
 	}
 
+	// async function editApplication(){
+	// 	try{
+	// 		const response = await axios.put(`${API_URL}/editApplication`, selectedAppToEdit)
+	// 	}
+	// }
+
 	async function editApplication() {}
 
 	async function showAllApplications() {
@@ -84,7 +115,6 @@
 
 			if (response.status === 200) {
 				applications = response.data;
-				console.log('response:', applications);
 
 				for (let i = 0; i < applications.length; i++) {
 					const app = applications[i];
@@ -94,8 +124,16 @@
 
 					app.appEndDate = new Date(app.appEndDate * 1000);
 					app.appEndDate = app.appEndDate.toLocaleDateString();
+
+					// Convert the input date to DD/MM/YYYY format
+					const [startMonth, startDay, startYear] = app.appStartDate.split('/');
+					app.appStartDate = `${startDay}/${startMonth}/${startYear}`;
+
+					const [endMonth, endDay, endYear] = app.appEndDate.split('/');
+					app.appEndDate = `${endDay}/${endMonth}/${endYear}`;
+
+					
 				}
-				console.log('applications', applications);
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -201,36 +239,36 @@
 				<h2>Edit Application</h2>
 				<div class="form-group">
 					<label for="appAcronym">App Acronym</label>
-					<input bind:value={newApplication.appAcronym} placeholder="Name" />
+					<input bind:value={selectedAppToEdit.appAcronym} placeholder="Name" readonly />
 				</div>
 				<div class="form-group">
 					<label for="appRNumber">App R-Number</label>
 					<input
 						type="text"
-						bind:value={newApplication.appRNumber}
+						bind:value={selectedAppToEdit.appRNumber}
 						placeholder="Number"
 					/>
 				</div>
 				<div class="form-group">
 					<label for="appDescription">App Description</label>
 					<textarea
-						bind:value={newApplication.appDescription}
+						bind:value={selectedAppToEdit.appDescription}
 						placeholder="Description"
 					/>
 				</div>
 				<div class="form-group">
 					<label for="appStartDate">Start Date</label>
-					<input type="date" bind:value={createAppStartDate} />
+					<input type="date" bind:value={selectedAppToEdit.appStartDate} />
 				</div>
 				<div class="form-group">
 					<label for="appEndDate">End Date</label>
-					<input type="date" bind:value={createAppEndDate} />
+					<input type="date" bind:value={selectedAppToEdit.appEndDate} />
 				</div>
 				<div class="form-group">
 					<label for="appPermitCreate">App Permit Create</label>
 					<input
 						type="text"
-						bind:value={newApplication.appPermitCreate}
+						bind:value={selectedAppToEdit.appPermitCreate}
 						placeholder="Group"
 					/>
 				</div>
@@ -238,7 +276,7 @@
 					<label for="appPermitOpen">App Permit Open</label>
 					<input
 						type="text"
-						bind:value={newApplication.appPermitOpen}
+						bind:value={selectedAppToEdit.appPermitOpen}
 						placeholder="Group"
 					/>
 				</div>
@@ -246,7 +284,7 @@
 					<label for="appPermitToDo">App Permit ToDo</label>
 					<input
 						type="text"
-						bind:value={newApplication.appPermitToDo}
+						bind:value={selectedAppToEdit.appPermitToDo}
 						placeholder="Group"
 					/>
 				</div>
@@ -254,7 +292,7 @@
 					<label for="appPermitDoing">App Permit Doing</label>
 					<input
 						type="text"
-						bind:value={newApplication.appPermitDoing}
+						bind:value={selectedAppToEdit.appPermitDoing}
 						placeholder="Group"
 					/>
 				</div>
@@ -262,7 +300,7 @@
 					<label for="appPermitDone">App Permit Done</label>
 					<input
 						type="text"
-						bind:value={newApplication.appPermitDone}
+						bind:value={selectedAppToEdit.appPermitDone}
 						placeholder="Group"
 					/>
 				</div>
@@ -304,6 +342,7 @@
 					for (let key in newApplication) {
 						newApplication[key] = null;
 					}
+					editApplicationModal(app);
 				}}><FaEdit /></button
 			>
 			<div class="application-card-content">
@@ -312,7 +351,7 @@
 			</div>
 			<div class="application-card-content">
 				<h3>App Description</h3>
-				<p>
+				<p class="card-text">
 					{app.appDescription}
 				</p>
 			</div>
@@ -329,7 +368,6 @@
 </div>
 
 <style>
-	
 	.middle-container {
 		align-items: center;
 		display: flex;
@@ -368,6 +406,7 @@
 		height: 38px;
 		width: 100%;
 		padding-left: 10px;
+		padding-right: 10px;
 		outline: none;
 		border-radius: 4px;
 	}
@@ -402,16 +441,17 @@
 		/* justify-content: space-evenly; */
 		justify-content: center;
 		margin-top: 10px;
-		flex-wrap: wrap; 
-		gap: 3rem;      
+		flex-wrap: wrap;
+		gap: 3rem;
 	}
 	.application-card {
 		background-color: #d8d8d8;
-		width: 600px;
+		/* width: 650px; */
+		width: 40%;
 		height: 200px;
 		padding: 20px;
-		overflow: hidden;
 		position: relative;
+		border-radius: 5px;
 	}
 	.application-card:hover {
 		box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
@@ -423,11 +463,11 @@
 	.application-card-content h3 {
 		width: 120px;
 	}
-	.application-card-content p {
-		width: 440px;
+	.card-text {
+		max-width: 80%;
 		overflow-wrap: break-word;
 		overflow-y: auto;
-		max-height: 450px;
+		max-height: 70px;
 	}
 	.editApplication-Button {
 		width: 25px;

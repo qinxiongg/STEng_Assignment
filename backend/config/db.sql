@@ -35,3 +35,13 @@ CREATE TABLE IF NOT EXISTS `Application` (
     `App_permit_Done` varchar(50),
     PRIMARY Key (`App_Acronym`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `Plan` {
+    `Plan_MVP_name` varchar(255),
+    `Plan_app_Acronym` varchar(50) NOT NULL,
+    `Plan_startDate` int,
+    `Plan_endDate` int,
+    `Plan_color` varchar(7)
+    PRIMARY KEY (`Plan_MVP_name`) REFERENCES
+    
+} 

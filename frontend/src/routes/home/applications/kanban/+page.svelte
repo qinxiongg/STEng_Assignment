@@ -1,28 +1,23 @@
 <script>
 	import { onMount } from 'svelte';
 	import axios from 'axios';
-	import { goto } from '$app/navigation';
 	import { authStore, userStore } from '$lib/stores';
 	import Modal from '$lib/Modal.svelte';
-	import FaEdit from 'svelte-icons/fa/FaEdit.svelte';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
 	let showModal = false;
 	let modalType = null;
 
-	let newApp = {
-		appAcronym: null,
-		appRNumber: null,
-		appDesc: null,
-		appStartDate: null,
-		appEndDate: null,
-		appPermitCreate: null,
-		appPermitOpen: null,
-		appPermitToDo: null,
-		appPermitDoing: null,
-		appPermitDone: null
+	let newPlan = {
+		planMVPName: null,
+		planAppAcronym: null,
+		planStartDate: null,
+		planEndDate: null,
+		planColor: null
 	};
+
+	async function createPlan() {}
 
 	// Set authStore to true if user is admin
 	async function checkIsAdmin() {
@@ -43,6 +38,46 @@
 		await checkIsAdmin();
 	});
 </script>
+
+<Modal bind:showModal>
+	{#if modalType === 'createPlan'}
+		<form on:submit|preventDefault={createPlan}>
+			<div>
+				<h2>Create Plan</h2>
+				<div class="form-group">
+					<label for="appAcronym">App Acronym</label>
+					<p>Task12</p>
+				</div>
+				<div class="form-group">
+					<label for="planName">Plan Name</label>
+					<input type="text" bind:value={newPlan.planMVPName} placeholder="Name" />
+				</div>
+				<div class="form-group">
+					<label for="appStartDate">Start Date</label>
+					<input type="date" bind:value={newPlan.planStartDate} />
+				</div>
+				<div class="form-group">
+					<label for="appEndDate">End Date</label>
+					<input type="date" bind:value={newPlan.planEndDate} />
+				</div>
+				<div class="form-group">
+					<label for="planColor">Color</label>
+					<input type="color" bind:value={newPlan.planColor} />
+				</div>
+			</div>
+			<div class="modal-buttons">
+				<button type="submit">Create Plan</button>
+				<button
+					type="button"
+					on:click={() => {
+						showModal = false;
+					}}>Cancel</button
+				>
+			</div>
+		</form>
+		<!-- {:else if modalType === 'createTask'} -->
+	{/if}
+</Modal>
 
 <div class="middle-container">
 	<h1 class="middle-left">Task Management Board</h1>
@@ -123,5 +158,27 @@
 		margin-right: 10px;
 		background-color: #000000;
 		color: #ffffff;
+	}
+	form h2 {
+		text-align: center;
+	}
+	.form-group {
+		display: flex;
+		justify-content: space-between;
+	}
+	.form-group label {
+		margin: 10px 20px;
+		width: 120px;
+		font-weight: bold;
+	}
+	.form-group input {
+		margin: 10px 20px;
+		background-color: #dadada;
+		border: transparent;
+		height: 38px;
+		width: 100%;
+		padding-left: 10px;
+		outline: none;
+		border-radius: 4px;
 	}
 </style>
