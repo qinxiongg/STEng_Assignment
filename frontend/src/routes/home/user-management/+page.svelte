@@ -166,7 +166,7 @@
 			const response = await axios.get(`${API_URL}/getAllGroups`, { withCredentials: true });
 
 			if (response.status === 200) {
-				allUserGroups = response.data.userGroups;
+				allUserGroups = response.data;
 			}
 		} catch (error) {
 			console.error('Error:', error);

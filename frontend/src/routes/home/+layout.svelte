@@ -248,7 +248,7 @@
 		background-color: black;
 		margin: 0;
 		color: #ffffff;
-		height: 80px;
+		height: 70px;
 		align-items: center;
 		font-size: 1.4em;
 	}
@@ -256,9 +256,10 @@
 		display: flex;
 		list-style: none;
 		color: #ffffff;
-		padding: 10px;
+		/* padding: 10px; */
 		flex-grow: 1;
 		justify-content: space-between;
+		margin: 0;
 	}
 	a {
 		text-decoration: none;

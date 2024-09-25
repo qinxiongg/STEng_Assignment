@@ -6,6 +6,6 @@ const {authenticateJWT} = require("../middleware/middlewares");
 // Protected routes for task management
 router.post("/createApplication", authenticateJWT, tmsController.createApplication);
 router.get("/applications", authenticateJWT, tmsController.showAllApplications);
-router.put("/editApplication", authenticateJWT)
+router.put("/editApplication", authenticateJWT, tmsController.editApplication);
 
 module.exports = router;

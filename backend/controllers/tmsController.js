@@ -1,5 +1,4 @@
 const query = require("../config/database");
-const { generateJWT } = require("../services/authService");
 
 const createApplication = async (req, res) => {
   const {
@@ -44,8 +43,7 @@ const createApplication = async (req, res) => {
 };
 const showAllApplications = async (req, res) => {
   try {
-    const result =
-      await query(`SELECT * 
+    const result = await query(`SELECT * 
                   FROM application`);
 
     const result_mapped = result.map((app) => ({
@@ -70,7 +68,55 @@ const showAllApplications = async (req, res) => {
   }
 };
 
+const editApplication = async (req, res) => {
+  const {
+    appAcronym,
+    appRNumber,
+    appDescription,
+    appStartDate,
+    appEndDate,
+    appPermitCreate,
+    appPermitOpen,
+    appPermitToDo,
+    appPermitDoing,
+    appPermitDone,
+  } = req.body;
+
+  try {
+    const result = await query(
+      `UPDATE application 
+      SET App_Description = ?, App_Rnumber = ?, App_startDate = ? ,
+          App_endDate = ? , App_permit_Create = ?, App_permit_Open = ?, App_permit_toDoList = ?,
+          App_permit_Doing = ?, App_permit_Done = ?
+          WHERE App_Acronym = ?`,
+      [
+        appDescription,
+        appRNumber,
+        appStartDate,
+        appEndDate,
+        appPermitCreate,
+        appPermitOpen,
+        appPermitToDo,
+        appPermitDoing,
+        appPermitDone,
+        appAcronym,
+      ]
+    );
+
+    if (result.affectedRow > 0)
+      return res
+        .status(200)
+        .json({ success: "Successfully updated application" });
+  } catch (error) {
+    console.error("Error modifying data in database.", error);
+    return res
+      .status(500)
+      .json({ message: "Unable to modify data in database" });
+  }
+};
+
 module.exports = {
   createApplication,
   showAllApplications,
+  editApplication,
 };

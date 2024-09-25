@@ -6,6 +6,7 @@
 	import Modal from '$lib/Modal.svelte';
 	import FaEdit from 'svelte-icons/fa/FaEdit.svelte';
 	import { customError, handleError, customAlert } from '$lib/errorHandler';
+	// import { YEAR } from 'mysql/lib/protocol/constants/types';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
@@ -13,9 +14,12 @@
 	let modalType = null;
 
 	let applications = [];
+	let allUserGroups = [];
 	let selectedAppToEdit = null;
 	let createAppStartDate = null;
 	let createAppEndDate = null;
+
+
 
 	let newApplication = {
 		appAcronym: null,
@@ -30,22 +34,8 @@
 		appPermitDone: null
 	};
 
-
 	function editApplicationModal(app) {
 		selectedAppToEdit = { ...app }; // clone the app object clicked
-		console.log("selectedapp", selectedAppToEdit);
-
-		// Convert to YYYY/MM/DD for use as a placeholder in date input
-		// const startDateString = selectedAppToEdit.appStartDate;
-		const [startDay, startMonth, startYear] = selectedAppToEdit.appStartDate.split('/');
-		selectedAppToEdit.appStartDate = `${startYear}-${startMonth}-${startDay}`;
-
-		// const EndDateString = selectedAppToEdit.appEndDate;
-		const [endDay, endMonth, endYear] = selectedAppToEdit.appEndDate.split('/');
-		selectedAppToEdit.appEndDate = `${endYear}-${endMonth}-${endDay}`;
-		console.log("selectedapp2", selectedAppToEdit);
-
-		
 	}
 
 	// Set authStore to true if user is admin
@@ -63,22 +53,30 @@
 		}
 	}
 
+	async function getAllGroups() {
+		try {
+			const response = await axios.get(`${API_URL}/getAllGroups`, {withCredentials: true});
+
+			if (response.status === 200 ) {
+				allUserGroups = response.data;
+			} 
+		} catch(error) {
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				customError('An error occurred when retrieving all user groups');
+			}
+		}
+	}
+
 	async function createApplication() {
 		try {
-			// convert date object to yyyy-mm-dd
-			const startDate = new Date(createAppStartDate);
-			const startYear = startDate.getFullYear();
-			const startMonth = String(startDate.getMonth() + 1).padStart(2, '0');
-			const startDay = String(startDate.getDate()).padStart(2,'0');
-
-			create
-			
 			// convert date to epoch timestamp
-			// const startDate = new Date(createAppStartDate);
-			// newApplication.appStartDate = Math.floor(startDate.getTime() / 1000);
+			const startDate = new Date(createAppStartDate);
+			newApplication.appStartDate = Math.floor(startDate.getTime() / 1000);
 
-			// const endDate = new Date(createAppEndDate);
-			// newApplication.appEndDate = Math.floor(endDate.getTime() / 1000);
+			const endDate = new Date(createAppEndDate);
+			newApplication.appEndDate = Math.floor(endDate.getTime() / 1000);
 
 			const response = await axios.post(`${API_URL}/createApplication`, newApplication, {
 				withCredentials: true
@@ -89,6 +87,8 @@
 				for (let key in newApplication) {
 					newApplication[key] = null;
 				}
+				createAppStartDate = null;
+				createAppEndDate = null;
 				showAllApplications();
 				customAlert(response.data.success);
 			}
@@ -101,13 +101,31 @@
 		}
 	}
 
-	// async function editApplication(){
-	// 	try{
-	// 		const response = await axios.put(`${API_URL}/editApplication`, selectedAppToEdit)
-	// 	}
-	// }
+	async function editApplication() {
+		// convert date to epoch timestamp
+		const startDate = new Date(selectedAppToEdit.appStartDate);
+		selectedAppToEdit.appStartDate = Math.floor(startDate.getTime() / 1000);
 
-	async function editApplication() {}
+		const endDate = new Date(selectedAppToEdit.appEndDate);
+		selectedAppToEdit.appEndDate = Math.floor(endDate.getTime() / 1000);
+
+		try {
+			const response = await axios.put(`${API_URL}/editApplication`, selectedAppToEdit, {
+				withCredentials: true
+			});
+
+			if (response.status === 200) {
+				customAlert(response.data.success);
+				editApplicationModal(app);
+			}
+		} catch (error) {
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				customError('An error occurred when creating application.');
+			}
+		}
+	}
 
 	async function showAllApplications() {
 		try {
@@ -119,20 +137,19 @@
 				for (let i = 0; i < applications.length; i++) {
 					const app = applications[i];
 
+					// Convert from epoch to yyyy-mm-dd
 					app.appStartDate = new Date(app.appStartDate * 1000);
-					app.appStartDate = app.appStartDate.toLocaleDateString();
+					const startYear = app.appStartDate.getFullYear();
+					const startMonth = String(app.appStartDate.getMonth() + 1).padStart(2, '0');
+					const startDay = String(app.appStartDate.getDate()).padStart(2, '0');
+					app.appStartDate = `${startYear}-${startMonth}-${startDay}`;
 
 					app.appEndDate = new Date(app.appEndDate * 1000);
-					app.appEndDate = app.appEndDate.toLocaleDateString();
+					const endYear = app.appEndDate.getFullYear();
+					const endMonth = String(app.appEndDate.getMonth() + 1).padStart(2, '0');
+					const endDay = String(app.appEndDate.getDate()).padStart(2, '0');
 
-					// Convert the input date to DD/MM/YYYY format
-					const [startMonth, startDay, startYear] = app.appStartDate.split('/');
-					app.appStartDate = `${startDay}/${startMonth}/${startYear}`;
-
-					const [endMonth, endDay, endYear] = app.appEndDate.split('/');
-					app.appEndDate = `${endDay}/${endMonth}/${endYear}`;
-
-					
+					app.appEndDate = `${endYear}-${endMonth}-${endDay}`;
 				}
 			}
 		} catch (error) {
@@ -147,6 +164,7 @@
 	onMount(async () => {
 		await checkIsAdmin();
 		await showAllApplications();
+		await getAllGroups();
 	});
 </script>
 
@@ -184,43 +202,43 @@
 				</div>
 				<div class="form-group">
 					<label for="appPermitCreate">App Permit Create</label>
-					<input
-						type="text"
-						bind:value={newApplication.appPermitCreate}
-						placeholder="Group"
-					/>
+					<select bind:value={newApplication.appPermitCreate}>
+						{#each allUserGroups as group}
+						<option value = {group.usergroup}>{group.usergroup}</option>
+						{/each}
+					</select>
 				</div>
 				<div class="form-group">
 					<label for="appPermitOpen">App Permit Open</label>
-					<input
-						type="text"
-						bind:value={newApplication.appPermitOpen}
-						placeholder="Group"
-					/>
+					<select bind:value={newApplication.appPermitOpen}>
+						{#each allUserGroups as group}
+						<option value = {group.usergroup}>{group.usergroup}</option>
+						{/each}
+					</select>
 				</div>
 				<div class="form-group">
 					<label for="appPermitToDo">App Permit ToDo</label>
-					<input
-						type="text"
-						bind:value={newApplication.appPermitToDo}
-						placeholder="Group"
-					/>
+					<select bind:value={newApplication.appPermitToDo}>
+						{#each allUserGroups as group}
+						<option value = {group.usergroup}>{group.usergroup}</option>
+						{/each}
+					</select>
 				</div>
 				<div class="form-group">
 					<label for="appPermitDoing">App Permit Doing</label>
-					<input
-						type="text"
-						bind:value={newApplication.appPermitDoing}
-						placeholder="Group"
-					/>
+					<select bind:value={newApplication.appPermitDoing}>
+						{#each allUserGroups as group}
+						<option value = {group.usergroup}>{group.usergroup}</option>
+						{/each}
+					</select>
 				</div>
 				<div class="form-group">
 					<label for="appPermitDone">App Permit Done</label>
-					<input
-						type="text"
-						bind:value={newApplication.appPermitDone}
-						placeholder="Group"
-					/>
+					<select bind:value={newApplication.appPermitDone}>
+						{#each allUserGroups as group}
+						<option value = {group.usergroup}>{group.usergroup}</option>
+						{/each}
+					</select>
 				</div>
 				<div class="modal-buttons">
 					<button type="submit">Create Application</button>
@@ -266,43 +284,43 @@
 				</div>
 				<div class="form-group">
 					<label for="appPermitCreate">App Permit Create</label>
-					<input
-						type="text"
-						bind:value={selectedAppToEdit.appPermitCreate}
-						placeholder="Group"
-					/>
+					<select bind:value={selectedAppToEdit.appPermitCreate}>
+						{#each allUserGroups as group}
+						<option value = {group.usergroup}>{group.usergroup}</option>
+						{/each}
+					</select>
 				</div>
 				<div class="form-group">
 					<label for="appPermitOpen">App Permit Open</label>
-					<input
-						type="text"
-						bind:value={selectedAppToEdit.appPermitOpen}
-						placeholder="Group"
-					/>
+					<select bind:value={selectedAppToEdit.appPermitOpen}>
+						{#each allUserGroups as group}
+						<option value = {group.usergroup}>{group.usergroup}</option>
+						{/each}
+					</select>
 				</div>
 				<div class="form-group">
 					<label for="appPermitToDo">App Permit ToDo</label>
-					<input
-						type="text"
-						bind:value={selectedAppToEdit.appPermitToDo}
-						placeholder="Group"
-					/>
+					<select bind:value={selectedAppToEdit.appPermitToDo}>
+						{#each allUserGroups as group}
+						<option value = {group.usergroup}>{group.usergroup}</option>
+						{/each}
+					</select>
 				</div>
 				<div class="form-group">
 					<label for="appPermitDoing">App Permit Doing</label>
-					<input
-						type="text"
-						bind:value={selectedAppToEdit.appPermitDoing}
-						placeholder="Group"
-					/>
+					<select bind:value={selectedAppToEdit.appPermitToDo}>
+						{#each allUserGroups as group}
+						<option value = {group.usergroup}>{group.usergroup}</option>
+						{/each}
+					</select>
 				</div>
 				<div class="form-group">
 					<label for="appPermitDone">App Permit Done</label>
-					<input
-						type="text"
-						bind:value={selectedAppToEdit.appPermitDone}
-						placeholder="Group"
-					/>
+					<select bind:value={selectedAppToEdit.appPermitDone}>
+						{#each allUserGroups as group}
+						<option value = {group.usergroup}>{group.usergroup}</option>
+						{/each}
+					</select>
 				</div>
 				<div class="modal-buttons">
 					<button type="submit">Edit Application</button>
@@ -399,7 +417,7 @@
 		font-weight: bold;
 		width: 190px;
 	}
-	.form-group input {
+	.form-group input, select{
 		margin: 10px 20px;
 		background-color: #dadada;
 		border: transparent;
@@ -452,6 +470,7 @@
 		padding: 20px;
 		position: relative;
 		border-radius: 5px;
+		cursor: pointer;
 	}
 	.application-card:hover {
 		box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);

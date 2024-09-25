@@ -196,7 +196,7 @@ const addNewGroups = async (req, res) => {
 const getAllGroups = async (req, res) => {
   try {
     const userGroups = await query("SELECT DISTINCT usergroup from user_group");
-    res.json({ userGroups });
+    res.json(userGroups);
   } catch (error) {
     res.status(500).json({ message: "Database query error" });
   }

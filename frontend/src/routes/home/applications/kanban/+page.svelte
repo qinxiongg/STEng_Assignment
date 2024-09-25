@@ -133,7 +133,7 @@
 		margin-top: 10px;
 		display: flex;
 		justify-content: space-evenly;
-		min-height: calc(100vh - 190px);
+		min-height: calc(100vh - 170px);
 	}
 	.kanban {
 		background-color: #d8d8d8;
