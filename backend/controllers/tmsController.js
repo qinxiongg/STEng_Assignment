@@ -116,14 +116,14 @@ const editApplication = async (req, res) => {
 };
 
 const createPlan = async (req, res) => {
-  const { planMVPName, planAppAcronym, planStartDate, planEndDate, planColor } =
+  const { Plan_MVP_name, Plan_app_Acronym, Plan_startDate, Plan_endDate, Plan_color } =
     req.body;
 
   try {
     await query(
       `INSERT INTO plan(Plan_MVP_name, Plan_app_Acronym, Plan_startDate, Plan_endDate, Plan_color)
         VALUES(?, ?, ?, ?, ?)`,
-      [planMVPName, planAppAcronym, planStartDate, planEndDate, planColor]
+      [Plan_MVP_name, Plan_app_Acronym, Plan_startDate, Plan_endDate, Plan_color]
     );
 
     return res.status(201).json({ success: "Successfully created plan" });

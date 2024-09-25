@@ -57,8 +57,9 @@ CREATE TABLE IF NOT EXISTS `Task` (
     `Task_state` varchar(10) NOT NULL,
     `Task_creator` varchar(50) NOT NULL,
     `Task_owner` varchar(50) NOT NULL,
-    FOREIGN KEY (`Task_plan`) REFERENCES 
-    Plan(`Plan_MVP_name`) ON DELETE
+    `Task_createDate` INT NOT NULL,
+    FOREIGN KEY (`Task_plan`) REFERENCES Plan
+    (`Plan_MVP_name`) ON DELETE
     SET NULL,
     FOREIGN KEY (`Task_app_Acronym`) REFERENCES
     Application(`App_Acronym`) ON DELETE CASCADE,

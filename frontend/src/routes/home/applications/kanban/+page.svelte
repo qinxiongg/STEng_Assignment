@@ -15,37 +15,50 @@
 	let createPlanEndDate = null;
 
 	let newPlan = {
-		planMVPName: null,
-		planAppAcronym: null,
-		planStartDate: null,
-		planEndDate: null,
-		planColor: '#000000'
+		Plan_MVP_name: null,
+		Plan_app_Acronym: null,
+		Plan_startDate: null,
+		Plan_endDate: null,
+		Plan_color: '#000000'
 	};
 
-	newPlan.planAppAcronym = $selectedAppToShowKanban;
+	let newTask = {
+		Task_id: null,
+		Task_plan: null,
+		Task_app_Acronym: null,
+		Task_name: null,
+		Task_description: null,
+		Task_notes: null,
+		Task_state: null,
+		Task_creator: null,
+		Task_owner: null,
+		Task_createDate: null
+	};
+
+	newPlan.Plan_app_Acronym = $selectedAppToShowKanban;
 
 	async function createPlan() {
 		try {
 			// convert date to epoch timestamp
 			const startDate = new Date(createPlanStartDate);
-			newPlan.planStartDate = Math.floor(startDate.getTime() / 1000);
+			newPlan.Plan_startDate = Math.floor(startDate.getTime() / 1000);
 
 			const endDate = new Date(createPlanEndDate);
-			newPlan.planEndDate = Math.floor(endDate.getTime() / 1000);
+			newPlan.Plan_endDate = Math.floor(endDate.getTime() / 1000);
 
 			const response = await axios.post(`${API_URL}/createPlan`, newPlan, {
 				withCredentials: true
 			});
 
-			console.log('newplan', newPlan);
 			if (response.status === 201) {
 				// reset object values back to null
 				for (let key in newPlan) {
-					newPlan[key] = null;
+					if (key !== Plan_app_Acronym) {
+						newPlan[key] = null;
+					}
 				}
 				createPlanStartDate = null;
 				createPlanEndDate = null;
-				planColor = '#000000';
 				customAlert(response.data.success);
 			}
 		} catch (error) {
@@ -72,24 +85,29 @@
 			<div>
 				<h2>Create Plan</h2>
 				<div class="form-group">
-					<label for="appAcronym">App Acronym</label>
-					<input type="text" bind:value={newPlan.planAppAcronym} placeholder="Name" />
+					<label for="Plan_app_Acronym">App Acronym</label>
+					<input
+						type="text"
+						bind:value={newPlan.Plan_app_Acronym}
+						placeholder="Name"
+						readonly
+					/>
 				</div>
 				<div class="form-group">
-					<label for="planName">Plan Name</label>
-					<input type="text" bind:value={newPlan.planMVPName} placeholder="Name" />
+					<label for="Plan_MVP_name">Plan Name</label>
+					<input type="text" bind:value={newPlan.Plan_MVP_name} placeholder="Name" />
 				</div>
 				<div class="form-group">
-					<label for="appStartDate">Start Date</label>
+					<label for="createPlanStartDate">Start Date</label>
 					<input type="date" bind:value={createPlanStartDate} />
 				</div>
 				<div class="form-group">
-					<label for="appEndDate">End Date</label>
+					<label for="createPlanEndDate">End Date</label>
 					<input type="date" bind:value={createPlanEndDate} />
 				</div>
 				<div class="form-group">
-					<label for="planColor">Color</label>
-					<input type="color" bind:value={newPlan.planColor} />
+					<label for="Plan_color">Color</label>
+					<input type="color" bind:value={newPlan.Plan_color} />
 				</div>
 			</div>
 			<div class="modal-buttons">
@@ -104,39 +122,44 @@
 		</form>
 	{:else if modalType === 'createTask'}
 		<form on:submit|preventDefault={createTask}>
-			<div>
-				<h2>app_AcronymXapp_RNumber</h2>
+			<h2>app_AcronymXapp_RNumber</h2>
+			<div class="createTask-container">
 				<div class="createTaskDetails">
 					<div class="form-group">
-						<label for="appAcronym">Task ID</label>
-						<input type="text" bind:value={newPlan.planAppAcronym} readonly />
+						<label for="Task_id">Task ID</label>
+						<input type="text" bind:value={newTask.Task_id} readonly />
 					</div>
 					<div class="form-group">
-						<label for="planName">Task Name</label>
-						<input type="text" bind:value={newPlan.planMVPName} />
+						<label for="Task_name">Task Name</label>
+						<input type="text" bind:value={newTask.Task_name} />
 					</div>
 					<div class="form-group">
 						<label for="appStartDate">Task Description</label>
-						<input type="date" bind:value={createPlanStartDate} />
+						<input type="text" bind:value={newTask.Task_description} />
 					</div>
 					<div class="form-group">
 						<label for="appEndDate">Plan Name</label>
-						<input type="date" bind:value={createPlanEndDate} />
+						<input type="text" bind:value={newTask.Task_plan} readonly />
 					</div>
 					<div class="form-group">
 						<label for="planColor">Task Creator</label>
-						<input type="color" bind:value={newPlan.planColor} />
+						<input type="text" bind:value={newTask.Task_creator} readonly />
 					</div>
 					<div class="form-group">
 						<label for="planColor">Task Owner</label>
-						<input type="color" bind:value={newPlan.planColor} />
+						<input type="text" bind:value={newTask.Task_owner} readonly />
 					</div>
 					<div class="form-group">
 						<label for="planColor">Task Create Date</label>
-						<input type="color" bind:value={newPlan.planColor} />
+						<input type="text" bind:value={newTask.Task_createDate} readonly />
 					</div>
 				</div>
+				<div>
+					<div class="taskNotes"></div>
+					<input type="text" bind:value={newTask.Task_notes} placeholder="Comments" />
+				</div>
 			</div>
+
 			<div class="modal-buttons">
 				<button type="submit">Create Plan</button>
 				<button
@@ -228,6 +251,10 @@
 	.kanban h2 {
 		margin-left: 20px;
 	}
+	.createTask-container {
+		display: flex;
+		justify-content: space-between;
+	}
 	.createTaskButton {
 		width: 120px;
 		height: 30px;
@@ -238,6 +265,7 @@
 	}
 	form h2 {
 		text-align: center;
+		font-size: 1em;
 	}
 	.form-group {
 		display: flex;
@@ -247,6 +275,7 @@
 		margin: 10px 20px;
 		width: 120px;
 		font-weight: bold;
+		font-size: 0.8em;
 	}
 	.form-group input {
 		margin: 10px 20px;
