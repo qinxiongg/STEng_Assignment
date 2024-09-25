@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS `Plan` (
     `Plan_app_Acronym` varchar(50) NOT NULL,
     `Plan_startDate` int NOT NULL,
     `Plan_endDate` int NOT NULL,
-    `Plan_color` varchar(7) NOT NULL
+    `Plan_color` varchar(7) NOT NULL,
     FOREIGN KEY (`Plan_app_Acronym`) REFERENCES 
     Application(`App_Acronym`) ON DELETE CASCADE,
     PRIMARY KEY (`Plan_MVP_name`)
