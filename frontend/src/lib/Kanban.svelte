@@ -1,9 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 	import axios from 'axios';
-	import { authStore, userStore, selectedAppToShowKanban } from '$lib/stores';
-	import { customError, handleError, customAlert } from '$lib/errorHandler';
+	import { authStore, userStore } from '$lib/stores';
 	import Modal from '$lib/Modal.svelte';
 
 	const API_URL = import.meta.env.VITE_API_URL;
@@ -11,42 +9,24 @@
 	let showModal = false;
 	let modalType = null;
 
-	let createPlanStartDate = null;
-	let createPlanEndDate = null;
-
 	let newPlan = {
 		planMVPName: null,
 		planAppAcronym: null,
 		planStartDate: null,
 		planEndDate: null,
-		planColor: '#000000'
+		planColor: null
 	};
-
-	newPlan.planAppAcronym = $selectedAppToShowKanban;
 
 	async function createPlan() {
 		try {
-			// convert date to epoch timestamp
-			const startDate = new Date(createPlanStartDate);
-			newPlan.planStartDate = Math.floor(startDate.getTime() / 1000);
-
-			const endDate = new Date(createPlanEndDate);
-			newPlan.planEndDate = Math.floor(endDate.getTime() / 1000);
-
 			const response = await axios.post(`${API_URL}/createPlan`, newPlan, {
 				withCredentials: true
 			});
-
-			console.log('newplan', newPlan);
-			if (response.status === 201) {
+			if (response.status === 200) {
 				// reset object values back to null
-				for (let key in newPlan) {
-					newPlan[key] = null;
+				for (let key in newApplication) {
+					newApplication[key] = null;
 				}
-				createPlanStartDate = null;
-				createPlanEndDate = null;
-				planColor = '#000000';
-				customAlert(response.data.success);
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -57,14 +37,23 @@
 		}
 	}
 
-	async function createTask() {
+	// Set authStore to true if user is admin
+	async function checkIsAdmin() {
+		try {
+			const response = await axios.get(`${API_URL}/checkIsAdmin`, { withCredentials: true });
+			let isAdmin = false;
 
+			if (response.status === 200) {
+				isAdmin = response.data.isAdmin;
+				authStore.set(response.data.isAdmin);
+			}
+		} catch (error) {
+			console.error('Error at checkIsAdmin:', error);
+		}
 	}
 
 	onMount(async () => {
-		if ($selectedAppToShowKanban === '') {
-			goto('/home/applications');
-		}
+		await checkIsAdmin();
 	});
 </script>
 
@@ -75,7 +64,7 @@
 				<h2>Create Plan</h2>
 				<div class="form-group">
 					<label for="appAcronym">App Acronym</label>
-					<input type="text" bind:value={newPlan.planAppAcronym} placeholder="Name" />
+					<p>Task12</p>
 				</div>
 				<div class="form-group">
 					<label for="planName">Plan Name</label>
@@ -83,11 +72,11 @@
 				</div>
 				<div class="form-group">
 					<label for="appStartDate">Start Date</label>
-					<input type="date" bind:value={createPlanStartDate} />
+					<input type="date" bind:value={newPlan.planStartDate} />
 				</div>
 				<div class="form-group">
 					<label for="appEndDate">End Date</label>
-					<input type="date" bind:value={createPlanEndDate} />
+					<input type="date" bind:value={newPlan.planEndDate} />
 				</div>
 				<div class="form-group">
 					<label for="planColor">Color</label>
@@ -104,56 +93,12 @@
 				>
 			</div>
 		</form>
-	{:else if modalType === 'createTask'}
-		<form on:submit|preventDefault={createTask}>
-			<div>
-				<h2>app_AcronymXapp_RNumber</h2>
-				<div>
-					<div class="form-group">
-						<label for="appAcronym">Task ID</label>
-						<input type="text" bind:value={newPlan.planAppAcronym} readonly />
-					</div>
-					<div class="form-group">
-						<label for="planName">Task Name</label>
-						<input type="text" bind:value={newPlan.planMVPName} />
-					</div>
-					<div class="form-group">
-						<label for="appStartDate">Task Description</label>
-						<input type="date" bind:value={createPlanStartDate} />
-					</div>
-					<div class="form-group">
-						<label for="appEndDate">Plan Name</label>
-						<input type="date" bind:value={createPlanEndDate} />
-					</div>
-					<div class="form-group">
-						<label for="planColor">Task Creator</label>
-						<input type="color" bind:value={newPlan.planColor} />
-					</div>
-					<div class="form-group">
-						<label for="planColor">Task Owner</label>
-						<input type="color" bind:value={newPlan.planColor} />
-					</div>
-					<div class="form-group">
-						<label for="planColor">Task Create Date</label>
-						<input type="color" bind:value={newPlan.planColor} />
-					</div>
-				</div>
-			</div>
-			<div class="modal-buttons">
-				<button type="submit">Create Plan</button>
-				<button
-					type="button"
-					on:click={() => {
-						showModal = false;
-					}}>Cancel</button
-				>
-			</div>
-		</form>
+		<!-- {:else if modalType === 'createTask'} -->
 	{/if}
 </Modal>
 
 <div class="middle-container">
-	<h1 class="middle-left">Task Management Board: {$selectedAppToShowKanban}</h1>
+	<h1 class="middle-left">Task Management Board</h1>
 	<button
 		class="middle-right"
 		on:click={() => {
@@ -166,13 +111,7 @@
 	<div class="kanban">
 		<div class="kanban-header">
 			<h2>Open</h2>
-			<button
-				class="createTaskButton"
-				on:click={() => {
-					showModal = true;
-					modalType = 'createTask';
-				}}>+ CREATE TASK</button
-			>
+			<button class="createTaskButton">+ CREATE TASK</button>
 		</div>
 	</div>
 	<div class="kanban">

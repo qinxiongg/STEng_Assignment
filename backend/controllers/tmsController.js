@@ -115,8 +115,29 @@ const editApplication = async (req, res) => {
   }
 };
 
+const createPlan = async (req, res) => {
+  const { planMVPName, planAppAcronym, planStartDate, planEndDate, planColor } =
+    req.body;
+
+  try {
+    await query(
+      `INSERT INTO plan(Plan_MVP_name, Plan_app_Acronym, Plan_startDate, Plan_endDate, Plan_color)
+        VALUES(?, ?, ?, ?, ?)`,
+      [planMVPName, planAppAcronym, planStartDate, planEndDate, planColor]
+    );
+
+    return res.status(201).json({ success: "Successfully created plan" });
+  } catch (error) {
+    console.error("Error inserting data into database.", error);
+    return res
+      .status(500)
+      .json({ message: "Unable to insert data into database" });
+  }
+};
+
 module.exports = {
   createApplication,
   showAllApplications,
   editApplication,
+  createPlan,
 };

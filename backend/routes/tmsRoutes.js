@@ -7,5 +7,6 @@ const {authenticateJWT} = require("../middleware/middlewares");
 router.post("/createApplication", authenticateJWT, tmsController.createApplication);
 router.get("/applications", authenticateJWT, tmsController.showAllApplications);
 router.put("/editApplication", authenticateJWT, tmsController.editApplication);
+router.post("/createPlan", authenticateJWT, tmsController.createPlan);
 
 module.exports = router;

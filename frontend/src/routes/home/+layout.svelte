@@ -5,7 +5,7 @@
 	import { Toaster, toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
 	import Modal from '$lib/Modal.svelte';
-	import { authStore, userStore } from '$lib/stores';
+	import { authStore, userStore, showKanban } from '$lib/stores';
 	import { customAlert, handleError, customError } from '$lib/errorHandler';
 
 	const API_URL = import.meta.env.VITE_API_URL;
@@ -183,7 +183,7 @@
 		<li class="nav-left">Hello, {$userStore}</li>
 		<div class="nav-center">
 			<li>
-				<a href="/home/applications">Applications</a>
+				<a href="/home/applications" on:click={()=> {showKanban.set(false)}} >Applications</a>
 			</li>
 			{#if $authStore}
 				<li>

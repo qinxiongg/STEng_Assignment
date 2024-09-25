@@ -1,12 +1,13 @@
 <script>
 	import { onMount } from 'svelte';
 	import axios from 'axios';
-	// import { goto } from '$app/navigation';
-	import { authStore, userStore } from '$lib/stores';
+	import { goto } from '$app/navigation';
+	import { authStore, userStore, selectedAppToShowKanban } from '$lib/stores';
 	import Modal from '$lib/Modal.svelte';
 	import FaEdit from 'svelte-icons/fa/FaEdit.svelte';
 	import { customError, handleError, customAlert } from '$lib/errorHandler';
 	// import { YEAR } from 'mysql/lib/protocol/constants/types';
+
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
@@ -18,8 +19,6 @@
 	let selectedAppToEdit = null;
 	let createAppStartDate = null;
 	let createAppEndDate = null;
-
-
 
 	let newApplication = {
 		appAcronym: null,
@@ -55,12 +54,12 @@
 
 	async function getAllGroups() {
 		try {
-			const response = await axios.get(`${API_URL}/getAllGroups`, {withCredentials: true});
+			const response = await axios.get(`${API_URL}/getAllGroups`, { withCredentials: true });
 
-			if (response.status === 200 ) {
+			if (response.status === 200) {
 				allUserGroups = response.data;
-			} 
-		} catch(error) {
+			}
+		} catch (error) {
 			if (error instanceof axios.AxiosError) {
 				handleError(error.response.data);
 			} else {
@@ -89,6 +88,8 @@
 				}
 				createAppStartDate = null;
 				createAppEndDate = null;
+
+				showModal = false;
 				showAllApplications();
 				customAlert(response.data.success);
 			}
@@ -204,7 +205,7 @@
 					<label for="appPermitCreate">App Permit Create</label>
 					<select bind:value={newApplication.appPermitCreate}>
 						{#each allUserGroups as group}
-						<option value = {group.usergroup}>{group.usergroup}</option>
+							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
@@ -212,7 +213,7 @@
 					<label for="appPermitOpen">App Permit Open</label>
 					<select bind:value={newApplication.appPermitOpen}>
 						{#each allUserGroups as group}
-						<option value = {group.usergroup}>{group.usergroup}</option>
+							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
@@ -220,7 +221,7 @@
 					<label for="appPermitToDo">App Permit ToDo</label>
 					<select bind:value={newApplication.appPermitToDo}>
 						{#each allUserGroups as group}
-						<option value = {group.usergroup}>{group.usergroup}</option>
+							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
@@ -228,7 +229,7 @@
 					<label for="appPermitDoing">App Permit Doing</label>
 					<select bind:value={newApplication.appPermitDoing}>
 						{#each allUserGroups as group}
-						<option value = {group.usergroup}>{group.usergroup}</option>
+							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
@@ -236,7 +237,7 @@
 					<label for="appPermitDone">App Permit Done</label>
 					<select bind:value={newApplication.appPermitDone}>
 						{#each allUserGroups as group}
-						<option value = {group.usergroup}>{group.usergroup}</option>
+							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
@@ -286,7 +287,7 @@
 					<label for="appPermitCreate">App Permit Create</label>
 					<select bind:value={selectedAppToEdit.appPermitCreate}>
 						{#each allUserGroups as group}
-						<option value = {group.usergroup}>{group.usergroup}</option>
+							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
@@ -294,7 +295,7 @@
 					<label for="appPermitOpen">App Permit Open</label>
 					<select bind:value={selectedAppToEdit.appPermitOpen}>
 						{#each allUserGroups as group}
-						<option value = {group.usergroup}>{group.usergroup}</option>
+							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
@@ -302,7 +303,7 @@
 					<label for="appPermitToDo">App Permit ToDo</label>
 					<select bind:value={selectedAppToEdit.appPermitToDo}>
 						{#each allUserGroups as group}
-						<option value = {group.usergroup}>{group.usergroup}</option>
+							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
@@ -310,7 +311,7 @@
 					<label for="appPermitDoing">App Permit Doing</label>
 					<select bind:value={selectedAppToEdit.appPermitToDo}>
 						{#each allUserGroups as group}
-						<option value = {group.usergroup}>{group.usergroup}</option>
+							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
@@ -318,7 +319,7 @@
 					<label for="appPermitDone">App Permit Done</label>
 					<select bind:value={selectedAppToEdit.appPermitDone}>
 						{#each allUserGroups as group}
-						<option value = {group.usergroup}>{group.usergroup}</option>
+							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
@@ -336,6 +337,7 @@
 	{/if}
 </Modal>
 
+
 <div class="middle-container">
 	<h1 class="middle-left">Applications</h1>
 	<button
@@ -351,10 +353,18 @@
 </div>
 <div class="application-container">
 	{#each applications as app}
-		<div class="application-card">
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<div
+			class="application-card"
+			on:click={() => {
+				selectedAppToShowKanban.set(app.appAcronym);
+				goto('applications/kanban');
+			}}
+		>
 			<button
 				class="editApplication-Button"
-				on:click={() => {
+				on:click|stopPropagation={() => {
 					showModal = true;
 					modalType = 'editApplication';
 					for (let key in newApplication) {
@@ -385,6 +395,8 @@
 	{/each}
 </div>
 
+<!-- {/if} -->
+
 <style>
 	.middle-container {
 		align-items: center;
@@ -406,6 +418,7 @@
 	}
 	form h2 {
 		text-align: center;
+		font-size: 1.3em;
 	}
 	.form-group {
 		display: flex;
@@ -416,8 +429,10 @@
 		margin: 10px 20px;
 		font-weight: bold;
 		width: 190px;
+		font-size: 0.9em;
 	}
-	.form-group input, select{
+	.form-group input,
+	select {
 		margin: 10px 20px;
 		background-color: #dadada;
 		border: transparent;
