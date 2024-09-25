@@ -57,9 +57,7 @@
 		}
 	}
 
-	async function createTask() {
-
-	}
+	async function createTask() {}
 
 	onMount(async () => {
 		if ($selectedAppToShowKanban === '') {
@@ -108,7 +106,7 @@
 		<form on:submit|preventDefault={createTask}>
 			<div>
 				<h2>app_AcronymXapp_RNumber</h2>
-				<div>
+				<div class="createTaskDetails">
 					<div class="form-group">
 						<label for="appAcronym">Task ID</label>
 						<input type="text" bind:value={newPlan.planAppAcronym} readonly />
