@@ -81,95 +81,99 @@
 
 <Modal bind:showModal>
 	{#if modalType === 'createPlan'}
-		<form on:submit|preventDefault={createPlan}>
-			<div>
-				<h2>Create Plan</h2>
-				<div class="form-group">
-					<label for="Plan_app_Acronym">App Acronym</label>
-					<input
-						type="text"
-						bind:value={newPlan.Plan_app_Acronym}
-						placeholder="Name"
-						readonly
-					/>
-				</div>
-				<div class="form-group">
-					<label for="Plan_MVP_name">Plan Name</label>
-					<input type="text" bind:value={newPlan.Plan_MVP_name} placeholder="Name" />
-				</div>
-				<div class="form-group">
-					<label for="createPlanStartDate">Start Date</label>
-					<input type="date" bind:value={createPlanStartDate} />
-				</div>
-				<div class="form-group">
-					<label for="createPlanEndDate">End Date</label>
-					<input type="date" bind:value={createPlanEndDate} />
-				</div>
-				<div class="form-group">
-					<label for="Plan_color">Color</label>
-					<input type="color" bind:value={newPlan.Plan_color} />
-				</div>
-			</div>
-			<div class="modal-buttons">
-				<button type="submit">Create Plan</button>
-				<button
-					type="button"
-					on:click={() => {
-						showModal = false;
-					}}>Cancel</button
-				>
-			</div>
-		</form>
-	{:else if modalType === 'createTask'}
-		<form on:submit|preventDefault={createTask}>
-			<h2>app_AcronymXapp_RNumber</h2>
-			<div class="createTask-container">
-				<div class="createTaskDetails">
-					<div class="form-group">
-						<label for="Task_id">Task ID</label>
-						<input type="text" bind:value={newTask.Task_id} readonly />
-					</div>
-					<div class="form-group">
-						<label for="Task_name">Task Name</label>
-						<input type="text" bind:value={newTask.Task_name} />
-					</div>
-					<div class="form-group">
-						<label for="appStartDate">Task Description</label>
-						<input type="text" bind:value={newTask.Task_description} />
-					</div>
-					<div class="form-group">
-						<label for="appEndDate">Plan Name</label>
-						<input type="text" bind:value={newTask.Task_plan} readonly />
-					</div>
-					<div class="form-group">
-						<label for="planColor">Task Creator</label>
-						<input type="text" bind:value={newTask.Task_creator} readonly />
-					</div>
-					<div class="form-group">
-						<label for="planColor">Task Owner</label>
-						<input type="text" bind:value={newTask.Task_owner} readonly />
-					</div>
-					<div class="form-group">
-						<label for="planColor">Task Create Date</label>
-						<input type="text" bind:value={newTask.Task_createDate} readonly />
-					</div>
-				</div>
+		<div>
+			<form on:submit|preventDefault={createPlan}>
 				<div>
-					<div class="taskNotes"></div>
-					<input type="text" bind:value={newTask.Task_notes} placeholder="Comments" />
+					<h2>Create Plan</h2>
+					<div class="form-group">
+						<label for="Plan_app_Acronym">App Acronym</label>
+						<input
+							type="text"
+							bind:value={newPlan.Plan_app_Acronym}
+							placeholder="Name"
+							readonly
+						/>
+					</div>
+					<div class="form-group">
+						<label for="Plan_MVP_name">Plan Name</label>
+						<input type="text" bind:value={newPlan.Plan_MVP_name} placeholder="Name" />
+					</div>
+					<div class="form-group">
+						<label for="createPlanStartDate">Start Date</label>
+						<input type="date" bind:value={createPlanStartDate} />
+					</div>
+					<div class="form-group">
+						<label for="createPlanEndDate">End Date</label>
+						<input type="date" bind:value={createPlanEndDate} />
+					</div>
+					<div class="form-group">
+						<label for="Plan_color">Color</label>
+						<input type="color" bind:value={newPlan.Plan_color} />
+					</div>
 				</div>
-			</div>
+				<div class="modal-buttons">
+					<button type="submit">Create Plan</button>
+					<button
+						type="button"
+						on:click={() => {
+							showModal = false;
+						}}>Cancel</button
+					>
+				</div>
+			</form>
+		</div>
+	{:else if modalType === 'createTask'}
+		<div>
+			<form on:submit|preventDefault={createTask}>
+				<h3>app_AcronymXapp_RNumber</h3>
+				<div class="createTask-container">
+					<div class="createTask-left">
+						<div class="form-group">
+							<label for="Task_id">Task ID</label>
+							<input type="text" bind:value={newTask.Task_id} readonly />
+						</div>
+						<div class="form-group">
+							<label for="Task_name">Task Name</label>
+							<input type="text" bind:value={newTask.Task_name} />
+						</div>
+						<div class="form-group">
+							<label for="appStartDate">Task Description</label>
+							<input type="text" bind:value={newTask.Task_description} />
+						</div>
+						<div class="form-group">
+							<label for="appEndDate">Plan Name</label>
+							<input type="text" bind:value={newTask.Task_plan} readonly />
+						</div>
+						<div class="form-group">
+							<label for="planColor">Task Creator</label>
+							<input type="text" bind:value={newTask.Task_creator} readonly />
+						</div>
+						<div class="form-group">
+							<label for="planColor">Task Owner</label>
+							<input type="text" bind:value={newTask.Task_owner} readonly />
+						</div>
+						<div class="form-group">
+							<label for="planColor">Task Create Date</label>
+							<input type="text" bind:value={newTask.Task_createDate} readonly />
+						</div>
+					</div>
+					<div class="createTask-right">
+						<div class="createTask-notes">dsadaddadaddad</div>
+						<textarea bind:value={newTask.Task_notes} placeholder="Comments" />
+					</div>
+				</div>
 
-			<div class="modal-buttons">
-				<button type="submit">Create Plan</button>
-				<button
-					type="button"
-					on:click={() => {
-						showModal = false;
-					}}>Cancel</button
-				>
-			</div>
-		</form>
+				<div class="modal-buttons">
+					<button type="submit">Create Plan</button>
+					<button
+						type="button"
+						on:click={() => {
+							showModal = false;
+						}}>Cancel</button
+					>
+				</div>
+			</form>
+		</div>
 	{/if}
 </Modal>
 
@@ -253,8 +257,24 @@
 	}
 	.createTask-container {
 		display: flex;
-		justify-content: space-between;
+		justify-content: center;
+		width: 1000px;
 	}
+	h3 {
+		text-align: center;
+		font-size: 1em;
+		background-color: #000000;
+		color: #ffffff;
+	}
+	.createTask-right textarea {
+		width: 500px;
+		height: 100px;
+	}
+	.createTask-notes {
+		width: 500px;
+		height: 300px;
+	}
+
 	.createTaskButton {
 		width: 120px;
 		height: 30px;
