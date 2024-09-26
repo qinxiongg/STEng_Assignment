@@ -167,10 +167,95 @@ const getApplicationPlans = async (req, res) => {
   }
 };
 
+const createTask = async (req, res) => {
+  const {
+    Task_id,
+    Task_plan,
+    Task_app_Acronym,
+    Task_name,
+    Task_description,
+    Task_notes,
+    Task_state,
+    Task_creator,
+    Task_owner,
+    Task_createDate,
+  } = req.body;
+
+  try {
+    await query(
+      `INSERT INTO task(Task_id, Task_plan, Task_app_Acronym, Task_name, 
+    Task_description, Task_notes, Task_state, Task_creator, Task_owner, Task_createDate)
+    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        Task_id,
+        Task_plan,
+        Task_app_Acronym,
+        Task_name,
+        Task_description,
+        Task_notes,
+        Task_state,
+        Task_creator,
+        Task_owner,
+        Task_createDate,
+      ]
+    );
+
+    return res.status(200).status({ success: "Successfully created task" });
+  } catch (error) {
+    console.error("Error inserting data into database", error);
+    return res.status(500).json({ message: "Unable to create new task" });
+  }
+};
+
+const getAppRNumber = async (req, res) => {
+  try {
+    const appAcronym = req.params.appAcronym;
+
+    const [App_RNumber] = await query(
+      `SELECT App_RNumber
+      FROM Application 
+      WHERE App_Acronym = ?`,
+      [appAcronym]
+    );
+
+    const [rNumberIncrementByAppAcronym] = await query(
+      `SELECT COUNT(*) as count
+      FROM task
+      WHERE Task_app_Acronym = ?`,
+      [appAcronym]
+    );
+
+    let currentRNumber = App_RNumber.App_RNumber + rNumberIncrementByAppAcronym.count;
+    console.log(currentRNumber);
+    return res.status(200).json(currentRNumber);
+  } catch (error) {
+    console.error("Error getting current RNumber from database", error);
+    return res.status(500).json({ message: "Unable to get current appRNumber from database." });
+  }
+};
+
+const getAllTasks = async (req, res) => {
+  try {
+    const results = await query(
+      `SELECT *
+      FROM task`
+    );
+
+    res.status(200).json(results);
+
+  }catch(error) {
+    console.error("Error fetching all tasks from database", error);
+    return res.status(500).json({ message: "Unable to fetch all tasks from database." });
+  }
+}
+
 module.exports = {
   createApplication,
   showAllApplications,
   editApplication,
   createPlan,
   getApplicationPlans,
+  createTask,
+  getAppRNumber,
+  getAllTasks,
 };

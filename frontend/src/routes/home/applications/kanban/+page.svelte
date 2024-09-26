@@ -14,6 +14,10 @@
 	let createPlanStartDate = null;
 	let createPlanEndDate = null;
 
+	let currentRNumber = null;
+	let plansByAppAcronym = [];
+	let createTaskDateDisplay = null;
+
 	let newPlan = {
 		Plan_MVP_name: null,
 		Plan_app_Acronym: $kanbanAppAcronym,
@@ -23,31 +27,40 @@
 	};
 
 	let newTask = {
-		Task_id: `${$kanbanAppAcronym}_${$kanbanAppRNumber}`,
+		Task_id: null,
 		Task_plan: null,
-		Task_app_Acronym: null,
+		Task_app_Acronym: $kanbanAppAcronym,
 		Task_name: null,
 		Task_description: null,
 		Task_notes: null,
-		Task_state: "Open",
+		Task_state: 'Open',
 		Task_creator: `${$userStore}`,
 		Task_owner: `${$userStore}`,
 		Task_createDate: null
 	};
 
-	let plansByAppAcronym = [];
+	let tasks = [];
+	let openTasks = [];
+	let toDoTasks = [];
+	let doingTasks = [];
+	let doneTasks = [];
+	let closedTasks = [];
 
 	function getCurrentDate() {
-		let currentDate = new Date();
+		const currentDate = new Date();
 
+		// Get current date to assign to Task_createDate
+		const startDate = currentDate;
+		newTask.Task_createDate = Math.floor(startDate.getTime() / 1000);
+
+		// current date for display at create task modal
 		let dateDisplay = {
 			day: 'numeric',
 			month: 'long',
 			year: 'numeric'
 		};
 
-		let formattedDate = currentDate.toLocaleDateString('en-GB', dateDisplay);
-		newTask.Task_createDate = formattedDate;
+		createTaskDateDisplay = currentDate.toLocaleDateString('en-GB', dateDisplay);
 	}
 
 	async function createPlan() {
@@ -104,12 +117,79 @@
 		}
 	}
 
-	async function createTask() {}
+	async function createTask() {
+		try {
+			const response = await axios.post(`${API_URL}/createTask`, newTask, {
+				withCredentials: true
+			});
+
+			if (response.status === 200) {
+				customAlert(response.data.success);
+			}
+		} catch (error) {
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				console.error(error);
+				customError('An error occurred when creating task.');
+			}
+		}
+	}
+
+	async function getAppRNumber() {
+		try {
+			const response = await axios.get(`${API_URL}/getAppRNumber/${$kanbanAppAcronym}`, {
+				withCredentials: true
+			});
+
+			if (response.status === 200) {
+				currentRNumber = response.data;
+				currentRNumber += 1;
+
+				// task id Rnumber
+				newTask.Task_id = `${$kanbanAppAcronym}_${currentRNumber}`;
+			}
+		} catch (error) {
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				console.error(error);
+				customError('An error occurred when retrieving current RNumber.');
+			}
+		}
+	}
+
+	async function getAllTask() {
+		try {
+			const response = await axios.get(`${API_URL}/getAllTasks`, { withCredentials: true });
+			if (response.status === 200) {
+				tasks = response.data;
+
+				//Filter tasks based on state
+				openTasks = tasks.filter((task) => task.Task_state === 'Open');
+				toDoTasks = tasks.filter((task) => task.Task_state === 'To do');
+				doingTasks = tasks.filter((task) => task.Task_state === 'Doing');
+				doneTasks = tasks.filter((task) => task.Task_state === 'Done');
+				closedTasks = tasks.filter((task) => task.Task_state === 'Closed');
+
+				console.log(tasks);
+			}
+		} catch (error) {
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				console.error(error);
+				customError('An error occurred when retrieving all tasks.');
+			}
+		}
+	}
 
 	onMount(async () => {
 		if ($kanbanAppAcronym === '' || $kanbanAppRNumber === '') {
 			goto('/home/applications');
 		}
+
+		await getAllTask();
 	});
 </script>
 
@@ -159,7 +239,7 @@
 	{:else if modalType === 'createTask'}
 		<div>
 			<form on:submit|preventDefault={createTask}>
-				<h3>{$kanbanAppAcronym}_{$kanbanAppRNumber}</h3>
+				<h3>{$kanbanAppAcronym}_{currentRNumber}</h3>
 				<div class="createTask-container">
 					<div class="createTask-left">
 						<div class="form-group">
@@ -197,7 +277,7 @@
 						</div>
 						<div class="form-group">
 							<label for="Task_createDate">Task Create Date</label>
-							<input type="text" bind:value={newTask.Task_createDate} readonly />
+							<input type="text" bind:value={createTaskDateDisplay} readonly />
 						</div>
 					</div>
 					<div class="createTask-right">
@@ -241,21 +321,55 @@
 					modalType = 'createTask';
 					getCurrentDate();
 					getApplicationPlans();
+					getAppRNumber();
 				}}>+ CREATE TASK</button
 			>
 		</div>
+		<div class="task-card">
+			{#each openTasks as task}
+				<div class="task-card-contents" style="border-left-color:{task.Plan_color};">
+					<h4>{task.Task_id}</h4>
+					<p>{task.Task_name}</p>
+					<span class="task-owner">{task.Task_owner}</span>
+				</div>
+			{/each}
+		</div>
 	</div>
 	<div class="kanban">
-		<h2>To do</h2>
+		{#each toDoTasks as task}
+			<div class="task-card-contents" style="border-left-color: {task.Plan_color};">
+				<h4>{task.Task_id}</h4>
+				<p>{task.Task_name}</p>
+				<span class="task-owner">{task.Task_owner}</span>
+			</div>
+		{/each}
 	</div>
 	<div class="kanban">
-		<h2>Doing</h2>
+		{#each doingTasks as task}
+			<div class="task-card-contents">
+				<h4>{task.Task_id}</h4>
+				<p>{task.Task_name}</p>
+				<span class="task-owner">{task.Task_owner}</span>
+			</div>
+		{/each}
 	</div>
 	<div class="kanban">
-		<h2>Done</h2>
+		{#each doneTasks as task}
+			<div class="task-card-contents">
+				<h4>{task.Task_id}</h4>
+				<p>{task.Task_name}</p>
+				<span class="task-owner">{task.Task_owner}</span>
+			</div>
+		{/each}
 	</div>
 	<div class="kanban">
-		<h2>Closed</h2>
+		{#each closedTasks as task}
+			<div class="task-card-contents">
+				<h4>{task.Task_id}</h4>
+				<p>{task.Task_name}</p>
+				<span class="task-owner">{task.Task_owner}</span>
+			</div>
+		{/each}
 	</div>
 </div>
 
@@ -296,6 +410,7 @@
 	.kanban-header {
 		display: flex;
 		justify-content: space-between;
+		margin-bottom: 10px;
 	}
 	.kanban h2 {
 		margin-left: 20px;
@@ -310,6 +425,9 @@
 		font-size: 1em;
 		background-color: #000000;
 		color: #ffffff;
+	}
+	.createTask-right {
+		border-left: 1px solid black;
 	}
 	.createTask-right textarea {
 		width: 500px;
@@ -369,5 +487,32 @@
 		width: 195px;
 		height: 40px;
 		cursor: pointer;
+	}
+	.task-card {
+		width: 90%;
+		/* height: 100px; */
+		background-color: #ffffff;
+		border-radius: 4px;
+		margin: auto;
+		margin-bottom: 30px;
+	}
+	.task-card-contents {
+		margin-left: 20px;
+		padding-top: 10px;
+		padding-bottom: 10px;
+	}
+	.task-card-contents p {
+		font-size: 1.2em;
+	}
+	h4 {
+		font-size: 1.5em;
+		margin: 0px;
+	}
+	.task-owner {
+		font-size: 1.4em;
+		padding: 5px;
+		background-color: #0095ff;
+		color: #ffffff;
+		border-radius: 5px;
 	}
 </style>
