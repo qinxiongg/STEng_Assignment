@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import axios from 'axios';
-	import { authStore, userStore, selectedAppToShowKanban } from '$lib/stores';
+	import { authStore, userStore, kanbanAppAcronym, kanbanAppRNumber } from '$lib/stores';
 	import { customError, handleError, customAlert } from '$lib/errorHandler';
 	import Modal from '$lib/Modal.svelte';
 
@@ -16,26 +16,39 @@
 
 	let newPlan = {
 		Plan_MVP_name: null,
-		Plan_app_Acronym: null,
+		Plan_app_Acronym: $kanbanAppAcronym,
 		Plan_startDate: null,
 		Plan_endDate: null,
 		Plan_color: '#000000'
 	};
 
 	let newTask = {
-		Task_id: null,
+		Task_id: `${$kanbanAppAcronym}_${$kanbanAppRNumber}`,
 		Task_plan: null,
 		Task_app_Acronym: null,
 		Task_name: null,
 		Task_description: null,
 		Task_notes: null,
-		Task_state: null,
-		Task_creator: null,
-		Task_owner: null,
+		Task_state: "Open",
+		Task_creator: `${$userStore}`,
+		Task_owner: `${$userStore}`,
 		Task_createDate: null
 	};
 
-	newPlan.Plan_app_Acronym = $selectedAppToShowKanban;
+	let plansByAppAcronym = [];
+
+	function getCurrentDate() {
+		let currentDate = new Date();
+
+		let dateDisplay = {
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric'
+		};
+
+		let formattedDate = currentDate.toLocaleDateString('en-GB', dateDisplay);
+		newTask.Task_createDate = formattedDate;
+	}
 
 	async function createPlan() {
 		try {
@@ -51,11 +64,12 @@
 			});
 
 			if (response.status === 201) {
-				// reset object values back to null
+				// reset object values back to default
 				for (let key in newPlan) {
-					if (key !== Plan_app_Acronym) {
+					if (key !== ('Plan_app_Acronym' || 'Plan_color')) {
 						newPlan[key] = null;
 					}
+					newPlan['Plan_color'] = '#000000';
 				}
 				createPlanStartDate = null;
 				createPlanEndDate = null;
@@ -65,7 +79,27 @@
 			if (error instanceof axios.AxiosError) {
 				handleError(error.response.data);
 			} else {
+				console.error(error);
 				customError('An error occurred at create plan.');
+			}
+		}
+	}
+
+	async function getApplicationPlans() {
+		try {
+			const response = await axios.get(
+				`${API_URL}/getApplicationPlans/${$kanbanAppAcronym}`,
+				{ withCredentials: true }
+			);
+			if (response.status === 200) {
+				plansByAppAcronym = response.data;
+			}
+		} catch (error) {
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				console.error(error);
+				customError('An error occurred at showing plans by app acronym.');
 			}
 		}
 	}
@@ -73,7 +107,7 @@
 	async function createTask() {}
 
 	onMount(async () => {
-		if ($selectedAppToShowKanban === '') {
+		if ($kanbanAppAcronym === '' || $kanbanAppRNumber === '') {
 			goto('/home/applications');
 		}
 	});
@@ -125,7 +159,7 @@
 	{:else if modalType === 'createTask'}
 		<div>
 			<form on:submit|preventDefault={createTask}>
-				<h3>app_AcronymXapp_RNumber</h3>
+				<h3>{$kanbanAppAcronym}_{$kanbanAppRNumber}</h3>
 				<div class="createTask-container">
 					<div class="createTask-left">
 						<div class="form-group">
@@ -137,34 +171,43 @@
 							<input type="text" bind:value={newTask.Task_name} />
 						</div>
 						<div class="form-group">
-							<label for="appStartDate">Task Description</label>
+							<label for="Task_description">Task Description</label>
 							<input type="text" bind:value={newTask.Task_description} />
 						</div>
 						<div class="form-group">
-							<label for="appEndDate">Plan Name</label>
+							<label for="Task_plan">Plan Name</label>
+							<select bind:value={newTask.Task_plan}>
+								{#each plansByAppAcronym as plan}
+									<option value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
+								{/each}
+							</select>
 							<input type="text" bind:value={newTask.Task_plan} readonly />
 						</div>
 						<div class="form-group">
-							<label for="planColor">Task Creator</label>
+							<label for="Task_state">Task State</label>
+							<input type="text" bind:value={newTask.Task_state} readonly />
+						</div>
+						<div class="form-group">
+							<label for="Task_creator">Task Creator</label>
 							<input type="text" bind:value={newTask.Task_creator} readonly />
 						</div>
 						<div class="form-group">
-							<label for="planColor">Task Owner</label>
+							<label for="Task_owner">Task Owner</label>
 							<input type="text" bind:value={newTask.Task_owner} readonly />
 						</div>
 						<div class="form-group">
-							<label for="planColor">Task Create Date</label>
+							<label for="Task_createDate">Task Create Date</label>
 							<input type="text" bind:value={newTask.Task_createDate} readonly />
 						</div>
 					</div>
 					<div class="createTask-right">
-						<div class="createTask-notes">dsadaddadaddad</div>
+						<div class="createTask-notes"><b>Notes</b></div>
 						<textarea bind:value={newTask.Task_notes} placeholder="Comments" />
 					</div>
 				</div>
 
 				<div class="modal-buttons">
-					<button type="submit">Create Plan</button>
+					<button type="submit">Create Task</button>
 					<button
 						type="button"
 						on:click={() => {
@@ -178,7 +221,7 @@
 </Modal>
 
 <div class="middle-container">
-	<h1 class="middle-left">Task Management Board: {$selectedAppToShowKanban}</h1>
+	<h1 class="middle-left">Task Management Board: {$kanbanAppAcronym}</h1>
 	<button
 		class="middle-right"
 		on:click={() => {
@@ -196,6 +239,8 @@
 				on:click={() => {
 					showModal = true;
 					modalType = 'createTask';
+					getCurrentDate();
+					getApplicationPlans();
 				}}>+ CREATE TASK</button
 			>
 		</div>
@@ -306,6 +351,9 @@
 		padding-left: 10px;
 		outline: none;
 		border-radius: 4px;
+	}
+	input[readonly] {
+		background-color: #ffffff;
 	}
 	.modal-buttons {
 		display: flex;

@@ -6,4 +6,6 @@ export const userStore = writable('');
 
 export const showKanban = writable(false);
 
-export const selectedAppToShowKanban = writable('');
+export const kanbanAppAcronym = writable('');
+
+export const kanbanAppRNumber = writable('');

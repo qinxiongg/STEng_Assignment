@@ -41,6 +41,7 @@ const createApplication = async (req, res) => {
     return res.status(500).json({ message: "Error querying database" });
   }
 };
+
 const showAllApplications = async (req, res) => {
   try {
     const result = await query(`SELECT * 
@@ -116,14 +117,25 @@ const editApplication = async (req, res) => {
 };
 
 const createPlan = async (req, res) => {
-  const { Plan_MVP_name, Plan_app_Acronym, Plan_startDate, Plan_endDate, Plan_color } =
-    req.body;
+  const {
+    Plan_MVP_name,
+    Plan_app_Acronym,
+    Plan_startDate,
+    Plan_endDate,
+    Plan_color,
+  } = req.body;
 
   try {
     await query(
       `INSERT INTO plan(Plan_MVP_name, Plan_app_Acronym, Plan_startDate, Plan_endDate, Plan_color)
         VALUES(?, ?, ?, ?, ?)`,
-      [Plan_MVP_name, Plan_app_Acronym, Plan_startDate, Plan_endDate, Plan_color]
+      [
+        Plan_MVP_name,
+        Plan_app_Acronym,
+        Plan_startDate,
+        Plan_endDate,
+        Plan_color,
+      ]
     );
 
     return res.status(201).json({ success: "Successfully created plan" });
@@ -135,9 +147,30 @@ const createPlan = async (req, res) => {
   }
 };
 
+const getApplicationPlans = async (req, res) => {
+  const appAcronym = req.params.appAcronym;
+
+  try {
+    const result = await query(
+      `SELECT * 
+      FROM plan
+      WHERE Plan_app_Acronym = ?`,
+      [appAcronym]
+    );
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error querying data from database.", error);
+    return res
+      .status(500)
+      .json({ message: "Unable to query data from database" });
+  }
+};
+
 module.exports = {
   createApplication,
   showAllApplications,
   editApplication,
   createPlan,
+  getApplicationPlans,
 };

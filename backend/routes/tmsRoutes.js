@@ -8,5 +8,6 @@ router.post("/createApplication", authenticateJWT, tmsController.createApplicati
 router.get("/applications", authenticateJWT, tmsController.showAllApplications);
 router.put("/editApplication", authenticateJWT, tmsController.editApplication);
 router.post("/createPlan", authenticateJWT, tmsController.createPlan);
+router.get("/getApplicationPlans/:appAcronym", authenticateJWT, tmsController.getApplicationPlans);
 
 module.exports = router;

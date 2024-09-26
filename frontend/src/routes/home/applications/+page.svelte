@@ -2,12 +2,10 @@
 	import { onMount } from 'svelte';
 	import axios from 'axios';
 	import { goto } from '$app/navigation';
-	import { authStore, userStore, selectedAppToShowKanban } from '$lib/stores';
+	import { authStore, userStore, kanbanAppAcronym, kanbanAppRNumber } from '$lib/stores';
 	import Modal from '$lib/Modal.svelte';
 	import FaEdit from 'svelte-icons/fa/FaEdit.svelte';
 	import { customError, handleError, customAlert } from '$lib/errorHandler';
-	// import { YEAR } from 'mysql/lib/protocol/constants/types';
-
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
@@ -358,7 +356,8 @@
 		<div
 			class="application-card"
 			on:click={() => {
-				selectedAppToShowKanban.set(app.appAcronym);
+				kanbanAppAcronym.set(app.appAcronym);
+				kanbanAppRNumber.set(app.appRNumber);
 				goto('applications/kanban');
 			}}
 		>
