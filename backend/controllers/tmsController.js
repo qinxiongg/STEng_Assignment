@@ -182,7 +182,7 @@ const createTask = async (req, res) => {
   } = req.body;
 
   try {
-    await query(
+    const result = await query(
       `INSERT INTO task(Task_id, Task_plan, Task_app_Acronym, Task_name, 
     Task_description, Task_notes, Task_state, Task_creator, Task_owner, Task_createDate)
     VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -200,7 +200,17 @@ const createTask = async (req, res) => {
       ]
     );
 
-    return res.status(200).status({ success: "Successfully created task" });
+    if (result.affectedRows > 0) {
+      // increment app RNumber
+      await query(
+        `UPDATE application
+      SET App_Rnumber = App_Rnumber + 1
+      WHERE App_Acronym = ?`,
+        [Task_app_Acronym]
+      );
+
+      return res.status(200).json({ success: "Successfully created task" });
+    }
   } catch (error) {
     console.error("Error inserting data into database", error);
     return res.status(500).json({ message: "Unable to create new task" });
@@ -218,35 +228,48 @@ const getAppRNumber = async (req, res) => {
       [appAcronym]
     );
 
-    const [rNumberIncrementByAppAcronym] = await query(
-      `SELECT COUNT(*) as count
-      FROM task
-      WHERE Task_app_Acronym = ?`,
-      [appAcronym]
-    );
-
-    let currentRNumber = App_RNumber.App_RNumber + rNumberIncrementByAppAcronym.count;
-    console.log(currentRNumber);
-    return res.status(200).json(currentRNumber);
+    return res.status(200).json(App_RNumber.App_RNumber);
   } catch (error) {
     console.error("Error getting current RNumber from database", error);
-    return res.status(500).json({ message: "Unable to get current appRNumber from database." });
+    return res
+      .status(500)
+      .json({ message: "Unable to get current appRNumber from database." });
   }
 };
 
 const getAllTasks = async (req, res) => {
   try {
-    const results = await query(
+    const tasks = await query(
       `SELECT *
       FROM task`
     );
 
-    res.status(200).json(results);
+    // loop through task and fetch its respective plan color
+    for (let task of tasks) {
+      const findPlanColorUsingTaskPlan = await query(
+        `SELECT Plan_color
+        FROM plan
+        WHERE Plan_MVP_Name = ?`,
+        [task.Task_plan]
+      );
 
-  }catch(error) {
+      // attched the corresponding plan color to task
+      task.Plan_color = findPlanColorUsingTaskPlan[0].Plan_color;
+    }
+
+    res.status(200).json(tasks);
+  } catch (error) {
     console.error("Error fetching all tasks from database", error);
-    return res.status(500).json({ message: "Unable to fetch all tasks from database." });
+    return res
+      .status(500)
+      .json({ message: "Unable to fetch all tasks from database." });
   }
+};
+
+
+
+const updateTask = async(req, res) => {
+
 }
 
 module.exports = {
@@ -258,4 +281,5 @@ module.exports = {
   createTask,
   getAppRNumber,
   getAllTasks,
+  updateTask,
 };

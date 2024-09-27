@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import axios from 'axios';
-	import { authStore, userStore, kanbanAppAcronym, kanbanAppRNumber } from '$lib/stores';
+	import { authStore, userStore, kanbanAppAcronym } from '$lib/stores';
 	import { customError, handleError, customAlert } from '$lib/errorHandler';
 	import Modal from '$lib/Modal.svelte';
 
@@ -18,6 +18,12 @@
 	let plansByAppAcronym = [];
 	let createTaskDateDisplay = null;
 
+	let selectedTask = {};
+	let newNote = null;
+	let selectedTaskAllNotes = selectedTask.Task_notes.split('\n');
+
+	let FormattedEpochToDate = null;
+
 	let newPlan = {
 		Plan_MVP_name: null,
 		Plan_app_Acronym: $kanbanAppAcronym,
@@ -27,7 +33,7 @@
 	};
 
 	let newTask = {
-		Task_id: null,
+		Task_id: `${$kanbanAppAcronym}_${currentRNumber}`,
 		Task_plan: null,
 		Task_app_Acronym: $kanbanAppAcronym,
 		Task_name: null,
@@ -53,7 +59,7 @@
 		const startDate = currentDate;
 		newTask.Task_createDate = Math.floor(startDate.getTime() / 1000);
 
-		// current date for display at create task modal
+		// convert current date to date string for display at create task modal
 		let dateDisplay = {
 			day: 'numeric',
 			month: 'long',
@@ -63,7 +69,37 @@
 		createTaskDateDisplay = currentDate.toLocaleDateString('en-GB', dateDisplay);
 	}
 
-	async function createPlan() {
+	// when task is clicked
+	const handleClickOnTask = (task) => {
+		showModal = true;
+		selectedTask = task;
+		modalType = 'updateTask';
+	};
+
+	const appendNote = () => {
+		if (newNote.trim() != '')  {
+			selectedTaskAllNotes.push()
+		}
+	}
+
+	// convert selectedtask create date to date string for display
+	const convertEpochToDate = () => {
+		let TaskCreateDateDisplay = new Date(selectedTask.Task_createDate * 1000);
+
+		// convert current date to date string for display at create task modal
+		let dateDisplay = {
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric'
+		};
+
+		FormattedEpochToDate = TaskCreateDateDisplay.toLocaleDateString(
+			'en-GB',
+			dateDisplay
+		);
+	};
+
+	const createPlan = async () => {
 		try {
 			// convert date to epoch timestamp
 			const startDate = new Date(createPlanStartDate);
@@ -86,6 +122,10 @@
 				}
 				createPlanStartDate = null;
 				createPlanEndDate = null;
+
+				// fetch application plans
+				getApplicationPlans();
+
 				customAlert(response.data.success);
 			}
 		} catch (error) {
@@ -96,9 +136,9 @@
 				customError('An error occurred at create plan.');
 			}
 		}
-	}
+	};
 
-	async function getApplicationPlans() {
+	const getApplicationPlans = async () => {
 		try {
 			const response = await axios.get(
 				`${API_URL}/getApplicationPlans/${$kanbanAppAcronym}`,
@@ -115,9 +155,9 @@
 				customError('An error occurred at showing plans by app acronym.');
 			}
 		}
-	}
+	};
 
-	async function createTask() {
+	const createTask = async () => {
 		try {
 			const response = await axios.post(`${API_URL}/createTask`, newTask, {
 				withCredentials: true
@@ -125,6 +165,8 @@
 
 			if (response.status === 200) {
 				customAlert(response.data.success);
+				await getAllTask();
+				getAppRNumber();
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -134,9 +176,9 @@
 				customError('An error occurred when creating task.');
 			}
 		}
-	}
+	};
 
-	async function getAppRNumber() {
+	const getAppRNumber = async () => {
 		try {
 			const response = await axios.get(`${API_URL}/getAppRNumber/${$kanbanAppAcronym}`, {
 				withCredentials: true
@@ -144,9 +186,8 @@
 
 			if (response.status === 200) {
 				currentRNumber = response.data;
-				currentRNumber += 1;
 
-				// task id Rnumber
+				// assign task id Rnumber
 				newTask.Task_id = `${$kanbanAppAcronym}_${currentRNumber}`;
 			}
 		} catch (error) {
@@ -157,9 +198,9 @@
 				customError('An error occurred when retrieving current RNumber.');
 			}
 		}
-	}
+	};
 
-	async function getAllTask() {
+	const getAllTask = async () => {
 		try {
 			const response = await axios.get(`${API_URL}/getAllTasks`, { withCredentials: true });
 			if (response.status === 200) {
@@ -171,8 +212,6 @@
 				doingTasks = tasks.filter((task) => task.Task_state === 'Doing');
 				doneTasks = tasks.filter((task) => task.Task_state === 'Done');
 				closedTasks = tasks.filter((task) => task.Task_state === 'Closed');
-
-				console.log(tasks);
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -182,14 +221,20 @@
 				customError('An error occurred when retrieving all tasks.');
 			}
 		}
-	}
+	};
+
+	const updateTask = async (Plan_app_Acronym) => {
+
+	};
 
 	onMount(async () => {
-		if ($kanbanAppAcronym === '' || $kanbanAppRNumber === '') {
+		if ($kanbanAppAcronym === '') {
 			goto('/home/applications');
 		}
 
 		await getAllTask();
+		await getApplicationPlans();
+		await getAppRNumber();
 	});
 </script>
 
@@ -244,7 +289,7 @@
 					<div class="createTask-left">
 						<div class="form-group">
 							<label for="Task_id">Task ID</label>
-							<input type="text" bind:value={newTask.Task_id} readonly />
+							<input type="text" bind:value={$kanbanAppAcronym} readonly />
 						</div>
 						<div class="form-group">
 							<label for="Task_name">Task Name</label>
@@ -261,7 +306,6 @@
 									<option value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
 								{/each}
 							</select>
-							<input type="text" bind:value={newTask.Task_plan} readonly />
 						</div>
 						<div class="form-group">
 							<label for="Task_state">Task State</label>
@@ -297,6 +341,74 @@
 				</div>
 			</form>
 		</div>
+	{:else if modalType === 'updateTask'}
+		<div>
+			<form on:submit|preventDefault={updateTask}>
+				<h3>{selectedTask.Task_id}</h3>
+				<div class="createTask-container">
+					<div class="createTask-left">
+						<div class="form-group">
+							<label for="Task_id">Task ID</label>
+							<input type="text" bind:value={selectedTask.Task_id} disabled />
+						</div>
+						<div class="form-group">
+							<label for="Task_name">Task Name</label>
+							<input type="text" bind:value={selectedTask.Task_name} disabled />
+						</div>
+						<div class="form-group">
+							<label for="Task_description">Task Description</label>
+							<input
+								type="text"
+								bind:value={selectedTask.Task_description}
+								disabled
+							/>
+						</div>
+						<div class="form-group">
+							<label for="Task_plan">Plan Name</label>
+							<select bind:value={selectedTask.Task_plan}>
+								{#each plansByAppAcronym as plan}
+									<option value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
+								{/each}
+							</select>
+						</div>
+						<div class="form-group">
+							<label for="Task_state">Task State</label>
+							<input type="text" bind:value={selectedTask.Task_state} disabled />
+						</div>
+						<div class="form-group">
+							<label for="Task_creator">Task Creator</label>
+							<input type="text" bind:value={selectedTask.Task_creator} disabled />
+						</div>
+						<div class="form-group">
+							<label for="Task_owner">Task Owner</label>
+							<input type="text" bind:value={selectedTask.Task_owner} disabled />
+						</div>
+						<div class="form-group">
+							<label for="Task_createDate">Task Create Date</label>
+							<input type="text" bind:value={FormattedEpochToDate} disabled />
+						</div>
+					</div>
+					<div class="createTask-right">
+						<b>Notes</b>
+						<div class="createTask-notes">{selectedTask.Task_notes}</div>
+						<textarea bind:value={newTask.Task_notes} placeholder="Comments" />
+					</div>
+				</div>
+
+				<div class="modal-buttons">
+					<button type="submit" style="background-color:#00A400; border:solid #00A400;"
+						>Release Task</button
+					>
+					<button type="submit">Save Changes</button>
+					<button
+						type="button"
+						on:click={() => {
+							showModal = false;
+						}}>Cancel</button
+					>
+				</div>
+			</form>
+		</div>
 	{/if}
 </Modal>
 
@@ -311,7 +423,7 @@
 	>
 </div>
 <div class="kanban-container">
-	<div class="kanban">
+	<div class="kanban-column">
 		<div class="kanban-header">
 			<h2>Open</h2>
 			<button
@@ -320,22 +432,32 @@
 					showModal = true;
 					modalType = 'createTask';
 					getCurrentDate();
-					getApplicationPlans();
-					getAppRNumber();
 				}}>+ CREATE TASK</button
 			>
 		</div>
-		<div class="task-card">
+		<div class="task-card-container">
 			{#each openTasks as task}
-				<div class="task-card-contents" style="border-left-color:{task.Plan_color};">
-					<h4>{task.Task_id}</h4>
-					<p>{task.Task_name}</p>
-					<span class="task-owner">{task.Task_owner}</span>
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<div
+					class="task-card"
+					style="border-left-color:{task.Plan_color};"
+					on:click={() => {
+						handleClickOnTask(task);
+						convertEpochToDate();
+					}}
+				>
+					<div class="task-card-contents">
+						<h4>{task.Task_id}</h4>
+						<p>{task.Task_name}</p>
+						<span class="task-owner">{task.Task_owner}</span>
+					</div>
 				</div>
 			{/each}
 		</div>
 	</div>
-	<div class="kanban">
+	<div class="kanban-column">
+		<h2>To do</h2>
 		{#each toDoTasks as task}
 			<div class="task-card-contents" style="border-left-color: {task.Plan_color};">
 				<h4>{task.Task_id}</h4>
@@ -344,7 +466,8 @@
 			</div>
 		{/each}
 	</div>
-	<div class="kanban">
+	<div class="kanban-column">
+		<h2>Doing</h2>
 		{#each doingTasks as task}
 			<div class="task-card-contents">
 				<h4>{task.Task_id}</h4>
@@ -353,7 +476,8 @@
 			</div>
 		{/each}
 	</div>
-	<div class="kanban">
+	<div class="kanban-column">
+		<h2>Done</h2>
 		{#each doneTasks as task}
 			<div class="task-card-contents">
 				<h4>{task.Task_id}</h4>
@@ -362,7 +486,8 @@
 			</div>
 		{/each}
 	</div>
-	<div class="kanban">
+	<div class="kanban-column">
+		<h2>Closed</h2>
 		{#each closedTasks as task}
 			<div class="task-card-contents">
 				<h4>{task.Task_id}</h4>
@@ -396,9 +521,8 @@
 		margin-top: 10px;
 		display: flex;
 		justify-content: space-evenly;
-		min-height: calc(100vh - 170px);
 	}
-	.kanban {
+	.kanban-column {
 		background-color: #d8d8d8;
 		width: 260px;
 		border-radius: 5px;
@@ -406,14 +530,23 @@
 		margin-left: 10px;
 		margin-right: 10px;
 		margin-bottom: 20px;
+		display: flex;
+		flex-direction: column;
+		overflow-y: scroll;
+		height: calc(100vh - 190px);
 	}
 	.kanban-header {
 		display: flex;
 		justify-content: space-between;
 		margin-bottom: 10px;
 	}
-	.kanban h2 {
+	.kanban-column h2 {
 		margin-left: 20px;
+	}
+	.task-card-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 	.createTask-container {
 		display: flex;
@@ -432,6 +565,7 @@
 	.createTask-right textarea {
 		width: 500px;
 		height: 100px;
+		resize: none;
 	}
 	.createTask-notes {
 		width: 500px;
@@ -473,6 +607,10 @@
 	input[readonly] {
 		background-color: #ffffff;
 	}
+	input[disabled] {
+		background-color: #ffffff;
+	}
+
 	.modal-buttons {
 		display: flex;
 		cursor: pointer;
@@ -492,9 +630,14 @@
 		width: 90%;
 		/* height: 100px; */
 		background-color: #ffffff;
-		border-radius: 4px;
-		margin: auto;
-		margin-bottom: 30px;
+		border-radius: 7px;
+		margin-top: 10px;
+		display: flex;
+		border-left: 5px solid;
+	}
+	.task-card:hover {
+		border-left: 10px solid;
+		cursor: pointer;
 	}
 	.task-card-contents {
 		margin-left: 20px;
@@ -503,6 +646,13 @@
 	}
 	.task-card-contents p {
 		font-size: 1.2em;
+	}
+	.task-changestate-btn {
+		background-color: #00a400;
+		color: #ffffff;
+		width: 195px;
+		height: 40px;
+		cursor: pointer;
 	}
 	h4 {
 		font-size: 1.5em;
