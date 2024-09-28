@@ -266,11 +266,46 @@ const getAllTasks = async (req, res) => {
   }
 };
 
+const updateTask = async (req, res) => {
+  const { Task_id, Task_plan, Task_notes } = req.body;
 
+  try {
+    await query(
+      `UPDATE task
+      SET Task_plan = ?, Task_notes = ?
+      WHERE Task_id = ?`,
+      [Task_plan, Task_notes, Task_id]
+    );
 
-const updateTask = async(req, res) => {
+    return res.status(200).json({ success: "Successfully updated task" });
+  } catch (error) {
+    console.error("Error updating data in database", error);
+    return res
+      .status(500)
+      .json({ message: "Unable to update task in database." });
+  }
+};
 
-}
+const changeTaskState = async (req, res) => {
+
+  const {Task_id, Task_state} = req.body;
+
+  try {
+    await query (
+    `UPDATE task
+    SET Task_state = ?
+    WHERE Task_id = ?`,
+    [Task_state, Task_id]
+  )
+
+  return res.status(200).json({success: "Successfully changed task state."});
+  } catch (error) {
+    console.error("Error updating task's state in database", error);
+    return res
+      .status(500)
+      .json({ message: "Unable to update task's state in database." });
+  }
+} 
 
 module.exports = {
   createApplication,
@@ -282,4 +317,5 @@ module.exports = {
   getAppRNumber,
   getAllTasks,
   updateTask,
+  changeTaskState,
 };

@@ -12,5 +12,7 @@ router.get("/getApplicationPlans/:appAcronym", authenticateJWT, tmsController.ge
 router.post("/createTask", authenticateJWT, tmsController.createTask);
 router.get("/getAppRNumber/:appAcronym", authenticateJWT, tmsController.getAppRNumber);
 router.get("/getAllTasks", authenticateJWT, tmsController.getAllTasks);
+router.put("/updateTask", authenticateJWT, tmsController.updateTask);
+router.put("/changeTaskState", authenticateJWT, tmsController.changeTaskState);
 
 module.exports = router;

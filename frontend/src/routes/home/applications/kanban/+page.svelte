@@ -19,7 +19,7 @@
 	let createTaskDateDisplay = null;
 
 	let selectedTask = {};
-	let newTaskNote = null;
+	let newTaskNote = '';
 
 	let FormattedEpochToDate = null;
 
@@ -37,7 +37,7 @@
 		Task_app_Acronym: $kanbanAppAcronym,
 		Task_name: null,
 		Task_description: null,
-		Task_notes: null,
+		Task_notes: '',
 		Task_state: 'Open',
 		Task_creator: `${$userStore}`,
 		Task_owner: `${$userStore}`,
@@ -50,6 +50,9 @@
 	let doingTasks = [];
 	let doneTasks = [];
 	let closedTasks = [];
+
+	$: {
+	}
 
 	function getCurrentDate() {
 		const currentDate = new Date();
@@ -73,13 +76,6 @@
 		showModal = true;
 		selectedTask = task;
 		modalType = 'updateTask';
-	};
-
-	const appendTaskNote = () => {
-		if (newTaskNote.trim() != '') {
-			selectedTask.Task_notes += `\n\n${newTaskNote}`;
-			newTaskNote = '';
-		}
 	};
 
 	// convert selectedtask create date to date string for display
@@ -155,6 +151,7 @@
 	};
 
 	const createTask = async () => {
+		appendTaskNote();
 		try {
 			const response = await axios.post(`${API_URL}/createTask`, newTask, {
 				withCredentials: true
@@ -221,13 +218,62 @@
 	};
 
 	const updateTask = async () => {
+		// append task notes when save changes or state change is clicked
+		if (newTaskNote.trim() != '') {
+			selectedTask.Task_notes += `\n\n${newTaskNote}`;
+			newTaskNote = '';
+		}
+
 		try {
-			const response = axios.post(
+			const response = await axios.put(
 				`${API_URL}/updateTask`,
-				{ Task_plan: selc },
+				{
+					Task_id: selectedTask.Task_id,
+					Task_plan: selectedTask.Task_plan,
+					Task_notes: selectedTask.Task_notes
+				},
 				{ withCredentials: true }
 			);
-		} catch (error) {}
+
+			if (response.status === 200) {
+				customAlert(response.data.success);
+				getAllTask();
+			}
+		} catch (error) {
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				console.error(error);
+				customError('An error occurred when updating task.');
+			}
+		}
+	};
+
+	const changeTaskState = async () => {
+		try {
+			const response = await axios.put(
+				`${API_URL}/changeTaskState`,
+				{
+					Task_id: selectedTask.Task_id,
+					Task_state: selectedTask.Task_state
+				},
+				{ withCredentials: true }
+			);
+
+			console.log(response);
+
+			if (response.status === 200) {
+				customAlert(response.data.success);
+				getAllTask();
+			}
+		} catch (error) {
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				console.error(error);
+				customError('An error occurred when changing task state.');
+			}
+		}
 	};
 
 	onMount(async () => {
@@ -399,10 +445,64 @@
 				</div>
 
 				<div class="modal-buttons">
-					<button type="submit" style="background-color:#00A400; border:solid #00A400;"
-						>Release Task</button
-					>
-					<button type="submit" on:click={appendTaskNote}>Save Changes</button>
+					{#if selectedTask.Task_state == 'Open'}
+						<button
+							type="submit"
+							style="background-color:#00A400; border:solid #00A400;"
+							on:click={() => {
+								selectedTask.Task_state = 'To do';
+								changeTaskState();
+								showModal = false;
+							}}>Release Task</button
+						>
+					{:else if selectedTask.Task_state == 'To do'}
+						<button
+							type="submit"
+							style="background-color:#00A400; border:solid #00A400;"
+							on:click={() => {
+								selectedTask.Task_state = 'Doing';
+								changeTaskState();
+								showModal = false;
+							}}>Take On</button
+						>
+					{:else if selectedTask.Task_state == 'Doing'}
+						<button
+							type="submit"
+							style="background-color:#00A400; border:solid #00A400;"
+							on:click={() => {
+								selectedTask.Task_state = 'Done';
+								changeTaskState();
+								showModal = false;
+							}}>To Review</button
+						>
+						<button
+							type="submit"
+							style="background-color:#D02929; border:solid #D02929;"
+							on:click={() => {
+								selectedTask.Task_state = 'To do';
+								changeTaskState();
+							}}>Forfeit Task</button
+						>
+					{:else if selectedTask.Task_state == 'Done'}
+						<button
+							type="submit"
+							style="background-color:#00A400; border:solid #00A400;"
+							on:click={() => {
+								selectedTask.Task_state = 'Closed';
+								changeTaskState();
+								showModal = false;
+							}}>Approve Task</button
+						>
+						<button
+							type="submit"
+							style="background-color:#D02929; border:solid #D02929;"
+							on:click={() => {
+								selectedTask.Task_state = 'Doing';
+								changeTaskState();
+							}}>Reject Task</button
+						>
+					{/if}
+					<button type="submit">Save Changes</button>
 					<button
 						type="button"
 						on:click={() => {
@@ -460,44 +560,104 @@
 		</div>
 	</div>
 	<div class="kanban-column">
-		<h2>To do</h2>
-		{#each toDoTasks as task}
-			<div class="task-card-contents" style="border-left-color: {task.Plan_color};">
-				<h4>{task.Task_id}</h4>
-				<p>{task.Task_name}</p>
-				<span class="task-owner">{task.Task_owner}</span>
-			</div>
-		{/each}
+		<div class="kanban-header">
+			<h2>To do</h2>
+		</div>
+		<div class="task-card-container">
+			{#each toDoTasks as task}
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<div
+					class="task-card"
+					style="border-left-color:{task.Plan_color};"
+					on:click={() => {
+						handleClickOnTask(task);
+						convertEpochToDate();
+					}}
+				>
+					<div class="task-card-contents">
+						<h4>{task.Task_id}</h4>
+						<p>{task.Task_name}</p>
+						<span class="task-owner">{task.Task_owner}</span>
+					</div>
+				</div>
+			{/each}
+		</div>
 	</div>
 	<div class="kanban-column">
-		<h2>Doing</h2>
-		{#each doingTasks as task}
-			<div class="task-card-contents">
-				<h4>{task.Task_id}</h4>
-				<p>{task.Task_name}</p>
-				<span class="task-owner">{task.Task_owner}</span>
-			</div>
-		{/each}
+		<div class="kanban-header">
+			<h2>Doing</h2>
+		</div>
+		<div class="task-card-container">
+			{#each doingTasks as task}
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<div
+					class="task-card"
+					style="border-left-color:{task.Plan_color};"
+					on:click={() => {
+						handleClickOnTask(task);
+						convertEpochToDate();
+					}}
+				>
+					<div class="task-card-contents">
+						<h4>{task.Task_id}</h4>
+						<p>{task.Task_name}</p>
+						<span class="task-owner">{task.Task_owner}</span>
+					</div>
+				</div>
+			{/each}
+		</div>
 	</div>
 	<div class="kanban-column">
-		<h2>Done</h2>
-		{#each doneTasks as task}
-			<div class="task-card-contents">
-				<h4>{task.Task_id}</h4>
-				<p>{task.Task_name}</p>
-				<span class="task-owner">{task.Task_owner}</span>
-			</div>
-		{/each}
+		<div class="kanban-header">
+			<h2>Done</h2>
+		</div>
+		<div class="task-card-container">
+			{#each doneTasks as task}
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<div
+					class="task-card"
+					style="border-left-color:{task.Plan_color};"
+					on:click={() => {
+						handleClickOnTask(task);
+						convertEpochToDate();
+					}}
+				>
+					<div class="task-card-contents">
+						<h4>{task.Task_id}</h4>
+						<p>{task.Task_name}</p>
+						<span class="task-owner">{task.Task_owner}</span>
+					</div>
+				</div>
+			{/each}
+		</div>
 	</div>
 	<div class="kanban-column">
-		<h2>Closed</h2>
-		{#each closedTasks as task}
-			<div class="task-card-contents">
-				<h4>{task.Task_id}</h4>
-				<p>{task.Task_name}</p>
-				<span class="task-owner">{task.Task_owner}</span>
-			</div>
-		{/each}
+		<div class="kanban-header">
+			<h2>Closed</h2>
+		</div>
+		<div class="task-card-container">
+			{#each closedTasks as task}
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<div
+					class="task-card"
+					style="border-left-color:{task.Plan_color};"
+					on:click={() => {
+						handleClickOnTask(task);
+						convertEpochToDate();
+					}}
+				>
+					<div class="task-card-contents">
+						<h4>{task.Task_id}</h4>
+						<p>{task.Task_name}</p>
+						<span class="task-owner">{task.Task_owner}</span>
+					</div>
+				</div>
+			{/each}
+		</div>
 	</div>
 </div>
 
@@ -574,6 +734,7 @@
 		width: 500px;
 		height: 300px;
 		white-space: pre-wrap;
+		overflow-y: auto;
 	}
 
 	.createTaskButton {
@@ -651,13 +812,13 @@
 	.task-card-contents p {
 		font-size: 1.2em;
 	}
-	.task-changestate-btn {
+	/* .task-changestate-btn {
 		background-color: #00a400;
 		color: #ffffff;
 		width: 195px;
 		height: 40px;
 		cursor: pointer;
-	}
+	} */
 	h4 {
 		font-size: 1.5em;
 		margin: 0px;
