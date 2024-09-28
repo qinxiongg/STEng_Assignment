@@ -19,8 +19,7 @@
 	let createTaskDateDisplay = null;
 
 	let selectedTask = {};
-	let newNote = null;
-	let selectedTaskAllNotes = selectedTask.Task_notes.split('\n');
+	let newTaskNote = null;
 
 	let FormattedEpochToDate = null;
 
@@ -76,11 +75,12 @@
 		modalType = 'updateTask';
 	};
 
-	const appendNote = () => {
-		if (newNote.trim() != '')  {
-			selectedTaskAllNotes.push()
+	const appendTaskNote = () => {
+		if (newTaskNote.trim() != '') {
+			selectedTask.Task_notes += `\n\n${newTaskNote}`;
+			newTaskNote = '';
 		}
-	}
+	};
 
 	// convert selectedtask create date to date string for display
 	const convertEpochToDate = () => {
@@ -93,10 +93,7 @@
 			year: 'numeric'
 		};
 
-		FormattedEpochToDate = TaskCreateDateDisplay.toLocaleDateString(
-			'en-GB',
-			dateDisplay
-		);
+		FormattedEpochToDate = TaskCreateDateDisplay.toLocaleDateString('en-GB', dateDisplay);
 	};
 
 	const createPlan = async () => {
@@ -223,8 +220,14 @@
 		}
 	};
 
-	const updateTask = async (Plan_app_Acronym) => {
-
+	const updateTask = async () => {
+		try {
+			const response = axios.post(
+				`${API_URL}/updateTask`,
+				{ Task_plan: selc },
+				{ withCredentials: true }
+			);
+		} catch (error) {}
 	};
 
 	onMount(async () => {
@@ -391,7 +394,7 @@
 					<div class="createTask-right">
 						<b>Notes</b>
 						<div class="createTask-notes">{selectedTask.Task_notes}</div>
-						<textarea bind:value={newTask.Task_notes} placeholder="Comments" />
+						<textarea bind:value={newTaskNote} placeholder="Comments" />
 					</div>
 				</div>
 
@@ -399,7 +402,7 @@
 					<button type="submit" style="background-color:#00A400; border:solid #00A400;"
 						>Release Task</button
 					>
-					<button type="submit">Save Changes</button>
+					<button type="submit" on:click={appendTaskNote}>Save Changes</button>
 					<button
 						type="button"
 						on:click={() => {
@@ -570,6 +573,7 @@
 	.createTask-notes {
 		width: 500px;
 		height: 300px;
+		white-space: pre-wrap;
 	}
 
 	.createTaskButton {
