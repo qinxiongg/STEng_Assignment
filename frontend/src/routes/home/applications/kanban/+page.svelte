@@ -23,6 +23,12 @@
 
 	let FormattedEpochToDate = null;
 
+	let trackTaskPlanChange = false;
+	let originalTaskPlan;
+	const handleTaskPlanChange = () => {
+		trackTaskPlanChange = originalTaskPlan !== selectedTask.Task_plan;
+	};
+
 	let newPlan = {
 		Plan_MVP_name: null,
 		Plan_app_Acronym: $kanbanAppAcronym,
@@ -50,9 +56,6 @@
 	let doingTasks = [];
 	let doneTasks = [];
 	let closedTasks = [];
-
-	$: {
-	}
 
 	function getCurrentDate() {
 		const currentDate = new Date();
@@ -90,6 +93,14 @@
 		};
 
 		FormattedEpochToDate = TaskCreateDateDisplay.toLocaleDateString('en-GB', dateDisplay);
+	};
+
+	const appendNewTaskNotes = () => {
+		// append task notes and change state when state change is clicked
+		if (newTaskNote.trim() != '') {
+			selectedTask.Task_notes += `\n\n${newTaskNote}`;
+			newTaskNote = '';
+		}
 	};
 
 	const createPlan = async () => {
@@ -151,7 +162,6 @@
 	};
 
 	const createTask = async () => {
-		appendTaskNote();
 		try {
 			const response = await axios.post(`${API_URL}/createTask`, newTask, {
 				withCredentials: true
@@ -159,7 +169,7 @@
 
 			if (response.status === 200) {
 				customAlert(response.data.success);
-				await getAllTask();
+				await getAllAppTasks();
 				getAppRNumber();
 			}
 		} catch (error) {
@@ -194,9 +204,15 @@
 		}
 	};
 
-	const getAllTask = async () => {
+	const getAllAppTasks = async () => {
 		try {
-			const response = await axios.get(`${API_URL}/getAllTasks`, { withCredentials: true });
+			const response = await axios.post(
+				`${API_URL}/getAllAppTasks`,
+				{ App_Acronym: $kanbanAppAcronym },
+				{
+					withCredentials: true
+				}
+			);
 			if (response.status === 200) {
 				tasks = response.data;
 
@@ -218,11 +234,7 @@
 	};
 
 	const updateTask = async () => {
-		// append task notes when save changes or state change is clicked
-		if (newTaskNote.trim() != '') {
-			selectedTask.Task_notes += `\n\n${newTaskNote}`;
-			newTaskNote = '';
-		}
+		appendNewTaskNotes();
 
 		try {
 			const response = await axios.put(
@@ -237,7 +249,7 @@
 
 			if (response.status === 200) {
 				customAlert(response.data.success);
-				getAllTask();
+				getAllAppTasks();
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -250,12 +262,17 @@
 	};
 
 	const changeTaskState = async () => {
+		// Append new task notes when state change occurs
+		appendNewTaskNotes();
+		console.log(selectedTask.Task_notes);
+
 		try {
 			const response = await axios.put(
 				`${API_URL}/changeTaskState`,
 				{
 					Task_id: selectedTask.Task_id,
-					Task_state: selectedTask.Task_state
+					Task_state: selectedTask.Task_state,
+					Task_notes: selectedTask.Task_notes
 				},
 				{ withCredentials: true }
 			);
@@ -264,7 +281,7 @@
 
 			if (response.status === 200) {
 				customAlert(response.data.success);
-				getAllTask();
+				getAllAppTasks();
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -281,7 +298,7 @@
 			goto('/home/applications');
 		}
 
-		await getAllTask();
+		await getAllAppTasks();
 		await getApplicationPlans();
 		await getAppRNumber();
 	});
@@ -333,7 +350,7 @@
 	{:else if modalType === 'createTask'}
 		<div>
 			<form on:submit|preventDefault={createTask}>
-				<h3>{$kanbanAppAcronym}_{currentRNumber}</h3>
+				<h3>{$kanbanAppAcronym}</h3>
 				<div class="createTask-container">
 					<div class="createTask-left">
 						<div class="form-group">
@@ -414,11 +431,20 @@
 						</div>
 						<div class="form-group">
 							<label for="Task_plan">Plan Name</label>
-							<select bind:value={selectedTask.Task_plan}>
-								{#each plansByAppAcronym as plan}
-									<option value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
-								{/each}
-							</select>
+							{#if selectedTask.Task_state === 'Open' || selectedTask.Task_state === 'Done'}
+								<select
+									bind:value={selectedTask.Task_plan}
+									on:change={handleTaskPlanChange}
+								>
+									{#each plansByAppAcronym as plan}
+										<option value={plan.Plan_MVP_name}
+											>{plan.Plan_MVP_name}</option
+										>
+									{/each}
+								</select>
+							{:else}
+								<input bind:value={selectedTask.Task_plan} disabled />
+							{/if}
 						</div>
 						<div class="form-group">
 							<label for="Task_state">Task State</label>
@@ -447,7 +473,7 @@
 				<div class="modal-buttons">
 					{#if selectedTask.Task_state == 'Open'}
 						<button
-							type="submit"
+							type="button"
 							style="background-color:#00A400; border:solid #00A400;"
 							on:click={() => {
 								selectedTask.Task_state = 'To do';
@@ -457,11 +483,11 @@
 						>
 					{:else if selectedTask.Task_state == 'To do'}
 						<button
-							type="submit"
+							type="button"
 							style="background-color:#00A400; border:solid #00A400;"
-							on:click={() => {
+							on:click={async () => {
 								selectedTask.Task_state = 'Doing';
-								changeTaskState();
+								await changeTaskState();
 								showModal = false;
 							}}>Take On</button
 						>
@@ -486,12 +512,14 @@
 					{:else if selectedTask.Task_state == 'Done'}
 						<button
 							type="submit"
-							style="background-color:#00A400; border:solid #00A400;"
+							style="background-color:{trackTaskPlanChange ? 'grey' : '#00A400'}; 
+								border:solid {trackTaskPlanChange ? 'grey' : '#00A400'};"
+							disabled={trackTaskPlanChange}
 							on:click={() => {
 								selectedTask.Task_state = 'Closed';
 								changeTaskState();
 								showModal = false;
-							}}>Approve Task</button
+							}}>Close Task</button
 						>
 						<button
 							type="submit"
@@ -502,7 +530,13 @@
 							}}>Reject Task</button
 						>
 					{/if}
-					<button type="submit">Save Changes</button>
+					<button
+						type="submit"
+						style="background-color:{trackTaskPlanChange
+							? 'grey'
+							: '#000000'}; border: solid {trackTaskPlanChange ? 'grey' : '#000000'};"
+						>Save Changes</button
+					>
 					<button
 						type="button"
 						on:click={() => {
@@ -548,6 +582,7 @@
 					on:click={() => {
 						handleClickOnTask(task);
 						convertEpochToDate();
+						handleTaskPlanChange();
 					}}
 				>
 					<div class="task-card-contents">
@@ -623,6 +658,7 @@
 					on:click={() => {
 						handleClickOnTask(task);
 						convertEpochToDate();
+						originalTaskPlan = selectedTask.Task_plan;
 					}}
 				>
 					<div class="task-card-contents">

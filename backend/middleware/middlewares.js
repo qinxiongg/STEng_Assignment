@@ -69,7 +69,7 @@ const checkUserAccStatus = async (username) => {
     return results[0].accountStatus === "Active"; // return true if status is active
   } catch (error) {
     console.error("Error checking user's account status", error);
-    return res.status(403).json({ message: "Access denied12" });
+    return res.status(403).json({ message: "Access denied" });
   }
 };
 

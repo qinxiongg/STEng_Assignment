@@ -19,16 +19,16 @@
 	let createAppEndDate = null;
 
 	let newApplication = {
-		appAcronym: null,
-		appRNumber: null,
-		appDescription: null,
-		appStartDate: null,
-		appEndDate: null,
-		appPermitCreate: null,
-		appPermitOpen: null,
-		appPermitToDo: null,
-		appPermitDoing: null,
-		appPermitDone: null
+		App_Acronym: null,
+		App_Rnumber: null,
+		App_Description: null,
+		App_startDate: null,
+		App_endDate: null,
+		App_permit_Create: null,
+		App_permit_Open: null,
+		App_permit_toDoList: null,
+		App_permit_Doing: null,
+		App_permit_Done: null
 	};
 
 	function editApplicationModal(app) {
@@ -70,11 +70,12 @@
 		try {
 			// convert date to epoch timestamp
 			const startDate = new Date(createAppStartDate);
-			newApplication.appStartDate = Math.floor(startDate.getTime() / 1000);
+			newApplication.App_startDate = Math.floor(startDate.getTime() / 1000);
 
 			const endDate = new Date(createAppEndDate);
-			newApplication.appEndDate = Math.floor(endDate.getTime() / 1000);
+			newApplication.App_endDate = Math.floor(endDate.getTime() / 1000);
 
+			console.log(newApplication);
 			const response = await axios.post(`${API_URL}/createApplication`, newApplication, {
 				withCredentials: true
 			});
@@ -88,7 +89,7 @@
 				createAppEndDate = null;
 
 				showModal = false;
-				showAllApplications();
+				getUserApplicationByPermit();
 				customAlert(response.data.success);
 			}
 		} catch (error) {
@@ -102,11 +103,11 @@
 
 	async function editApplication() {
 		// convert date to epoch timestamp
-		const startDate = new Date(selectedAppToEdit.appStartDate);
-		selectedAppToEdit.appStartDate = Math.floor(startDate.getTime() / 1000);
+		const startDate = new Date(selectedAppToEdit.App_startDate);
+		selectedAppToEdit.App_startDate = Math.floor(startDate.getTime() / 1000);
 
-		const endDate = new Date(selectedAppToEdit.appEndDate);
-		selectedAppToEdit.appEndDate = Math.floor(endDate.getTime() / 1000);
+		const endDate = new Date(selectedAppToEdit.App_endDate);
+		selectedAppToEdit.App_endDate = Math.floor(endDate.getTime() / 1000);
 
 		try {
 			const response = await axios.put(`${API_URL}/editApplication`, selectedAppToEdit, {
@@ -126,9 +127,13 @@
 		}
 	}
 
-	async function showAllApplications() {
+	async function getUserApplicationByPermit() {
 		try {
-			const response = await axios.get(`${API_URL}/applications`, { withCredentials: true });
+			const response = await axios.post(
+				`${API_URL}/getUserApplicationByPermit`,
+				{ username: $userStore },
+				{ withCredentials: true }
+			);
 
 			if (response.status === 200) {
 				applications = response.data;
@@ -137,18 +142,18 @@
 					const app = applications[i];
 
 					// Convert from epoch to yyyy-mm-dd
-					app.appStartDate = new Date(app.appStartDate * 1000);
-					const startYear = app.appStartDate.getFullYear();
-					const startMonth = String(app.appStartDate.getMonth() + 1).padStart(2, '0');
-					const startDay = String(app.appStartDate.getDate()).padStart(2, '0');
-					app.appStartDate = `${startYear}-${startMonth}-${startDay}`;
+					app.App_startDate = new Date(app.App_startDate * 1000);
+					const startYear = app.App_startDate.getFullYear();
+					const startMonth = String(app.App_startDate.getMonth() + 1).padStart(2, '0');
+					const startDay = String(app.App_startDate.getDate()).padStart(2, '0');
+					app.App_startDate = `${startYear}-${startMonth}-${startDay}`;
 
-					app.appEndDate = new Date(app.appEndDate * 1000);
-					const endYear = app.appEndDate.getFullYear();
-					const endMonth = String(app.appEndDate.getMonth() + 1).padStart(2, '0');
-					const endDay = String(app.appEndDate.getDate()).padStart(2, '0');
+					app.App_endDate = new Date(app.App_endDate * 1000);
+					const endYear = app.App_endDate.getFullYear();
+					const endMonth = String(app.App_endDate.getMonth() + 1).padStart(2, '0');
+					const endDay = String(app.App_endDate.getDate()).padStart(2, '0');
 
-					app.appEndDate = `${endYear}-${endMonth}-${endDay}`;
+					app.App_endDate = `${endYear}-${endMonth}-${endDay}`;
 				}
 			}
 		} catch (error) {
@@ -162,7 +167,7 @@
 
 	onMount(async () => {
 		await checkIsAdmin();
-		await showAllApplications();
+		await getUserApplicationByPermit();
 		await getAllGroups();
 	});
 </script>
@@ -173,67 +178,67 @@
 			<div>
 				<h2>Create Application</h2>
 				<div class="form-group">
-					<label for="appAcronym">App Acronym</label>
-					<input type="text" bind:value={newApplication.appAcronym} placeholder="Name" />
+					<label for="App_Acronym">App Acronym</label>
+					<input type="text" bind:value={newApplication.App_Acronym} placeholder="Name" />
 				</div>
 				<div class="form-group">
-					<label for="appRNumber">App R-Number</label>
+					<label for="App_Rnumber">App R-Number</label>
 					<input
 						type="text"
-						bind:value={newApplication.appRNumber}
+						bind:value={newApplication.App_Rnumber}
 						placeholder="Number"
 					/>
 				</div>
 				<div class="form-group">
-					<label for="appDescription">App Description</label>
+					<label for="App_Description">App Description</label>
 					<textarea
-						bind:value={newApplication.appDescription}
+						bind:value={newApplication.App_Description}
 						placeholder="Description"
 					/>
 				</div>
 				<div class="form-group">
-					<label for="appStartDate">Start Date</label>
+					<label for="App_startDate">Start Date</label>
 					<input type="date" bind:value={createAppStartDate} />
 				</div>
 				<div class="form-group">
-					<label for="appEndDate">End Date</label>
+					<label for="App_endDate">End Date</label>
 					<input type="date" bind:value={createAppEndDate} />
 				</div>
 				<div class="form-group">
-					<label for="appPermitCreate">App Permit Create</label>
-					<select bind:value={newApplication.appPermitCreate}>
+					<label for="App_permit_Create">App Permit Create</label>
+					<select bind:value={newApplication.App_permit_Create}>
 						{#each allUserGroups as group}
 							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
 				<div class="form-group">
-					<label for="appPermitOpen">App Permit Open</label>
-					<select bind:value={newApplication.appPermitOpen}>
+					<label for="App_permit_Open">App Permit Open</label>
+					<select bind:value={newApplication.App_permit_Open}>
 						{#each allUserGroups as group}
 							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
 				<div class="form-group">
-					<label for="appPermitToDo">App Permit ToDo</label>
-					<select bind:value={newApplication.appPermitToDo}>
+					<label for="App_permit_toDoList">App Permit ToDo</label>
+					<select bind:value={newApplication.App_permit_toDoList}>
 						{#each allUserGroups as group}
 							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
 				<div class="form-group">
-					<label for="appPermitDoing">App Permit Doing</label>
-					<select bind:value={newApplication.appPermitDoing}>
+					<label for="App_permit_Doing">App Permit Doing</label>
+					<select bind:value={newApplication.App_permit_Doing}>
 						{#each allUserGroups as group}
 							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
 				<div class="form-group">
-					<label for="appPermitDone">App Permit Done</label>
-					<select bind:value={newApplication.appPermitDone}>
+					<label for="App_permit_Done">App Permit Done</label>
+					<select bind:value={newApplication.App_permit_Done}>
 						{#each allUserGroups as group}
 							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
@@ -255,67 +260,67 @@
 			<div>
 				<h2>Edit Application</h2>
 				<div class="form-group">
-					<label for="appAcronym">App Acronym</label>
-					<input bind:value={selectedAppToEdit.appAcronym} placeholder="Name" readonly />
+					<label for="App_Acronym">App Acronym</label>
+					<input bind:value={selectedAppToEdit.App_Acronym} placeholder="Name" readonly />
 				</div>
 				<div class="form-group">
-					<label for="appRNumber">App R-Number</label>
+					<label for="App_Rnumber">App R-Number</label>
 					<input
 						type="text"
-						bind:value={selectedAppToEdit.appRNumber}
+						bind:value={selectedAppToEdit.App_Rnumber}
 						placeholder="Number"
 					/>
 				</div>
 				<div class="form-group">
-					<label for="appDescription">App Description</label>
+					<label for="App_Description">App Description</label>
 					<textarea
-						bind:value={selectedAppToEdit.appDescription}
+						bind:value={selectedAppToEdit.App_Description}
 						placeholder="Description"
 					/>
 				</div>
 				<div class="form-group">
-					<label for="appStartDate">Start Date</label>
-					<input type="date" bind:value={selectedAppToEdit.appStartDate} />
+					<label for="App_startDate">Start Date</label>
+					<input type="date" bind:value={selectedAppToEdit.App_startDate} />
 				</div>
 				<div class="form-group">
-					<label for="appEndDate">End Date</label>
-					<input type="date" bind:value={selectedAppToEdit.appEndDate} />
+					<label for="App_endDate">End Date</label>
+					<input type="date" bind:value={selectedAppToEdit.App_endDate} />
 				</div>
 				<div class="form-group">
-					<label for="appPermitCreate">App Permit Create</label>
-					<select bind:value={selectedAppToEdit.appPermitCreate}>
+					<label for="App_permit_Create">App Permit Create</label>
+					<select bind:value={selectedAppToEdit.App_permit_Create}>
 						{#each allUserGroups as group}
 							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
 				<div class="form-group">
-					<label for="appPermitOpen">App Permit Open</label>
-					<select bind:value={selectedAppToEdit.appPermitOpen}>
+					<label for="App_permit_Open">App Permit Open</label>
+					<select bind:value={selectedAppToEdit.App_permit_Open}>
 						{#each allUserGroups as group}
 							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
 				<div class="form-group">
-					<label for="appPermitToDo">App Permit ToDo</label>
-					<select bind:value={selectedAppToEdit.appPermitToDo}>
+					<label for="App_permit_toDoList">App Permit ToDo</label>
+					<select bind:value={selectedAppToEdit.App_permit_toDoList}>
 						{#each allUserGroups as group}
 							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
 				<div class="form-group">
-					<label for="appPermitDoing">App Permit Doing</label>
-					<select bind:value={selectedAppToEdit.appPermitToDo}>
+					<label for="App_permit_Doing">App Permit Doing</label>
+					<select bind:value={selectedAppToEdit.App_permit_Doing}>
 						{#each allUserGroups as group}
 							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
 					</select>
 				</div>
 				<div class="form-group">
-					<label for="appPermitDone">App Permit Done</label>
-					<select bind:value={selectedAppToEdit.appPermitDone}>
+					<label for="App_permit_Done">App Permit Done</label>
+					<select bind:value={selectedAppToEdit.App_permit_Done}>
 						{#each allUserGroups as group}
 							<option value={group.usergroup}>{group.usergroup}</option>
 						{/each}
@@ -334,7 +339,6 @@
 		</form>
 	{/if}
 </Modal>
-
 
 <div class="middle-container">
 	<h1 class="middle-left">Applications</h1>
@@ -356,8 +360,8 @@
 		<div
 			class="application-card"
 			on:click={() => {
-				kanbanAppAcronym.set(app.appAcronym);
-				kanbanAppRNumber.set(app.appRNumber);
+				kanbanAppAcronym.set(app.App_Acronym);
+				kanbanAppRNumber.set(app.App_Acronym);
 				goto('applications/kanban');
 			}}
 		>
@@ -374,21 +378,21 @@
 			>
 			<div class="application-card-content">
 				<h3>App Name</h3>
-				<p>{app.appAcronym}</p>
+				<p>{app.App_Acronym}</p>
 			</div>
 			<div class="application-card-content">
 				<h3>App Description</h3>
 				<p class="card-text">
-					{app.appDescription}
+					{app.App_Description}
 				</p>
 			</div>
 			<div class="application-card-content">
 				<h3>Start Date</h3>
-				<p>{app.appStartDate}</p>
+				<p>{app.App_startDate}</p>
 			</div>
 			<div class="application-card-content">
 				<h3>End Date</h3>
-				<p>{app.appEndDate}</p>
+				<p>{app.App_endDate}</p>
 			</div>
 		</div>
 	{/each}

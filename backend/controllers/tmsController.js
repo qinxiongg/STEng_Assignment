@@ -2,17 +2,19 @@ const query = require("../config/database");
 
 const createApplication = async (req, res) => {
   const {
-    appAcronym,
-    appRNumber,
-    appDescription,
-    appStartDate,
-    appEndDate,
-    appPermitCreate,
-    appPermitOpen,
-    appPermitToDo,
-    appPermitDoing,
-    appPermitDone,
+    App_Acronym,
+    App_Rnumber,
+    App_Description,
+    App_startDate,
+    App_endDate,
+    App_permit_Create,
+    App_permit_Open,
+    App_permit_toDoList,
+    App_permit_Doing,
+    App_permit_Done,
   } = req.body;
+
+  console.log(req.body);
 
   try {
     await query(
@@ -22,45 +24,45 @@ const createApplication = async (req, res) => {
                 App_permit_Done) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        appAcronym,
-        appDescription,
-        appRNumber,
-        appStartDate,
-        appEndDate,
-        appPermitCreate,
-        appPermitOpen,
-        appPermitToDo,
-        appPermitDoing,
-        appPermitDone,
+        App_Acronym,
+        App_Description,
+        App_Rnumber,
+        App_startDate,
+        App_endDate,
+        App_permit_Create,
+        App_permit_Open,
+        App_permit_toDoList,
+        App_permit_Doing,
+        App_permit_Done,
       ]
     );
 
     return res.status(201).json({ success: "New application created" });
   } catch (error) {
     console.error("Error creating user:", error);
-    return res.status(500).json({ message: "Error querying database" });
+    return res.status(500).json({ message: "Error inserting data into database" });
   }
 };
 
-const showAllApplications = async (req, res) => {
+const getUserApplicationByPermit = async (req, res) => {
   try {
-    const result = await query(`SELECT * 
-                  FROM application`);
+    const { username } = req.body;
+    console.log(username);
 
-    const result_mapped = result.map((app) => ({
-      appAcronym: app.App_Acronym,
-      appDescription: app.App_Description,
-      appRNumber: app.App_Rnumber,
-      appStartDate: app.App_startDate,
-      appEndDate: app.App_endDate,
-      appPermitCreate: app.App_permit_Create,
-      appPermitOpen: app.App_permit_Open,
-      appPermitToDo: app.App_permit_toDoList,
-      appPermitDoing: app.App_permit_Doing,
-      appPermitDone: app.App_permit_Done,
-    }));
+    const result = await query(
+      `SELECT DISTINCT A.*
+      FROM Application A
+      JOIN User_group U
+      ON U.usergroup = A.App_permit_Create
+      OR U.usergroup = A.App_permit_Open
+      OR U.usergroup = A.App_permit_toDoList
+      OR U.usergroup = A.App_permit_Doing
+      OR U.usergroup = A.App_permit_Done
+      WHERE username = ?`,
+      [username]
+    );
 
-    return res.status(200).json(result_mapped);
+    return res.status(200).json(result);
   } catch (error) {
     console.error("Error querying data from database.", error);
     return res
@@ -237,11 +239,15 @@ const getAppRNumber = async (req, res) => {
   }
 };
 
-const getAllTasks = async (req, res) => {
+const getAllAppTasks = async (req, res) => {
   try {
+    const { App_Acronym } = req.body;
+
     const tasks = await query(
       `SELECT *
-      FROM task`
+      FROM task
+      WHERE Task_app_Acronym = ?`,
+      [App_Acronym]
     );
 
     // loop through task and fetch its respective plan color
@@ -287,35 +293,36 @@ const updateTask = async (req, res) => {
 };
 
 const changeTaskState = async (req, res) => {
-
-  const {Task_id, Task_state} = req.body;
+  const { Task_id, Task_state, Task_notes } = req.body;
 
   try {
-    await query (
-    `UPDATE task
-    SET Task_state = ?
+    await query(
+      `UPDATE task
+    SET Task_state = ?, Task_notes = ?
     WHERE Task_id = ?`,
-    [Task_state, Task_id]
-  )
+      [Task_state, Task_notes, Task_id]
+    );
 
-  return res.status(200).json({success: "Successfully changed task state."});
+    return res
+      .status(200)
+      .json({ success: "Successfully changed task state." });
   } catch (error) {
     console.error("Error updating task's state in database", error);
     return res
       .status(500)
       .json({ message: "Unable to update task's state in database." });
   }
-} 
+};
 
 module.exports = {
   createApplication,
-  showAllApplications,
+  getUserApplicationByPermit,
   editApplication,
   createPlan,
   getApplicationPlans,
   createTask,
   getAppRNumber,
-  getAllTasks,
+  getAllAppTasks,
   updateTask,
   changeTaskState,
 };
