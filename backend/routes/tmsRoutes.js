@@ -4,7 +4,7 @@ const tmsController = require("../controllers/tmsController");
 const {authenticateJWT, verifyTokenWithIPAndBrowser} = require("../middleware/middlewares");
 
 // Protected routes for task management
-router.post("/createApplication", authenticateJWT, tmsController.createApplication);
+router.post("/createApplication", verifyTokenWithIPAndBrowser('PL'), tmsController.createApplication);
 router.post("/getUserApplicationByPermit", authenticateJWT, tmsController.getUserApplicationByPermit);
 router.put("/editApplication", authenticateJWT, tmsController.editApplication);
 router.post("/createPlan", authenticateJWT, tmsController.createPlan);

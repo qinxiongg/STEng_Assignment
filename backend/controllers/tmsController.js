@@ -40,7 +40,9 @@ const createApplication = async (req, res) => {
     return res.status(201).json({ success: "New application created" });
   } catch (error) {
     console.error("Error creating user:", error);
-    return res.status(500).json({ message: "Error inserting data into database" });
+    return res
+      .status(500)
+      .json({ message: "Error inserting data into database" });
   }
 };
 
@@ -73,17 +75,19 @@ const getUserApplicationByPermit = async (req, res) => {
 
 const editApplication = async (req, res) => {
   const {
-    appAcronym,
-    appRNumber,
-    appDescription,
-    appStartDate,
-    appEndDate,
-    appPermitCreate,
-    appPermitOpen,
-    appPermitToDo,
-    appPermitDoing,
-    appPermitDone,
+    App_Acronym,
+    App_Description,
+    App_Rnumber,
+    App_startDate,
+    App_endDate,
+    App_permit_Create,
+    App_permit_Open,
+    App_permit_toDoList,
+    App_permit_Doing,
+    App_permit_Done,
   } = req.body;
+
+  console.log(req.body);
 
   try {
     const result = await query(
@@ -93,16 +97,16 @@ const editApplication = async (req, res) => {
           App_permit_Doing = ?, App_permit_Done = ?
           WHERE App_Acronym = ?`,
       [
-        appDescription,
-        appRNumber,
-        appStartDate,
-        appEndDate,
-        appPermitCreate,
-        appPermitOpen,
-        appPermitToDo,
-        appPermitDoing,
-        appPermitDone,
-        appAcronym,
+        App_Description,
+        App_Rnumber,
+        App_startDate,
+        App_endDate,
+        App_permit_Create,
+        App_permit_Open,
+        App_permit_toDoList,
+        App_permit_Doing,
+        App_permit_Done,
+        App_Acronym,
       ]
     );
 

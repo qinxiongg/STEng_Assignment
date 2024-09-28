@@ -109,6 +109,8 @@
 		const endDate = new Date(selectedAppToEdit.App_endDate);
 		selectedAppToEdit.App_endDate = Math.floor(endDate.getTime() / 1000);
 
+		console.log(selectedAppToEdit);
+
 		try {
 			const response = await axios.put(`${API_URL}/editApplication`, selectedAppToEdit, {
 				withCredentials: true
@@ -117,6 +119,7 @@
 			if (response.status === 200) {
 				customAlert(response.data.success);
 				editApplicationModal(app);
+				getUserApplicationByPermit();
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
