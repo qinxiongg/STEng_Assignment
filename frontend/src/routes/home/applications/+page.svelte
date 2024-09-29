@@ -5,7 +5,12 @@
 	import { authStore, userStore, kanbanAppAcronym, kanbanAppRNumber } from '$lib/stores';
 	import Modal from '$lib/Modal.svelte';
 	import FaEdit from 'svelte-icons/fa/FaEdit.svelte';
-	import { customError, handleError, customAlert } from '$lib/errorHandler';
+	import {
+		customError,
+		handleError,
+		customAlert,
+		handleUnauthorizedError
+	} from '$lib/errorHandler';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
@@ -109,12 +114,12 @@
 		const endDate = new Date(selectedAppToEdit.App_endDate);
 		selectedAppToEdit.App_endDate = Math.floor(endDate.getTime() / 1000);
 
-		console.log(selectedAppToEdit);
-
 		try {
 			const response = await axios.put(`${API_URL}/editApplication`, selectedAppToEdit, {
 				withCredentials: true
 			});
+
+			console.log('response', response.status);
 
 			if (response.status === 200) {
 				customAlert(response.data.success);
@@ -330,7 +335,12 @@
 					</select>
 				</div>
 				<div class="modal-buttons">
-					<button type="submit">Edit Application</button>
+					<button
+						type="submit"
+						on:click={() => {
+							showModal = false;
+						}}>Edit Application</button
+					>
 					<button
 						type="button"
 						on:click={() => {

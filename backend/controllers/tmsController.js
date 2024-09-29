@@ -14,8 +14,6 @@ const createApplication = async (req, res) => {
     App_permit_Done,
   } = req.body;
 
-  console.log(req.body);
-
   try {
     await query(
       `INSERT INTO application
@@ -87,8 +85,6 @@ const editApplication = async (req, res) => {
     App_permit_Done,
   } = req.body;
 
-  console.log(req.body);
-
   try {
     const result = await query(
       `UPDATE application 
@@ -110,10 +106,11 @@ const editApplication = async (req, res) => {
       ]
     );
 
-    if (result.affectedRow > 0)
+    if (result.affectedRow > 0) {
       return res
         .status(200)
         .json({ success: "Successfully updated application" });
+    }
   } catch (error) {
     console.error("Error modifying data in database.", error);
     return res
@@ -263,9 +260,14 @@ const getAllAppTasks = async (req, res) => {
         [task.Task_plan]
       );
 
-      // attched the corresponding plan color to task
-      task.Plan_color = findPlanColorUsingTaskPlan[0].Plan_color;
+      console.log(task.Plan_color);
+      // attach the corresponding plan color to task else if no color set to null
+      task.Plan_color = findPlanColorUsingTaskPlan[0]
+        ? findPlanColorUsingTaskPlan[0].Plan_color
+        : null;
     }
+
+    console.log(tasks);
 
     res.status(200).json(tasks);
   } catch (error) {
@@ -297,14 +299,14 @@ const updateTask = async (req, res) => {
 };
 
 const changeTaskState = async (req, res) => {
-  const { Task_id, Task_state, Task_notes } = req.body;
+  const { Task_id, Task_state, Task_plan, Task_notes, Task_owner } = req.body;
 
   try {
     await query(
       `UPDATE task
-    SET Task_state = ?, Task_notes = ?
+    SET Task_state = ?, Task_notes = ?, Task_plan = ?, Task_owner = ?
     WHERE Task_id = ?`,
-      [Task_state, Task_notes, Task_id]
+      [Task_state, Task_notes, Task_plan, Task_owner, Task_id]
     );
 
     return res

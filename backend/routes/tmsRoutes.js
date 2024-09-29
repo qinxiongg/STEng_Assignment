@@ -6,8 +6,8 @@ const {authenticateJWT, verifyTokenWithIPAndBrowser} = require("../middleware/mi
 // Protected routes for task management
 router.post("/createApplication", verifyTokenWithIPAndBrowser('PL'), tmsController.createApplication);
 router.post("/getUserApplicationByPermit", authenticateJWT, tmsController.getUserApplicationByPermit);
-router.put("/editApplication", authenticateJWT, tmsController.editApplication);
-router.post("/createPlan", authenticateJWT, tmsController.createPlan);
+router.put("/editApplication", verifyTokenWithIPAndBrowser('PL'), tmsController.editApplication);
+router.post("/createPlan", verifyTokenWithIPAndBrowser('PM'), tmsController.createPlan);
 router.get("/getApplicationPlans/:appAcronym", authenticateJWT, tmsController.getApplicationPlans);
 router.post("/createTask", authenticateJWT, tmsController.createTask);
 router.get("/getAppRNumber/:appAcronym", authenticateJWT, tmsController.getAppRNumber);

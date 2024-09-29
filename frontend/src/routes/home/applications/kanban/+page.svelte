@@ -25,9 +25,8 @@
 
 	let trackTaskPlanChange = false;
 	let originalTaskPlan;
-	const handleTaskPlanChange = () => {
-		trackTaskPlanChange = originalTaskPlan !== selectedTask.Task_plan;
-	};
+
+	let statechangeaction;
 
 	let newPlan = {
 		Plan_MVP_name: null,
@@ -56,6 +55,12 @@
 	let doingTasks = [];
 	let doneTasks = [];
 	let closedTasks = [];
+
+	// Disable save changes and close task button if plan is changed for tasks at "Done"
+	const handleTaskPlanChange = () => {
+		trackTaskPlanChange =
+			originalTaskPlan !== selectedTask.Task_plan && selectedTask.Task_state === 'Done';
+	};
 
 	function getCurrentDate() {
 		const currentDate = new Date();
@@ -100,6 +105,29 @@
 		if (newTaskNote.trim() != '') {
 			selectedTask.Task_notes += `\n\n${newTaskNote}`;
 			newTaskNote = '';
+		}
+	};
+
+	// task change state and owner logic when task is promoted/demoted
+	const updateTaskOwnerAndState = (statechangeaction) => {
+		console.log(statechangeaction);
+		if (selectedTask.Task_state === 'Open' && statechangeaction === 'Release') {
+			selectedTask.Task_owner = $userStore;
+			selectedTask.Task_state = 'To do';
+		} else if (selectedTask.Task_state === 'To do' && statechangeaction === 'Take On') {
+			selectedTask.Task_owner = $userStore;
+			selectedTask.Task_state = 'Doing';
+		} else if (selectedTask.Task_state === 'Doing' && statechangeaction === 'To Review') {
+			selectedTask.Task_owner = $userStore;
+			selectedTask.Task_state = 'Done';
+		} else if (selectedTask.Task_state === 'Doing' && statechangeaction === 'Forfeit Task') {
+			selectedTask.Task_owner = $userStore;
+			selectedTask.Task_state = 'To do';
+		} else if (selectedTask.Task_state === 'Done' && statechangeaction === 'Close Task') {
+			selectedTask.Task_owner = $userStore;
+			selectedTask.Task_state = 'Closed';
+		} else if (selectedTask.Task_state === 'Done' && statechangeaction === 'Reject Task') {
+			selectedTask.Task_state = 'Doing';
 		}
 	};
 
@@ -234,9 +262,9 @@
 	};
 
 	const updateTask = async () => {
-		appendNewTaskNotes();
-
 		try {
+			appendNewTaskNotes();
+
 			const response = await axios.put(
 				`${API_URL}/updateTask`,
 				{
@@ -261,18 +289,21 @@
 		}
 	};
 
-	const changeTaskState = async () => {
-		// Append new task notes when state change occurs
-		appendNewTaskNotes();
-		console.log(selectedTask.Task_notes);
-
+	const changeTaskState = async (statechangeaction) => {
 		try {
+			// Append new task notes when state change occurs
+			appendNewTaskNotes();
+			updateTaskOwnerAndState(statechangeaction);
+			console.log(selectedTask);
+
 			const response = await axios.put(
 				`${API_URL}/changeTaskState`,
 				{
 					Task_id: selectedTask.Task_id,
 					Task_state: selectedTask.Task_state,
-					Task_notes: selectedTask.Task_notes
+					Task_plan: selectedTask.Task_plan,
+					Task_notes: selectedTask.Task_notes,
+					Task_owner: selectedTask.Task_owner
 				},
 				{ withCredentials: true }
 			);
@@ -476,8 +507,8 @@
 							type="button"
 							style="background-color:#00A400; border:solid #00A400;"
 							on:click={() => {
-								selectedTask.Task_state = 'To do';
-								changeTaskState();
+								statechangeaction = 'Release';
+								changeTaskState(statechangeaction);
 								showModal = false;
 							}}>Release Task</button
 						>
@@ -486,8 +517,8 @@
 							type="button"
 							style="background-color:#00A400; border:solid #00A400;"
 							on:click={async () => {
-								selectedTask.Task_state = 'Doing';
-								await changeTaskState();
+								statechangeaction = 'Take On';
+								changeTaskState(statechangeaction);
 								showModal = false;
 							}}>Take On</button
 						>
@@ -496,8 +527,8 @@
 							type="submit"
 							style="background-color:#00A400; border:solid #00A400;"
 							on:click={() => {
-								selectedTask.Task_state = 'Done';
-								changeTaskState();
+								statechangeaction = 'To Review';
+								changeTaskState(statechangeaction);
 								showModal = false;
 							}}>To Review</button
 						>
@@ -505,8 +536,8 @@
 							type="submit"
 							style="background-color:#D02929; border:solid #D02929;"
 							on:click={() => {
-								selectedTask.Task_state = 'To do';
-								changeTaskState();
+								statechangeaction = 'Forfeit Task';
+								changeTaskState(statechangeaction);
 							}}>Forfeit Task</button
 						>
 					{:else if selectedTask.Task_state == 'Done'}
@@ -516,8 +547,8 @@
 								border:solid {trackTaskPlanChange ? 'grey' : '#00A400'};"
 							disabled={trackTaskPlanChange}
 							on:click={() => {
-								selectedTask.Task_state = 'Closed';
-								changeTaskState();
+								statechangeaction = 'Close Task';
+								changeTaskState(statechangeaction);
 								showModal = false;
 							}}>Close Task</button
 						>
@@ -525,8 +556,8 @@
 							type="submit"
 							style="background-color:#D02929; border:solid #D02929;"
 							on:click={() => {
-								selectedTask.Task_state = 'Doing';
-								changeTaskState();
+								statechangeaction = 'Reject Task';
+								changeTaskState(statechangeaction);
 							}}>Reject Task</button
 						>
 					{/if}
@@ -578,7 +609,7 @@
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<div
 					class="task-card"
-					style="border-left-color:{task.Plan_color};"
+					style="border-left-color:{task.Plan_color ? task.Plan_color : '#D8D8D8'};"
 					on:click={() => {
 						handleClickOnTask(task);
 						convertEpochToDate();
