@@ -340,7 +340,6 @@ const updateTask = async (req, res) => {
     Task_app_Acronym,
     username,
   } = req.body;
-  console.log("req.body", req.body);
 
   try {
     //fetch app permits
