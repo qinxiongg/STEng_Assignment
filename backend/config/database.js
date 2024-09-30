@@ -18,7 +18,7 @@ connection.connect((err) => {
 });
 
 // promisify query
-const query = (sql, params) => {
+const query = (sql, params = []) => {
   return new Promise((resolve, reject) => {
     connection.query(sql, params, (error, results) => {
       if (error) {

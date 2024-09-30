@@ -94,7 +94,7 @@
 				createAppEndDate = null;
 
 				showModal = false;
-				getUserApplicationByPermit();
+				getApplications();
 				customAlert(response.data.success);
 			}
 		} catch (error) {
@@ -124,7 +124,7 @@
 			if (response.status === 200) {
 				customAlert(response.data.success);
 				editApplicationModal(app);
-				getUserApplicationByPermit();
+				getApplications();
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -135,11 +135,10 @@
 		}
 	}
 
-	async function getUserApplicationByPermit() {
+	async function getApplications() {
 		try {
-			const response = await axios.post(
-				`${API_URL}/getUserApplicationByPermit`,
-				{ username: $userStore },
+			const response = await axios.get(
+				`${API_URL}/getApplications`,
 				{ withCredentials: true }
 			);
 
@@ -175,7 +174,7 @@
 
 	onMount(async () => {
 		await checkIsAdmin();
-		await getUserApplicationByPermit();
+		await getApplications();
 		await getAllGroups();
 	});
 </script>

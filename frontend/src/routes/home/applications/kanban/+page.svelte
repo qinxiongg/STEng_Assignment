@@ -65,11 +65,10 @@
 	let appPermits = {};
 	let userGroupForCheckingPermit = {};
 
-	// const checkUserPermit = (userGroupForCheckingPermit, appPermits, action) => {
-	// 	// Get permitted groups for the action
-	// 	const appPermittedGroup = appPermits[action];
-	// 	return userGroupForCheckingPermit.includes(appPermittedGroup);
-	// };
+	$: {
+		console.log('user', userGroupForCheckingPermit);
+		console.log('permit', appPermits.App_permit_Open);
+	}
 
 	// Disable save changes and close task button if plan is changed for tasks at "Done"
 	const handleTaskPlanChange = () => {
@@ -115,17 +114,36 @@
 		FormattedEpochToDate = TaskCreateDateDisplay.toLocaleDateString('en-GB', dateDisplay);
 	};
 
-	const appendNewTaskNotes = () => {
-		// append task notes and change state when state change is clicked
-		if (newTaskNote.trim() != '') {
-			selectedTask.Task_notes += `\n\n${newTaskNote}`;
+	const appendNewTaskNotes = (statechange) => {
+		const currentDate = new Date();
+
+		const day = String(currentDate.getDate()).padStart(2, '0');
+		const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+		const year = currentDate.getFullYear();
+
+		let timestampDate = `${day}/${month}/${year}`;
+
+		// if true then append state change notes
+		if (statechange) {
+			// append task notes when task state changes
+			selectedTask.Task_notes =
+				`Date: ${timestampDate} \nCommented By: ${$userStore}\n${newTaskNote}\n\n[Task State changed from ${stateBeforeStateChange} to ${selectedTask.Task_state}]\n\n` +
+				selectedTask.Task_notes;
 			newTaskNote = '';
+		} else {
+			selectedTask.Task_notes =
+				`Date: ${timestampDate} \nCommented By: ${$userStore}\n${newTaskNote}\n\n [Task State: ${selectedTask.Task_state}]\n\n` +
+				selectedTask.Task_notes;
+			newTaskNote = '';
+
+			// // append task notes when save changes is clicked
+			// 	selectedTask.Task_notes += `Date: ${timestampDate} \nCommented By: ${$userStore}\n${newTaskNote}\n\n [Task State: ${selectedTask.Task_state}]\n\n`;
+			// 	newTaskNote = '';
 		}
 	};
 
 	// task change state and owner logic when task is promoted/demoted
 	const updateTaskOwnerAndState = (statechangeaction) => {
-		console.log(statechangeaction);
 		if (selectedTask.Task_state === 'Open' && statechangeaction === 'Release') {
 			stateBeforeStateChange = 'Open';
 			selectedTask.Task_owner = $userStore;
@@ -222,9 +240,14 @@
 			});
 
 			if (response.status === 200) {
+				showModal = false;
 				customAlert(response.data.success);
 				await getAllAppTasks();
 				getAppRNumber();
+
+				for (let key in newTask) {
+					newTask[key] = null;
+				}
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -289,7 +312,7 @@
 
 	const updateTask = async () => {
 		try {
-			appendNewTaskNotes();
+			appendNewTaskNotes(false);
 
 			const response = await axios.put(
 				`${API_URL}/updateTask`,
@@ -321,8 +344,8 @@
 	const changeTaskState = async (statechangeaction) => {
 		try {
 			// Append new task notes when state change occurs
-			appendNewTaskNotes();
 			updateTaskOwnerAndState(statechangeaction);
+			appendNewTaskNotes(true);
 
 			const response = await axios.put(
 				`${API_URL}/changeTaskState`,
@@ -339,10 +362,10 @@
 				{ withCredentials: true }
 			);
 
-			console.log(response);
-
 			if (response.status === 200) {
+				showModal = false;
 				customAlert(response.data.success);
+				stateBeforeStateChange = null;
 				getAllAppTasks();
 			}
 		} catch (error) {
@@ -368,6 +391,7 @@
 
 			if (response.status === 200) {
 				appPermits = response.data.appPermits;
+				// console.log(appPermits);
 				userGroupForCheckingPermit = response.data.userGroup;
 			}
 		} catch (error) {
@@ -451,7 +475,7 @@
 						</div>
 						<div class="form-group">
 							<label for="Task_description">Task Description</label>
-							<input type="text" bind:value={newTask.Task_description} />
+							<textarea bind:value={newTask.Task_description} />
 						</div>
 						<div class="form-group">
 							<label for="Task_plan">Plan Name</label>
@@ -511,15 +535,11 @@
 						</div>
 						<div class="form-group">
 							<label for="Task_description">Task Description</label>
-							<input
-								type="text"
-								bind:value={selectedTask.Task_description}
-								disabled
-							/>
+							<textarea bind:value={selectedTask.Task_description} disabled />
 						</div>
 						<div class="form-group">
 							<label for="Task_plan">Plan Name</label>
-							{#if selectedTask.Task_state === 'Open' || selectedTask.Task_state === 'Done'}
+							{#if (selectedTask.Task_state === 'Open' && userGroupForCheckingPermit.includes(appPermits.App_permit_Open)) || (selectedTask.Task_state === 'Done' && userGroupForCheckingPermit.includes(appPermits.App_permit_Done))}
 								<select
 									bind:value={selectedTask.Task_plan}
 									on:change={handleTaskPlanChange}
@@ -559,7 +579,7 @@
 				</div>
 
 				<div class="modal-buttons">
-					{#if selectedTask.Task_state == 'Open'}
+					{#if selectedTask.Task_state == 'Open' && userGroupForCheckingPermit.includes(appPermits.App_permit_Open)}
 						<button
 							type="button"
 							style="background-color:#00A400; border:solid #00A400;"
@@ -569,7 +589,15 @@
 								showModal = false;
 							}}>Release Task</button
 						>
-					{:else if selectedTask.Task_state == 'To do'}
+						<button
+							type="submit"
+							style="background-color:{trackTaskPlanChange
+								? 'grey'
+								: '#000000'}; border: solid {trackTaskPlanChange
+								? 'grey'
+								: '#000000'};">Save Changes</button
+						>
+					{:else if selectedTask.Task_state == 'To do' && userGroupForCheckingPermit.includes(appPermits.App_permit_toDoList)}
 						<button
 							type="button"
 							style="background-color:#00A400; border:solid #00A400;"
@@ -579,7 +607,15 @@
 								showModal = false;
 							}}>Take On</button
 						>
-					{:else if selectedTask.Task_state == 'Doing'}
+						<button
+							type="submit"
+							style="background-color:{trackTaskPlanChange
+								? 'grey'
+								: '#000000'}; border: solid {trackTaskPlanChange
+								? 'grey'
+								: '#000000'};">Save Changes</button
+						>
+					{:else if selectedTask.Task_state == 'Doing' && userGroupForCheckingPermit.includes(appPermits.App_permit_Doing)}
 						<button
 							type="submit"
 							style="background-color:#00A400; border:solid #00A400;"
@@ -597,7 +633,15 @@
 								changeTaskState(statechangeaction);
 							}}>Forfeit Task</button
 						>
-					{:else if selectedTask.Task_state == 'Done'}
+						<button
+							type="submit"
+							style="background-color:{trackTaskPlanChange
+								? 'grey'
+								: '#000000'}; border: solid {trackTaskPlanChange
+								? 'grey'
+								: '#000000'};">Save Changes</button
+						>
+					{:else if selectedTask.Task_state == 'Done' && userGroupForCheckingPermit.includes(appPermits.App_permit_Done)}
 						<button
 							type="submit"
 							style="background-color:{trackTaskPlanChange ? 'grey' : '#00A400'}; 
@@ -617,14 +661,22 @@
 								changeTaskState(statechangeaction);
 							}}>Reject Task</button
 						>
+						<button
+							type="submit"
+							style="background-color:{trackTaskPlanChange
+								? 'grey'
+								: '#000000'}; border: solid {trackTaskPlanChange
+								? 'grey'
+								: '#000000'};">Save Changes</button
+						>
 					{/if}
-					<button
+					<!-- <button
 						type="submit"
 						style="background-color:{trackTaskPlanChange
 							? 'grey'
 							: '#000000'}; border: solid {trackTaskPlanChange ? 'grey' : '#000000'};"
 						>Save Changes</button
-					>
+					> -->
 					<button
 						type="button"
 						on:click={() => {
@@ -853,6 +905,7 @@
 		width: 500px;
 		height: 100px;
 		resize: none;
+		background-color: lightgrey;
 	}
 	.createTask-notes {
 		width: 500px;

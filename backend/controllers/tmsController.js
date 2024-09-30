@@ -14,13 +14,47 @@ const createApplication = async (req, res) => {
     App_permit_Done,
   } = req.body;
 
+  if (!App_Acronym) {
+    return res.status(400).json({ message: "Please enter an app acronym" });
+  }
+
+  const App_AcronymRegex = /^[a-zA-Z0-9_]{1,50}$/;
+
+  if (!App_AcronymRegex.test(App_Acronym)) {
+    return res.status(400).json({
+      message:
+        "App Acronym must be alphanumeric including '_' and 1-50 characters long",
+    });
+  }
+
+  if (!App_Rnumber) {
+    return res.status(400).json({ message: "Please enter a RNumber" });
+  }
+
+  const App_RnumberRegex = /^[1-9]\d*$/;
+  if (!App_RnumberRegex.test(App_Rnumber)) {
+    return res.status(400).json({
+      message: "App Rnumber must be an integer more than 0",
+    });
+  }
+
+  if (!App_startDate) {
+    return res.status(400).json({ message: "Please pick a app start date" });
+  }
+
+  if (!App_endDate) {
+    return res.status(400).json({ message: "Please pick a app end date" });
+  }
+
   try {
+    await query("START TRANSACTION");
+
     await query(
       `INSERT INTO application
-                (App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate,
-                App_permit_Create, App_permit_Open, App_permit_toDoList, App_permit_Doing,
-                App_permit_Done) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate,
+      App_permit_Create, App_permit_Open, App_permit_toDoList, App_permit_Doing,
+      App_permit_Done) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         App_Acronym,
         App_Description,
@@ -35,8 +69,12 @@ const createApplication = async (req, res) => {
       ]
     );
 
+    await query("COMMIT");
+
     return res.status(201).json({ success: "New application created" });
   } catch (error) {
+    await query("ROLLBACK");
+
     console.error("Error creating user:", error);
     return res
       .status(500)
@@ -44,21 +82,11 @@ const createApplication = async (req, res) => {
   }
 };
 
-const getUserApplicationByPermit = async (req, res) => {
+const getApplications = async (req, res) => {
   try {
-    const { username } = req.body;
-
     const result = await query(
-      `SELECT DISTINCT A.*
-      FROM Application A
-      JOIN User_group U
-      ON U.usergroup = A.App_permit_Create
-      OR U.usergroup = A.App_permit_Open
-      OR U.usergroup = A.App_permit_toDoList
-      OR U.usergroup = A.App_permit_Doing
-      OR U.usergroup = A.App_permit_Done
-      WHERE username = ?`,
-      [username]
+      `SELECT *
+      FROM application`
     );
 
     return res.status(200).json(result);
@@ -127,6 +155,30 @@ const createPlan = async (req, res) => {
     Plan_color,
   } = req.body;
 
+  if (!Plan_MVP_name) {
+    return res
+      .status(400)
+      .json({ message: "Please enter plan name" });
+  }
+
+  if (Plan_MVP_name.length < 1 || Plan_MVP_name.length > 255) {
+    return res
+      .status(400)
+      .json({ message: "Plan name must be 1 - 255 characters" });
+  }
+
+  if (!Plan_color) {
+    return res.status(400).json({ message: "Please pick a plan color" });
+  }
+
+  if (!Plan_startDate) {
+    return res.status(400).json({ message: "Please pick a plan start date" });
+  }
+
+  if (!Plan_endDate) {
+    return res.status(400).json({ message: "Please pick a plan end date" });
+  }
+
   try {
     await query(
       `INSERT INTO plan(Plan_MVP_name, Plan_app_Acronym, Plan_startDate, Plan_endDate, Plan_color)
@@ -182,6 +234,18 @@ const createTask = async (req, res) => {
     Task_owner,
     Task_createDate,
   } = req.body;
+
+  if(!Task_name) {
+    return res
+      .status(400)
+      .json({ message: "Please enter a task name" });
+  }
+
+  if (Task_name.length < 1 || Task_name.length > 255) {
+    return res
+      .status(400)
+      .json({ message: "Plan name must be 1 - 255 characters" });
+  }
 
   try {
     //fetch app permits
@@ -342,6 +406,8 @@ const updateTask = async (req, res) => {
   } = req.body;
 
   try {
+    await query("START TRANSACTION");
+
     //fetch app permits
     const appPermitsResults = await query(
       `SELECT App_permit_Open, App_permit_toDoList,
@@ -398,8 +464,12 @@ const updateTask = async (req, res) => {
       [Task_plan, Task_notes, Task_id]
     );
 
+    await query("COMMIT");
+
     return res.status(200).json({ success: "Successfully updated task" });
   } catch (error) {
+    await query("ROLLBACK");
+
     console.error("Error updating data in database", error);
     return res
       .status(500)
@@ -420,6 +490,8 @@ const changeTaskState = async (req, res) => {
   } = req.body;
 
   try {
+    await query("START TRANSACTION");
+
     //fetch app permits
     const appPermitsResults = await query(
       `SELECT App_permit_Open, App_permit_toDoList,
@@ -477,10 +549,13 @@ const changeTaskState = async (req, res) => {
       [Task_state, Task_notes, Task_plan, Task_owner, Task_id]
     );
 
+    await query("COMMIT");
     return res
       .status(200)
       .json({ success: "Successfully changed task state." });
   } catch (error) {
+    await query("ROLLBACK");
+
     console.error("Error updating task's state in database", error);
     return res
       .status(500)
@@ -523,7 +598,7 @@ const getAppPermitsAndUserGroup = async (req, res) => {
 
     return res
       .status(200)
-      .json({ appPermits: appPermits, userGroup: getUserGroup });
+      .json({ appPermits: appPermits[0], userGroup: UserGroup });
   } catch (error) {
     console.error("Error querying application permits in database", error);
     return res
@@ -534,7 +609,7 @@ const getAppPermitsAndUserGroup = async (req, res) => {
 
 module.exports = {
   createApplication,
-  getUserApplicationByPermit,
+  getApplications,
   editApplication,
   createPlan,
   getApplicationPlans,
