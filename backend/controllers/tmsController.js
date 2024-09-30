@@ -409,7 +409,16 @@ const updateTask = async (req, res) => {
 };
 
 const changeTaskState = async (req, res) => {
-  const { Task_id, Task_state, Task_plan, Task_notes, Task_owner, Task_app_Acronym, username, stateBeforeStateChange } = req.body;
+  const {
+    Task_id,
+    Task_state,
+    Task_plan,
+    Task_notes,
+    Task_owner,
+    Task_app_Acronym,
+    username,
+    stateBeforeStateChange,
+  } = req.body;
 
   try {
     //fetch app permits
@@ -433,10 +442,6 @@ const changeTaskState = async (req, res) => {
 
     // convert usergroup result to an array
     UserGroup = getUserGroup.map((group) => group.usergroup);
-
-    console.log(UserGroup);
-    console.log(appPermits);
-    console.log(Task_state);
 
     // Determine which permit to check based on task state
     let requiredPermit = "";

@@ -32,7 +32,7 @@
 	let originalTaskPlan;
 
 	let statechangeaction;
-	let stateBeforeStateChange;
+	let stateBeforeStateChange = null;
 
 	let newPlan = {
 		Plan_MVP_name: null,
@@ -65,11 +65,11 @@
 	let appPermits = {};
 	let userGroupForCheckingPermit = {};
 
-	const checkUserPermit = (userGroupForCheckingPermit, appPermits, action) => {
-		// Get permitted groups for the action
-		const appPermittedGroup = appPermits[action];
-		return userGroupForCheckingPermit.includes(appPermittedGroup);
-	};
+	// const checkUserPermit = (userGroupForCheckingPermit, appPermits, action) => {
+	// 	// Get permitted groups for the action
+	// 	const appPermittedGroup = appPermits[action];
+	// 	return userGroupForCheckingPermit.includes(appPermittedGroup);
+	// };
 
 	// Disable save changes and close task button if plan is changed for tasks at "Done"
 	const handleTaskPlanChange = () => {
@@ -127,20 +127,26 @@
 	const updateTaskOwnerAndState = (statechangeaction) => {
 		console.log(statechangeaction);
 		if (selectedTask.Task_state === 'Open' && statechangeaction === 'Release') {
+			stateBeforeStateChange = 'Open';
 			selectedTask.Task_owner = $userStore;
 			selectedTask.Task_state = 'To do';
 		} else if (selectedTask.Task_state === 'To do' && statechangeaction === 'Take On') {
+			stateBeforeStateChange = 'To do';
 			selectedTask.Task_owner = $userStore;
 			selectedTask.Task_state = 'Doing';
 		} else if (selectedTask.Task_state === 'Doing' && statechangeaction === 'To Review') {
+			stateBeforeStateChange = 'Doing';
 			selectedTask.Task_owner = $userStore;
 			selectedTask.Task_state = 'Done';
 		} else if (selectedTask.Task_state === 'Doing' && statechangeaction === 'Forfeit Task') {
+			stateBeforeStateChange = 'Doing';
 			selectedTask.Task_state = 'To do';
 		} else if (selectedTask.Task_state === 'Done' && statechangeaction === 'Close Task') {
+			stateBeforeStateChange = 'Done';
 			selectedTask.Task_owner = $userStore;
 			selectedTask.Task_state = 'Closed';
 		} else if (selectedTask.Task_state === 'Done' && statechangeaction === 'Reject Task') {
+			stateBeforeStateChange = 'Done';
 			selectedTask.Task_state = 'Doing';
 		}
 	};
@@ -317,7 +323,6 @@
 			// Append new task notes when state change occurs
 			appendNewTaskNotes();
 			updateTaskOwnerAndState(statechangeaction);
-			console.log(selectedTask);
 
 			const response = await axios.put(
 				`${API_URL}/changeTaskState`,
@@ -559,7 +564,6 @@
 							type="button"
 							style="background-color:#00A400; border:solid #00A400;"
 							on:click={() => {
-								stateBeforeStateChange = "Open";
 								statechangeaction = 'Release';
 								changeTaskState(statechangeaction);
 								showModal = false;
