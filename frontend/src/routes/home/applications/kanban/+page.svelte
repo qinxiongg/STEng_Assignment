@@ -3,7 +3,12 @@
 	import { goto } from '$app/navigation';
 	import axios from 'axios';
 	import { authStore, userStore, kanbanAppAcronym } from '$lib/stores';
-	import { customError, handleError, customAlert } from '$lib/errorHandler';
+	import {
+		customError,
+		handleError,
+		customAlert,
+		handleUnauthorizedError
+	} from '$lib/errorHandler';
 	import Modal from '$lib/Modal.svelte';
 
 	const API_URL = import.meta.env.VITE_API_URL;
@@ -27,6 +32,7 @@
 	let originalTaskPlan;
 
 	let statechangeaction;
+	let stateBeforeStateChange;
 
 	let newPlan = {
 		Plan_MVP_name: null,
@@ -55,6 +61,15 @@
 	let doingTasks = [];
 	let doneTasks = [];
 	let closedTasks = [];
+
+	let appPermits = {};
+	let userGroupForCheckingPermit = {};
+
+	const checkUserPermit = (userGroupForCheckingPermit, appPermits, action) => {
+		// Get permitted groups for the action
+		const appPermittedGroup = appPermits[action];
+		return userGroupForCheckingPermit.includes(appPermittedGroup);
+	};
 
 	// Disable save changes and close task button if plan is changed for tasks at "Done"
 	const handleTaskPlanChange = () => {
@@ -121,7 +136,6 @@
 			selectedTask.Task_owner = $userStore;
 			selectedTask.Task_state = 'Done';
 		} else if (selectedTask.Task_state === 'Doing' && statechangeaction === 'Forfeit Task') {
-			selectedTask.Task_owner = $userStore;
 			selectedTask.Task_state = 'To do';
 		} else if (selectedTask.Task_state === 'Done' && statechangeaction === 'Close Task') {
 			selectedTask.Task_owner = $userStore;
@@ -191,6 +205,12 @@
 
 	const createTask = async () => {
 		try {
+			// check usergroup verification with app permit before executing
+			// if(!userGroupForCheckingPermit.includes(appPermits.App_permit_Create)) {
+			// 	// handleUnauthorizedError();
+
+			// }
+
 			const response = await axios.post(`${API_URL}/createTask`, newTask, {
 				withCredentials: true
 			});
@@ -270,7 +290,10 @@
 				{
 					Task_id: selectedTask.Task_id,
 					Task_plan: selectedTask.Task_plan,
-					Task_notes: selectedTask.Task_notes
+					Task_notes: selectedTask.Task_notes,
+					Task_state: selectedTask.Task_state,
+					Task_app_Acronym: selectedTask.Task_app_Acronym,
+					username: $userStore
 				},
 				{ withCredentials: true }
 			);
@@ -303,7 +326,10 @@
 					Task_state: selectedTask.Task_state,
 					Task_plan: selectedTask.Task_plan,
 					Task_notes: selectedTask.Task_notes,
-					Task_owner: selectedTask.Task_owner
+					Task_owner: selectedTask.Task_owner,
+					Task_app_Acronym: selectedTask.Task_app_Acronym,
+					username: $userStore,
+					stateBeforeStateChange: stateBeforeStateChange
 				},
 				{ withCredentials: true }
 			);
@@ -324,11 +350,37 @@
 		}
 	};
 
+	const getAppPermitsAndUserGroup = async () => {
+		try {
+			const response = await axios.post(
+				`${API_URL}/getAppPermitsAndUserGroup`,
+				{
+					App_Acronym: $kanbanAppAcronym,
+					username: $userStore
+				},
+				{ withCredentials: true }
+			);
+
+			if (response.status === 200) {
+				appPermits = response.data.appPermits;
+				userGroupForCheckingPermit = response.data.userGroup;
+			}
+		} catch (error) {
+			if (error instanceof axios.AxiosError) {
+				handleError(error.response.data);
+			} else {
+				console.error(error);
+				customError('An error occurred when getting app permits and user group.');
+			}
+		}
+	};
+
 	onMount(async () => {
 		if ($kanbanAppAcronym === '') {
 			goto('/home/applications');
 		}
 
+		await getAppPermitsAndUserGroup();
 		await getAllAppTasks();
 		await getApplicationPlans();
 		await getAppRNumber();
@@ -507,6 +559,7 @@
 							type="button"
 							style="background-color:#00A400; border:solid #00A400;"
 							on:click={() => {
+								stateBeforeStateChange = "Open";
 								statechangeaction = 'Release';
 								changeTaskState(statechangeaction);
 								showModal = false;

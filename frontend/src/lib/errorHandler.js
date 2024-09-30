@@ -18,6 +18,11 @@ export function handleError(error) {
 		setTimeout(() => {
 			toast.error(`Error: ${error.message || 'Access denied'}`);
 		}, 200);
+	} else if (error.message == 'Unauthorised') {
+		goto('/home/applications');
+		setTimeout(() => {
+			toast.error(`Error: ${error.message || 'Unauthorised'}`);
+		}, 200);
 	} else {
 		toast.error(`Error: ${error.message || 'Something went wrong!'}`);
 	}
@@ -29,10 +34,10 @@ export function handleNetworkError() {
 }
 
 export function handleUnauthorizedError() {
-  goto('/login');
-		setTimeout(() => {
-			toast.error(`Error: ${error.message || 'Access denied'}`);
-		}, 200);
+	goto('/home/applications');
+	setTimeout(() => {
+		toast.error(`Error: ${error.message || 'You are not authorised to access resources'}`);
+	}, 200);
 }
 
 export function handleValidationError(field) {

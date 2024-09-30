@@ -47,7 +47,6 @@ const createApplication = async (req, res) => {
 const getUserApplicationByPermit = async (req, res) => {
   try {
     const { username } = req.body;
-    console.log(username);
 
     const result = await query(
       `SELECT DISTINCT A.*
@@ -185,6 +184,63 @@ const createTask = async (req, res) => {
   } = req.body;
 
   try {
+    //fetch app permits
+    const appPermitsResults = await query(
+      `SELECT App_permit_Create, App_permit_Open, App_permit_toDoList,
+      App_permit_Doing, App_permit_Done
+      FROM Application
+      WHERE App_Acronym = ?`,
+      [Task_app_Acronym]
+    );
+
+    const appPermits = appPermitsResults[0];
+
+    // Query user's usergroup
+    const getUserGroup = await query(
+      `SELECT usergroup
+          FROM user_group
+          WHERE username = ?`,
+      [Task_creator]
+    );
+
+    // convert usergroup result to an array
+    UserGroup = getUserGroup.map((group) => group.usergroup);
+
+    // Determine which permit to check based on task state
+    let requiredPermit = "";
+    switch (Task_state) {
+      case "Open":
+        requiredPermit = appPermits.App_permit_Open;
+        break;
+      case "To do":
+        requiredPermit = appPermits.App_permit_toDoList;
+        break;
+      case "Doing":
+        requiredPermit = appPermits.App_permit_Doing;
+        break;
+      case "Done":
+        requiredPermit = appPermits.App_permit_Done;
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid task state" });
+    }
+
+    // check if user has required group to create task
+    if (!UserGroup.includes(requiredPermit)) {
+      return res.status(403).json({
+        message: "Unauthorised",
+      });
+    }
+
+    // // check if user has required group to create task
+    // if (!UserGroup.includes(appPermits.App_permit_Create)) {
+    //   return res.status(403).json({
+    //     message: "Unauthorised",
+    //   });
+    // }
+
+    //////// query if usergroup matches
+
     const result = await query(
       `INSERT INTO task(Task_id, Task_plan, Task_app_Acronym, Task_name, 
     Task_description, Task_notes, Task_state, Task_creator, Task_owner, Task_createDate)
@@ -260,14 +316,11 @@ const getAllAppTasks = async (req, res) => {
         [task.Task_plan]
       );
 
-      console.log(task.Plan_color);
       // attach the corresponding plan color to task else if no color set to null
       task.Plan_color = findPlanColorUsingTaskPlan[0]
         ? findPlanColorUsingTaskPlan[0].Plan_color
         : null;
     }
-
-    console.log(tasks);
 
     res.status(200).json(tasks);
   } catch (error) {
@@ -279,9 +332,66 @@ const getAllAppTasks = async (req, res) => {
 };
 
 const updateTask = async (req, res) => {
-  const { Task_id, Task_plan, Task_notes } = req.body;
+  const {
+    Task_id,
+    Task_plan,
+    Task_notes,
+    Task_state,
+    Task_app_Acronym,
+    username,
+  } = req.body;
+  console.log("req.body", req.body);
 
   try {
+    //fetch app permits
+    const appPermitsResults = await query(
+      `SELECT App_permit_Open, App_permit_toDoList,
+     App_permit_Doing, App_permit_Done
+    FROM Application
+    WHERE App_Acronym = ?`,
+      [Task_app_Acronym]
+    );
+
+    const appPermits = appPermitsResults[0];
+
+    // Query user's usergroup
+    const getUserGroup = await query(
+      `SELECT usergroup
+      FROM user_group
+      WHERE username = ?`,
+      [username]
+    );
+
+    // convert usergroup result to an array
+    UserGroup = getUserGroup.map((group) => group.usergroup);
+
+    // Determine which permit to check based on task state
+    let requiredPermit = "";
+    switch (Task_state) {
+      case "Open":
+        requiredPermit = appPermits.App_permit_Open;
+        break;
+      case "To do":
+        requiredPermit = appPermits.App_permit_toDoList;
+        break;
+      case "Doing":
+        requiredPermit = appPermits.App_permit_Doing;
+        break;
+      case "Done":
+        requiredPermit = appPermits.App_permit_Done;
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid task state" });
+    }
+
+    // check if user has required group to create task
+    if (!UserGroup.includes(requiredPermit)) {
+      return res.status(403).json({
+        message: "Unauthorised",
+      });
+    }
+
+    //////// query if usergroup matches////////////////
     await query(
       `UPDATE task
       SET Task_plan = ?, Task_notes = ?
@@ -299,9 +409,63 @@ const updateTask = async (req, res) => {
 };
 
 const changeTaskState = async (req, res) => {
-  const { Task_id, Task_state, Task_plan, Task_notes, Task_owner } = req.body;
+  const { Task_id, Task_state, Task_plan, Task_notes, Task_owner, Task_app_Acronym, username, stateBeforeStateChange } = req.body;
 
   try {
+    //fetch app permits
+    const appPermitsResults = await query(
+      `SELECT App_permit_Open, App_permit_toDoList,
+     App_permit_Doing, App_permit_Done
+    FROM Application
+    WHERE App_Acronym = ?`,
+      [Task_app_Acronym]
+    );
+
+    const appPermits = appPermitsResults[0];
+
+    // Query user's usergroup
+    const getUserGroup = await query(
+      `SELECT usergroup
+      FROM user_group
+      WHERE username = ?`,
+      [username]
+    );
+
+    // convert usergroup result to an array
+    UserGroup = getUserGroup.map((group) => group.usergroup);
+
+    console.log(UserGroup);
+    console.log(appPermits);
+    console.log(Task_state);
+
+    // Determine which permit to check based on task state
+    let requiredPermit = "";
+    switch (stateBeforeStateChange) {
+      case "Open":
+        requiredPermit = appPermits.App_permit_Open;
+        break;
+      case "To do":
+        requiredPermit = appPermits.App_permit_toDoList;
+        break;
+      case "Doing":
+        requiredPermit = appPermits.App_permit_Doing;
+        break;
+      case "Done":
+        requiredPermit = appPermits.App_permit_Done;
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid task state" });
+    }
+
+    // check if user has required group to create task
+    if (!UserGroup.includes(requiredPermit)) {
+      return res.status(403).json({
+        message: "Unauthorised",
+      });
+    }
+
+    //////// Query if usergroup matches app permit
+
     await query(
       `UPDATE task
     SET Task_state = ?, Task_notes = ?, Task_plan = ?, Task_owner = ?
@@ -320,6 +484,50 @@ const changeTaskState = async (req, res) => {
   }
 };
 
+// get
+const getAppPermitsAndUserGroup = async (req, res) => {
+  try {
+    const { App_Acronym, username } = req.body;
+
+    // get application permits
+    const appPermits = await query(
+      `SELECT App_permit_Create, App_permit_Open, App_permit_toDoList,
+    App_permit_Doing, App_permit_Done
+    FROM Application
+    WHERE App_Acronym = ?`,
+      [App_Acronym]
+    );
+
+    if (appPermits.length === 0) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    // Query user's usergroup
+    const getUserGroup = await query(
+      `SELECT usergroup
+      FROM user_group
+      WHERE username = ?`,
+      [username]
+    );
+
+    if (getUserGroup.length === 0) {
+      return res.status(404).json({ message: "Usergroup not found" });
+    }
+
+    // convert usergroup result to an array
+    UserGroup = getUserGroup.map((group) => group.usergroup);
+
+    return res
+      .status(200)
+      .json({ appPermits: appPermits, userGroup: getUserGroup });
+  } catch (error) {
+    console.error("Error querying application permits in database", error);
+    return res
+      .status(500)
+      .json({ message: "Unable to query application permits from database." });
+  }
+};
+
 module.exports = {
   createApplication,
   getUserApplicationByPermit,
@@ -331,4 +539,5 @@ module.exports = {
   getAllAppTasks,
   updateTask,
   changeTaskState,
+  getAppPermitsAndUserGroup,
 };

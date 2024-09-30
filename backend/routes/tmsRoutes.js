@@ -14,5 +14,6 @@ router.get("/getAppRNumber/:appAcronym", authenticateJWT, tmsController.getAppRN
 router.post("/getAllAppTasks", authenticateJWT, tmsController.getAllAppTasks);
 router.put("/updateTask", authenticateJWT, tmsController.updateTask);
 router.put("/changeTaskState", authenticateJWT, tmsController.changeTaskState);
+router.post("/getAppPermitsAndUserGroup", authenticateJWT, tmsController.getAppPermitsAndUserGroup);
 
 module.exports = router;
