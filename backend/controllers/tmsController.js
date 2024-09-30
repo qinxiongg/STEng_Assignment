@@ -1,4 +1,5 @@
 const query = require("../config/database");
+const nodemailer = require("nodemailer");
 
 const createApplication = async (req, res) => {
   const {
@@ -156,9 +157,7 @@ const createPlan = async (req, res) => {
   } = req.body;
 
   if (!Plan_MVP_name) {
-    return res
-      .status(400)
-      .json({ message: "Please enter plan name" });
+    return res.status(400).json({ message: "Please enter plan name" });
   }
 
   if (Plan_MVP_name.length < 1 || Plan_MVP_name.length > 255) {
@@ -192,6 +191,7 @@ const createPlan = async (req, res) => {
       ]
     );
 
+    
     return res.status(201).json({ success: "Successfully created plan" });
   } catch (error) {
     console.error("Error inserting data into database.", error);
@@ -235,10 +235,10 @@ const createTask = async (req, res) => {
     Task_createDate,
   } = req.body;
 
-  if(!Task_name) {
-    return res
-      .status(400)
-      .json({ message: "Please enter a task name" });
+  console.log(req.body);
+
+  if (!Task_name) {
+    return res.status(400).json({ message: "Please enter a task name" });
   }
 
   if (Task_name.length < 1 || Task_name.length > 255) {
@@ -271,37 +271,39 @@ const createTask = async (req, res) => {
     UserGroup = getUserGroup.map((group) => group.usergroup);
 
     // Determine which permit to check based on task state
-    let requiredPermit = "";
-    switch (Task_state) {
-      case "Open":
-        requiredPermit = appPermits.App_permit_Open;
-        break;
-      case "To do":
-        requiredPermit = appPermits.App_permit_toDoList;
-        break;
-      case "Doing":
-        requiredPermit = appPermits.App_permit_Doing;
-        break;
-      case "Done":
-        requiredPermit = appPermits.App_permit_Done;
-        break;
-      default:
-        return res.status(400).json({ message: "Invalid task state" });
-    }
+
+    
+    // let requiredPermit = "";
+    // switch (Task_state) {
+    //   case "Open":
+    //     requiredPermit = appPermits.App_permit_Open;
+    //     break;
+    //   case "To do":
+    //     requiredPermit = appPermits.App_permit_toDoList;
+    //     break;
+    //   case "Doing":
+    //     requiredPermit = appPermits.App_permit_Doing;
+    //     break;
+    //   case "Done":
+    //     requiredPermit = appPermits.App_permit_Done;
+    //     break;
+    //   default:
+    //     return res.status(400).json({ message: "Invalid task state" });
+    // }
 
     // check if user has required group to create task
-    if (!UserGroup.includes(requiredPermit)) {
-      return res.status(403).json({
-        message: "Unauthorised",
-      });
-    }
-
-    // // check if user has required group to create task
-    // if (!UserGroup.includes(appPermits.App_permit_Create)) {
+    // if (!UserGroup.includes(requiredPermit)) {
     //   return res.status(403).json({
     //     message: "Unauthorised",
     //   });
     // }
+
+    // check if user has required group to create task
+    if (!UserGroup.includes(appPermits.App_permit_Create)) {
+      return res.status(403).json({
+        message: "Unauthorised",
+      });
+    }
 
     //////// query if usergroup matches
 
@@ -487,8 +489,10 @@ const changeTaskState = async (req, res) => {
     Task_app_Acronym,
     username,
     stateBeforeStateChange,
+    stateAfterStateChange,
   } = req.body;
 
+  console.log(req.body);
   try {
     await query("START TRANSACTION");
 
@@ -550,6 +554,52 @@ const changeTaskState = async (req, res) => {
     );
 
     await query("COMMIT");
+
+    if (stateBeforeStateChange === "Doing" && stateAfterStateChange === "Done") {
+      const findUserEmailWithPMAndDone = await query(
+        `SELECT a.email FROM accounts a
+      JOIN user_group u ON u.username = a.username
+      JOIN application app ON (u.usergroup = 'PL' OR
+      app.App_permit_Done = u.usergroup)
+      WHERE app.App_Acronym = ?
+      AND (u.usergroup = 'PL' OR
+      u.usergroup = app.App_permit_Done)`,
+        [Task_app_Acronym]
+      );
+
+      console.log("findUserEmailWithPMAndDone", findUserEmailWithPMAndDone);
+      const emails = findUserEmailWithPMAndDone.map((user) => user.email);
+
+      if (emails.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No user with PL or permit_Done found " });
+      }
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.email_user,
+          pass: process.env.pass,
+        },
+      });
+
+      const mailOptions = {
+        from: process.env.email_user,
+        to: emails.join(","),
+        subject: "Task for review",
+        text: `Task ID ${Task_id} in application ${Task_app_Acronym} is pending for your review`,
+      };
+
+      transporter
+        .sendMail(mailOptions)
+        .then((e) => {
+          console.log(e.messageId);
+        })
+        .catch((e) => {
+          console.error(e);
+        });
+    }
     return res
       .status(200)
       .json({ success: "Successfully changed task state." });

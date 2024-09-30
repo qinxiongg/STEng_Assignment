@@ -24,6 +24,7 @@
 	let createTaskDateDisplay = null;
 
 	let selectedTask = {};
+	let tempTask;
 	let newTaskNote = '';
 
 	let FormattedEpochToDate = null;
@@ -33,6 +34,7 @@
 
 	let statechangeaction;
 	let stateBeforeStateChange = null;
+	let stateAfterStateChange = null;
 
 	let newPlan = {
 		Plan_MVP_name: null,
@@ -127,12 +129,12 @@
 		if (statechange) {
 			// append task notes when task state changes
 			selectedTask.Task_notes =
-				`Date: ${timestampDate} \nCommented By: ${$userStore}\n${newTaskNote}\n\n[Task State changed from ${stateBeforeStateChange} to ${selectedTask.Task_state}]\n\n` +
+				`Date: ${timestampDate} \nCommented By: ${$userStore}\n${newTaskNote}\n\n[Task State changed from ${stateBeforeStateChange} to ${selectedTask.Task_state}]\n##################\n` +
 				selectedTask.Task_notes;
 			newTaskNote = '';
 		} else {
 			selectedTask.Task_notes =
-				`Date: ${timestampDate} \nCommented By: ${$userStore}\n${newTaskNote}\n\n [Task State: ${selectedTask.Task_state}]\n\n` +
+				`Date: ${timestampDate} \nCommented By: ${$userStore}\n${newTaskNote}\n\n [Task State: ${selectedTask.Task_state}]\n####################\n` +
 				selectedTask.Task_notes;
 			newTaskNote = '';
 
@@ -154,6 +156,8 @@
 			selectedTask.Task_state = 'Doing';
 		} else if (selectedTask.Task_state === 'Doing' && statechangeaction === 'To Review') {
 			stateBeforeStateChange = 'Doing';
+			stateAfterStateChange = 'Done';
+
 			selectedTask.Task_owner = $userStore;
 			selectedTask.Task_state = 'Done';
 		} else if (selectedTask.Task_state === 'Doing' && statechangeaction === 'Forfeit Task') {
@@ -245,9 +249,19 @@
 				await getAllAppTasks();
 				getAppRNumber();
 
-				for (let key in newTask) {
-					newTask[key] = null;
-				}
+				newTask = {
+					Task_id: `${$kanbanAppAcronym}_${currentRNumber}`,
+					Task_plan: null,
+					Task_app_Acronym: $kanbanAppAcronym,
+					Task_name: null,
+					Task_description: null,
+					Task_notes: '',
+					Task_state: 'Open',
+					Task_creator: `${$userStore}`,
+					Task_owner: `${$userStore}`,
+					Task_createDate: null
+				};
+				console.log(newTask);
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -330,6 +344,7 @@
 			if (response.status === 200) {
 				customAlert(response.data.success);
 				getAllAppTasks();
+				selectedTask.task_plan = null;
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -357,7 +372,8 @@
 					Task_owner: selectedTask.Task_owner,
 					Task_app_Acronym: selectedTask.Task_app_Acronym,
 					username: $userStore,
-					stateBeforeStateChange: stateBeforeStateChange
+					stateBeforeStateChange: stateBeforeStateChange,
+					stateAfterStateChange: stateAfterStateChange
 				},
 				{ withCredentials: true }
 			);
@@ -681,6 +697,8 @@
 						type="button"
 						on:click={() => {
 							showModal = false;
+							selectedTask.Task_plan = originalTaskPlan;
+							trackTaskPlanChange = false;
 						}}>Cancel</button
 					>
 				</div>
