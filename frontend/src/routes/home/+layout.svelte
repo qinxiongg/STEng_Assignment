@@ -9,9 +9,7 @@
 	const API_URL = import.meta.env.VITE_API_URL;
 
 	let isAdmin = false;
-
 	let showModal = false;
-
 	let globalUsername = '';
 	let globalEmail = '';
 
@@ -21,12 +19,11 @@
 		password: ''
 	};
 
-	let originalProfile = {
-		username: '',
-		email: ''
+	let currentProfile = {
+		username: globalUsername,
+		email: '',
+		password: ''
 	};
-
-	let newPassword;
 
 	function handleCancel() {
 		showModal = false;
@@ -40,24 +37,21 @@
 		showKanban.set(false);
 	}
 
-	// function checkProfileEdit() {
+	function handleUpdateProfile() {
+		const updatedFields = {};
 
-	// 	if ()
+		updatedFields.username = globalUsername;
 
-	// 	if (newPassword) {
-	// 		userProfile.password = newPassword;
-	// 	} else {
-	// 		userProfile.password = null;
-	// 	}
+		if (currentProfile.email !== userProfile.email) {
+			updatedFields.email = userProfile.email;
+		}
 
-	// 	const updatedFields = {};
+		if (!userProfile.password) {
+			updatedFields.password = userProfile.password;
+		}
 
-	// 	if (userProfile.email !== originalProfile.email) {
-	// 		updatedFields.email = userProfile.email;
-	// 	}
-
-	// 	updatedFields.password = userProfile.password;
-	// }
+		return updatedFields;
+	}
 
 	const getCurrentUser = async () => {
 		try {
@@ -87,7 +81,7 @@
 		}
 	};
 
-	const logout = async() => {
+	const logout = async () => {
 		try {
 			const response = await axios.post(
 				`${API_URL}/logout`,
@@ -105,53 +99,40 @@
 			handleError(error.response.data);
 			console.error('Unable to log out:', error);
 		}
-	}
+	};
 
-	 const getUserProfile = async()=>{
+	const getUserProfile = async () => {
 		try {
 			const response = await axios.get(`${API_URL}/profile`, { withCredentials: true });
 
 			if (response.status === 200) {
-				userProfile = response.data;
-				originalProfile = { ...userProfile };
+				currentProfile = response.data;
+				userProfile = { ...currentProfile };
 			}
 		} catch (error) {
-			console.log('Error fetching user profile:', error);
+			console.error('Error fetching user profile:', error);
 			handleError(error.response.data);
 		}
-	}
+	};
 
-	 const updateUserProfile = async() =>{
-		if (newPassword) {
-			userProfile.password = newPassword;
-		} else {
-			userProfile.password = null;
-		}
+	const updateUserProfile = async () => {
+		const updatedFields = handleUpdateProfile();
 
-		const updatedFields = {};
+		console.log('updatedFields', updatedFields);
 
-		if (userProfile.email !== originalProfile.email) {
-			updatedFields.email = userProfile.email;
-		}
-
-		updatedFields.password = userProfile.password;
-
-		if (Object.keys(updatedFields).length > 0)
-			try {
-				const response = await axios.patch(`${API_URL}/updateUserProfile`, updatedFields, {
-					withCredentials: true
-				});
-				if (response.status === 200) {
-					originalProfile = { ...userProfile };
-
-					alertSuccess(response.data.success);
-					newPassword = '';
-				}
-			} catch (error) {
-				handleError(error.response.data);
-				console.error('Unable to update user profile.', error);
+		try {
+			const response = await axios.patch(`${API_URL}/updateUserProfile`, updatedFields, {
+				withCredentials: true
+			});
+			if (response.status === 200) {
+				alertSuccess(response.data.success);
+				getUserProfile();
 			}
-	}
+		} catch (error) {
+			handleError(error.response.data);
+			console.error('Unable to update user profile.', error);
+		}
+	};
 
 	onMount(async () => {
 		await getCurrentUser();
@@ -166,7 +147,7 @@
 			<h2>Edit Profile</h2>
 			<div class="form-group">
 				<label for="username">Username:</label>
-				<input type="text" bind:value={globalUsername} readonly />
+				<input type="text" bind:value={userProfile.username} readonly />
 			</div>
 			<div class="form-group">
 				<label for="email">Email:</label>
@@ -176,7 +157,7 @@
 				<label for="password">Password:</label>
 				<input
 					type="password"
-					bind:value={newPassword}
+					bind:value={userProfile.password}
 					name="password"
 					placeholder="Enter your new password"
 				/>
@@ -221,7 +202,7 @@
 <style>
 	form h2 {
 		text-align: center;
-		font-size: 1.3em;
+		font-size: 1.5em;
 	}
 	.form-group {
 		display: flex;
@@ -234,7 +215,7 @@
 		margin: 10px 20px;
 		font-weight: bold;
 		width: 190px;
-		font-size: 0.9em;
+		font-size: 1.1em;
 	}
 
 	.form-group input {

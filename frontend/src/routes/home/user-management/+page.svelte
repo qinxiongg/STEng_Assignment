@@ -3,7 +3,9 @@
 	import { customError, handleError, alertSuccess } from '$lib/errorHandler';
 	import { authStore } from '$lib/stores';
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import axios from 'axios';
+	import FaEdit from 'svelte-icons/fa/FaEdit.svelte';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
@@ -17,8 +19,6 @@
 
 	let users_list = [];
 	let newPassword = '';
-
-	// Add new groups
 	let newGroupName = '';
 
 	let newUser = {
@@ -32,20 +32,6 @@
 	let allUserGroups = [];
 
 	let editingUserId = null; // To track the user being edited
-
-	let loggedinUser = '';
-
-	let userProfile = {
-		username: '',
-		email: '',
-		password: ''
-	};
-
-	let originalProfile = {
-		username: '',
-		email: '',
-		password: ''
-	};
 
 	async function checkIsAdmin() {
 		try {
@@ -66,6 +52,10 @@
 	function addGroupModal() {
 		modalType = 'addGroup';
 		showModal = true;
+	}
+
+	function handleCancel() {
+		showModal = false;
 	}
 
 	function addGroupToSelected(group) {
@@ -173,20 +163,6 @@
 		}
 	}
 
-
-
-	async function updateUserProfile() {
-		try {
-			const response = await axios.get(`${API_URL}/profile`, { withCredentials: true });
-			if (response.status === 200) {
-				userProfile = response.data.profile;
-				originalProfile = { ...userProfile };
-			}
-		} catch (error) {
-			console.log('Error fetching user profile:', error);
-		}
-	}
-
 	// Enter edit mode for the selected user
 	function editUser(user) {
 		newPassword = '';
@@ -231,13 +207,10 @@
 
 	/////////////////////////////////////////////////////////////
 
-	import { onMount } from 'svelte';
 	onMount(async () => {
 		await checkIsAdmin();
-		// await fetchUserInfo();
 		await getAllUsers();
 		await getAllGroups();
-		await updateUserProfile();
 	});
 </script>
 
@@ -247,54 +220,23 @@
 </div>
 
 <Modal bind:showModal>
-	<!-- {#if modalType === 'editProfile'}
-		<div>
-			<h2>Edit Profile</h2>
-			<div class="form-group">
-				<label for="username">Username:</label>
-				<input type="text" bind:value={loggedinUser} readonly name="username" />
-
-				<label for="email">Email:</label>
-				<input type="text" bind:value={userProfile.email} name="email" />
-
-				<label for="password">Password:</label>
-				<input type="password" bind:value={userProfile.password} name="password" />
-			</div>
-			<div class="modal-buttons">
-				<button type="submit" on:click={editProfile}>SAVE CHANGES</button>
-				<button
-					type="button"
-					on:click={() => {
-						showModal = false;
-					}}>CANCEL</button
-				>
-			</div>
+	<form on:submit|preventDefault={addNewGroups}>
+		<h2>Add Group</h2>
+		<div class="form-group">
+			<label for="newGroupName">Group Name:</label>
+			<input
+				type="text"
+				bind:value={newGroupName}
+				id="newGroupName"
+				name="newGroupName"
+				placeholder="Name"
+			/>
 		</div>
-	{/if} -->
-	{#if modalType === 'addGroup'}
-		<div class="modal-title">
-			<h2>Add Group</h2>
-			<div class="form-group">
-				<label for="newGroupName">Group Name:</label>
-				<input
-					type="text"
-					bind:value={newGroupName}
-					id="newGroupName"
-					name="newGroupName"
-					placeholder="Name"
-				/>
-			</div>
-			<div class="modal-buttons">
-				<button type="submit" on:click={addNewGroups}>ADD</button>
-				<button
-					type="button"
-					on:click={() => {
-						showModal = false;
-					}}>CANCEL</button
-				>
-			</div>
+		<div class="modal-buttons">
+			<button type="submit">ADD</button>
+			<button type="button" on:click={handleCancel}>CANCEL</button>
 		</div>
-	{/if}
+	</form>
 </Modal>
 
 <table id="users">
@@ -419,7 +361,7 @@
 				</td>
 				<td> <input type="password" bind:value={user.password} readonly /></td>
 				<td> {user.accountStatus}</td>
-				<td> <button on:click={() => editUser(user)}>Edit</button> </td>
+				<td> <button class="editUser-Btn" on:click={() => editUser(user)}><FaEdit /></button> </td>
 			{/if}
 			<td></td>
 		</tr>
@@ -427,41 +369,52 @@
 </table>
 
 <style>
-	.modal-title {
+	form h2 {
 		text-align: center;
+		font-size: 1.5em;
 	}
 	.form-group {
 		display: flex;
 		align-items: center;
-		margin: 15px 15px 15px 15px;
+		justify-content: space-between;
+		width: 700px;
 	}
 
 	.form-group label {
-		width: 30%;
-		margin-right: 10px;
+		margin: 10px 20px;
+		font-weight: bold;
+		width: 190px;
+		font-size: 1.1em;
 	}
 
 	.form-group input {
-		width: 70%;
-		padding: 8px;
-		background-color: #f0f0f0;
-		border-radius: 5px;
+		margin: 10px 20px;
+		background-color: #dadada;
+		border: transparent;
+		height: 38px;
+		width: 100%;
+		padding-left: 10px;
+		padding-right: 10px;
+		outline: none;
+		border-radius: 4px;
 	}
 
 	.modal-buttons {
 		display: flex;
 		justify-content: center;
 		margin-top: 20px;
-		margin-bottom: 20px;
 		gap: 20px;
 	}
 
 	.modal-buttons button {
 		padding: 10px 40px 10px 40px;
+		width: 200px;
+		height: 40px;
 		cursor: pointer;
 		background-color: black;
 		color: #ffffff;
 		border: none;
+		margin-bottom: 20px;
 	}
 	.middle-container {
 		align-items: center;
@@ -490,6 +443,7 @@
 		background: #eff4fa;
 		color: #8f9bb3;
 		padding: 30px 20px 30px 20px;
+
 	}
 	#users td {
 		padding-top: 20px;
@@ -502,7 +456,6 @@
 		padding: 10px 15px;
 	}
 	#users select {
-
 		background-color: #f0f0f0;
 		padding: 10px 30px;
 		border: none;
@@ -521,9 +474,19 @@
 
 	.group-tag {
 		background-color: #e0e0e0;
+		width: 40px;
 		padding: 5px;
-		margin-right: 5px;
+		margin-right: 8px;
 		border-radius: 5px;
 		display: inline-block;
+	}
+	.editUser-Btn {
+		width: 25;
+		height: 25px;
+		padding: 0px;
+		background-color: transparent;
+		border: none;
+		cursor: pointer;
+
 	}
 </style>

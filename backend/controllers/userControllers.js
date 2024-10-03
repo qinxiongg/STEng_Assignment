@@ -113,8 +113,6 @@ const getCurrentUser = async (req, res) => {
       email: result.email,
     };
 
-    console.log("user", user);
-
     return res.status(200).json(user);
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -267,13 +265,7 @@ const getUserProfile = async (req, res) => {
 };
 
 const updateUserProfile = async (req, res) => {
-  const token = req.cookies.authToken;
-
-  const { password } = req.body;
-
-  if (!token) {
-    return res.status(401).json({ message: "No token provided" });
-  }
+  const { username, email, password } = req.body;
 
   if (password && password.length > 0) {
     const passwordRegex =
@@ -287,10 +279,6 @@ const updateUserProfile = async (req, res) => {
   }
 
   try {
-    const decoded = await verifyJWT(token);
-    const username = decoded.username;
-    const { email, password } = req.body;
-
     let updateProfileQuery = "UPDATE accounts SET ";
     const params = [];
 
@@ -300,7 +288,7 @@ const updateUserProfile = async (req, res) => {
     }
 
     if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = bcrypt.hash(password, 10);
       updateProfileQuery += "password = ?, ";
       params.push(hashedPassword);
     }
@@ -317,7 +305,7 @@ const updateUserProfile = async (req, res) => {
     }
   } catch (error) {
     console.error("Error updating profile:", error);
-    return res.status(403).json({ message: "Access denied" });
+    return res.status(500).json({ error: error.message });
   }
 };
 
