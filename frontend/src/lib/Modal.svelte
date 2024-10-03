@@ -1,5 +1,5 @@
 <script>
-	import { onMount } from 'svelte';
+	// import { onMount } from 'svelte';
 	export let showModal; //boolean
 	import { Toaster, toast } from 'svelte-sonner';
 
@@ -12,9 +12,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
 <dialog
 	bind:this={dialog}
-	on:close={() => (showModal = false)}
-	on:click|self={() => dialog.close()}
->
+	on:close={() => (showModal = false)}>
 	<Toaster richColors />
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div on:click|stopPropagation>
@@ -24,11 +22,9 @@
 
 <style>
 	dialog {
-		/* max-width: 32em; */
 		border-radius: 0.2em;
 		border: none;
 		padding: 0;
-		/* width: 700px; */
 		z-index: 1;
 	}
 	dialog::backdrop {

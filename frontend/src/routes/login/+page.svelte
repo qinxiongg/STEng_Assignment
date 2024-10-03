@@ -1,11 +1,10 @@
 <script>
 	import axios from 'axios';
 	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import { customError, handleError, customAlert } from '$lib/errorHandler';
+	// import { onMount } from 'svelte';
+	import { customError, handleError, alertSuccess } from '$lib/errorHandler';
 	import { userStore } from '$lib/stores';
-	import { Toaster } from 'svelte-sonner';
-	
+
 	const API_URL = import.meta.env.VITE_API_URL;
 
 	let username = '';
@@ -26,29 +25,26 @@
 
 			if (response.status === 200) {
 				userStore.set(username);
-				customAlert(response.data.success);
+				alertSuccess(response.data.success);
 				goto('/home/applications');
 			}
 		} catch (error) {
-			if (error instanceof axios.AxiosError) {
-				handleError(error.response.data);
-			} else {
-				customError('An error occurred during login');
-			}
+			console.log('Unable to log in:', error.response.data.message);
+			handleError(error.response.data);
 		}
 	}
 </script>
 
-<Toaster richColors />
-
-<div class="login-container">
-	<h1>LOGIN</h1>
-	<div class="login-form">
-		<input type="text" bind:value={username} placeholder="Username" />
-		<input type="password" bind:value={password} placeholder="Password" />
-		<button type="submit" on:click={login}>LOGIN</button>
+<body>
+	<div class="login-container">
+		<h1>LOGIN</h1>
+		<form class="login-form" on:submit|preventDefault={login}>
+			<input type="text" bind:value={username} placeholder="Username" />
+			<input type="password" bind:value={password} placeholder="Password" />
+			<button type="submit">LOGIN</button>
+		</form>
 	</div>
-</div>
+</body>
 
 <style>
 	.login-container {

@@ -1,6 +1,6 @@
 <script>
 	import Modal from '$lib/Modal.svelte';
-	import { customError, handleError, customAlert } from '$lib/errorHandler';
+	import { customError, handleError, alertSuccess } from '$lib/errorHandler';
 	import { authStore } from '$lib/stores';
 	import { goto } from '$app/navigation';
 	import axios from 'axios';
@@ -127,7 +127,7 @@
 				};
 
 				selectedGroups = []; // Clear selected groups
-				customAlert(response.data.success);
+				alertSuccess(response.data.success);
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -150,7 +150,7 @@
 
 			if (response.status === 201) {
 				newGroupName = '';
-				customAlert(response.data.success);
+				alertSuccess(response.data.success);
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -178,7 +178,6 @@
 	async function updateUserProfile() {
 		try {
 			const response = await axios.get(`${API_URL}/profile`, { withCredentials: true });
-			console.log('user profile:', response.data);
 			if (response.status === 200) {
 				userProfile = response.data.profile;
 				originalProfile = { ...userProfile };
@@ -208,12 +207,11 @@
 			});
 
 			if (response.status === 200) {
-				console.log('edit user:', response);
 				// Exit edit mode
 				editingUserId = null;
 				await getAllUsers();
 
-				customAlert(response.data.success);
+				alertSuccess(response.data.success);
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {

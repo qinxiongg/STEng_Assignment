@@ -6,7 +6,7 @@
 	import {
 		customError,
 		handleError,
-		customAlert,
+		alertSuccess,
 		handleUnauthorizedError
 	} from '$lib/errorHandler';
 	import Modal from '$lib/Modal.svelte';
@@ -134,7 +134,7 @@
 			newTaskNote = '';
 		} else {
 			selectedTask.Task_notes =
-				`Date: ${timestampDate} \nCommented By: ${$userStore}\n${newTaskNote}\n\n [Task State: ${selectedTask.Task_state}]\n####################\n` +
+				`Date: ${timestampDate} \nCommented By: ${$userStore}\n${newTaskNote}\n\n [Task State: ${selectedTask.Task_state}]\n####################\n\n` +
 				selectedTask.Task_notes;
 			newTaskNote = '';
 
@@ -200,7 +200,7 @@
 				// fetch application plans
 				getApplicationPlans();
 
-				customAlert(response.data.success);
+				alertSuccess(response.data.success);
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -245,7 +245,7 @@
 
 			if (response.status === 200) {
 				showModal = false;
-				customAlert(response.data.success);
+				alertSuccess(response.data.success);
 				await getAllAppTasks();
 				getAppRNumber();
 
@@ -326,26 +326,28 @@
 
 	const updateTask = async () => {
 		try {
-			appendNewTaskNotes(false);
+			// if input field is empty then task notes is not updated
+				appendNewTaskNotes(false);
 
-			const response = await axios.put(
-				`${API_URL}/updateTask`,
-				{
-					Task_id: selectedTask.Task_id,
-					Task_plan: selectedTask.Task_plan,
-					Task_notes: selectedTask.Task_notes,
-					Task_state: selectedTask.Task_state,
-					Task_app_Acronym: selectedTask.Task_app_Acronym,
-					username: $userStore
-				},
-				{ withCredentials: true }
-			);
+				const response = await axios.put(
+					`${API_URL}/updateTask`,
+					{
+						Task_id: selectedTask.Task_id,
+						Task_plan: selectedTask.Task_plan,
+						Task_notes: selectedTask.Task_notes,
+						Task_state: selectedTask.Task_state,
+						Task_app_Acronym: selectedTask.Task_app_Acronym,
+						username: $userStore
+					},
+					{ withCredentials: true }
+				);
 
-			if (response.status === 200) {
-				customAlert(response.data.success);
-				getAllAppTasks();
-				selectedTask.task_plan = null;
-			}
+				if (response.status === 200) {
+					alertSuccess(response.data.success);
+					getAllAppTasks();
+					selectedTask.task_plan = null;
+				}
+			
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
 				handleError(error.response.data);
@@ -380,7 +382,7 @@
 
 			if (response.status === 200) {
 				showModal = false;
-				customAlert(response.data.success);
+				alertSuccess(response.data.success);
 				stateBeforeStateChange = null;
 				getAllAppTasks();
 			}
@@ -1024,5 +1026,9 @@
 		background-color: #0095ff;
 		color: #ffffff;
 		border-radius: 5px;
+	}
+	textarea {
+		width: 100%;
+		height: 100px
 	}
 </style>

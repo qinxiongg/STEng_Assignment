@@ -7,8 +7,10 @@ export function customError(error) {
 	toast.error(`Error: ${error || 'Something went wrong!'}`);
 }
 
-export function customAlert(success) {
-	toast.success(`${success || 'Something went wrong!'}`);
+export function alertSuccess(success) {
+	setTimeout(() => {
+		toast.success(`${success || 'Something went wrong!'}`);
+	}, 100);
 }
 
 // Function to handle a general error message
@@ -17,7 +19,7 @@ export function handleError(error) {
 		goto('/login');
 		setTimeout(() => {
 			toast.error(`Error: ${error.message || 'Access denied'}`);
-		}, 200);
+		}, 100);
 	} else if (error.message == 'Unauthorised') {
 		goto('/home/applications');
 		setTimeout(() => {
@@ -43,12 +45,3 @@ export function handleUnauthorizedError() {
 export function handleValidationError(field) {
 	toast.error(`Validation error: ${field} is invalid.`);
 }
-
-// module.exports = {
-//   customError,
-//   handleError,
-//   customAlert,
-//   handleNetworkError,
-//   handleUnauthorizedError,
-//   handleValidationError,
-// };

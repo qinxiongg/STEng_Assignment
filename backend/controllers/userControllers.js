@@ -1,10 +1,9 @@
 const query = require("../config/database");
 const { generateJWT, verifyJWT } = require("../services/authService");
-const { Checkgroup} = require("../middleware/middlewares");
+const { Checkgroup } = require("../middleware/middlewares");
 // const { Checkgroup, createAdmin } = require("../middleware/middlewares");
 const jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
-
 
 const secretKey = process.env.JWT_SECRET;
 
@@ -12,22 +11,21 @@ const secretKey = process.env.JWT_SECRET;
 const login = async (req, res) => {
   console.log("login called");
   const { username, password } = req.body;
-  const ipAddress = req.ip;
-  const browserType = req.headers["user-agent"];
 
   // Run createAdmin if username is admin
   // if (username === "admin") {
   //   await createAdmin();
   // }
 
-  // Check if login input fields is mepty
   if (!username || !password) {
-    return res
-      .status(400)
-      .json({ message: "Please enter your username and/or password" });
+    return res.status(400).json({ message: "Invalid Credentials." });
   }
 
   try {
+    const ipAddress =
+      req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+    const browserType = req.headers["user-agent"];
+
     const results = await query("SELECT * FROM accounts WHERE username = ?", [
       username,
     ]);
@@ -37,15 +35,15 @@ const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials." });
     }
 
-    // Take the first and only row of the queried results
     const user = results[0];
 
     // Check if queried account is disabled
     if (user.accountStatus === "Disabled") {
-      return res.status(403).json({ message: "" });
+      return res.status(403).json({ message: "Access denied" });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
+
     if (!passwordMatch) {
       return res.status(401).json({ message: "Invalid credentials." });
     }
@@ -53,33 +51,73 @@ const login = async (req, res) => {
     // Generate JWT
     const tokenPayload = {
       username: user.username,
-      ipAddress: req.ip,
+      ipAddress: ipAddress,
       browserType: req.headers["user-agent"],
     };
 
-    const token = generateJWT(tokenPayload);
+    const authToken = jwt.sign(tokenPayload, secretKey, { expiresIn: "1h" });
 
-    return res
-      .cookie("authToken", token, { maxAge: 3600000, httpOnly: true })
-      .status(200)
-      .json({ success: "Successfully logged in" });
+    res.cookie("authToken", authToken, {
+      maxAge: 1 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: "Strict",
+    });
+
+    return res.status(200).json({ success: "Successfully logged in" });
   } catch (error) {
-    return res.status(500).json({ message: "Error." });
+    return res.status(500).json({ error: error.message });
   }
 };
 
 const logout = async (req, res) => {
   try {
-
     if (req.cookies.authToken) {
-      res.clearCookie("authToken", { path: "/", httpOnly: true });
+      res.clearCookie("authToken", {
+        path: "/",
+        httpOnly: true,
+        sameSite: "Strict",
+      });
     } else {
       console.log("no cookies found");
     }
 
     return res.status(200).json({ success: "Successfully logged out" });
   } catch (error) {
-    return res.status(500).json({ message: "Error logging out" });
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+const getCurrentUser = async (req, res) => {
+  const authToken = req.cookies.authToken;
+
+  if (!authToken) {
+    return res.status(401).json({ message: "Access denied" });
+  }
+
+  try {
+    const decoded = jwt.verify(authToken, secretKey);
+    const username = decoded.username;
+
+    const [result] = await query(
+      `SELECT * FROM accounts 
+      WHERE username = ?`,
+      [username]
+    );
+
+    if (result.length === 0) {
+      return res.status(404).json({ message: "Unable to find user" });
+    }
+
+    const user = {
+      username: result.username,
+      email: result.email,
+    };
+
+    console.log("user", user);
+
+    return res.status(200).json(user);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -202,44 +240,33 @@ const getAllGroups = async (req, res) => {
   }
 };
 
-const getUsername = async (req, res) => {
-  const token = req.cookies.authToken;
-  if (!token)
-    return res
-      .status(401)
-      .json({ message: "No token provided for username display " });
-  try {
-    const decoded = await verifyJWT(token);
-    res.status(200).json({ username: decoded.username });
-  } catch (error) {
-    res.status(403).json({ message: "Invalid token" });
-  }
-};
-
 const getUserProfile = async (req, res) => {
-  const token = req.cookies.authToken;
-  if (!token)
-    return res
-      .status(401)
-      .json({ message: "No token provided for user profile" });
+  const authToken = req.cookies.authToken;
+  if (!authToken) return res.status(401).json({ message: "No token provided" });
 
   try {
-    const decoded = await verifyJWT(token);
+    const decoded = jwt.verify(authToken, secretKey);
     const username = decoded.username;
+
     const result = await query(
       `SELECT username, email, password 
       FROM accounts 
       WHERE username = ?`,
       [username]
     );
-    res.json({ profile: result[0] });
+
+    userProfile = {
+      username: result[0].username,
+      email: result[0].email,
+    };
+
+    res.json(userProfile);
   } catch (error) {
-    res.status(403).json({ message: "Invalid token" });
+    return res.status(500).json({ error: error.message });
   }
 };
 
 const updateUserProfile = async (req, res) => {
-  console.log("update profile called");
   const token = req.cookies.authToken;
 
   const { password } = req.body;
@@ -290,9 +317,7 @@ const updateUserProfile = async (req, res) => {
     }
   } catch (error) {
     console.error("Error updating profile:", error);
-    return res
-      .status(403)
-      .json({ message: "Access denied"});
+    return res.status(403).json({ message: "Access denied" });
   }
 };
 
@@ -356,7 +381,6 @@ const editUser = async (req, res) => {
     }
     return res.status(200).json({ success: "Credential successfully changed" });
   } catch (error) {
-
     return res.status(500).json({ message: "Database query error" });
   }
 };
@@ -378,11 +402,11 @@ const checkIsAdmin = async (req, res) => {
 
 module.exports = {
   login,
+  getCurrentUser,
   getAllUsers,
   createUser,
   addNewGroups,
   getAllGroups,
-  getUsername,
   getUserProfile,
   updateUserProfile,
   editUser,

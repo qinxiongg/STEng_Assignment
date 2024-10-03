@@ -1,20 +1,19 @@
 <script>
 	import axios from 'axios';
-	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { Toaster, toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
 	import Modal from '$lib/Modal.svelte';
-	import { authStore, userStore, showKanban } from '$lib/stores';
-	import { customAlert, handleError, customError } from '$lib/errorHandler';
+	import { authStore, showKanban } from '$lib/stores';
+	import { alertSuccess, handleError, customError } from '$lib/errorHandler';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
 	let isAdmin = false;
-	let loggedinUsername;
 
 	let showModal = false;
-	let modalType = '';
+
+	let globalUsername = '';
+	let globalEmail = '';
 
 	let userProfile = {
 		username: '',
@@ -24,18 +23,57 @@
 
 	let originalProfile = {
 		username: '',
-		email: '',
-		password: ''
+		email: ''
 	};
 
 	let newPassword;
 
-	function editProfileModal() {
-		modalType = 'editProfile';
+	function handleCancel() {
+		showModal = false;
+	}
+
+	function handleClickEditProfile() {
 		showModal = true;
 	}
 
-	async function checkIsAdmin() {
+	function handleClickApplications() {
+		showKanban.set(false);
+	}
+
+	// function checkProfileEdit() {
+
+	// 	if ()
+
+	// 	if (newPassword) {
+	// 		userProfile.password = newPassword;
+	// 	} else {
+	// 		userProfile.password = null;
+	// 	}
+
+	// 	const updatedFields = {};
+
+	// 	if (userProfile.email !== originalProfile.email) {
+	// 		updatedFields.email = userProfile.email;
+	// 	}
+
+	// 	updatedFields.password = userProfile.password;
+	// }
+
+	const getCurrentUser = async () => {
+		try {
+			const response = await axios.get(`${API_URL}/getCurrentUser`, {
+				withCredentials: true
+			});
+
+			globalUsername = response.data.username;
+			globalEmail = response.data.email;
+		} catch (error) {
+			handleError(error.response.data);
+			console.error('Failed to fetch current user', error);
+		}
+	};
+
+	const checkIsAdmin = async () => {
 		try {
 			const response = await axios.get(`${API_URL}/checkIsAdmin`, { withCredentials: true });
 
@@ -44,26 +82,12 @@
 				authStore.set(response.data.isAdmin);
 			}
 		} catch (error) {
-			console.log('Error at checkIsAdmin', error);
+			handleError(error.response.data);
+			console.error('unable to check if user is admin', error);
 		}
-	}
+	};
 
-	async function getUsername() {
-		try {
-			const response = await axios.get(`${API_URL}/getUsername`, { withCredentials: true });
-			if (response.status === 200) {
-				// save retrieved username
-				userStore.set(response.data.username);
-
-				// save value from userStore to loggedinUsername
-				loggedinUsername = $userStore;
-			}
-		} catch (error) {
-			console.error('Error fetching user info:', error);
-		}
-	}
-
-	async function logout() {
+	const logout = async() => {
 		try {
 			const response = await axios.post(
 				`${API_URL}/logout`,
@@ -74,34 +98,30 @@
 			);
 
 			if (response.status === 200) {
-				userStore.set('');
-				loggedinUsername = '';
 				goto('/login');
-				customAlert(response.data.success);
+				alertSuccess(response.data.success);
 			}
 		} catch (error) {
-			if (error instanceof axios.AxiosError) {
-				handleError(error.response.data);
-			} else {
-				customError('An error occurred during logout');
-			}
+			handleError(error.response.data);
+			console.error('Unable to log out:', error);
 		}
 	}
 
-	async function getUserProfile() {
+	 const getUserProfile = async()=>{
 		try {
 			const response = await axios.get(`${API_URL}/profile`, { withCredentials: true });
 
 			if (response.status === 200) {
-				userProfile = response.data.profile;
+				userProfile = response.data;
 				originalProfile = { ...userProfile };
 			}
 		} catch (error) {
 			console.log('Error fetching user profile:', error);
+			handleError(error.response.data);
 		}
 	}
 
-	async function updateUserProfile() {
+	 const updateUserProfile = async() =>{
 		if (newPassword) {
 			userProfile.password = newPassword;
 		} else {
@@ -124,66 +144,57 @@
 				if (response.status === 200) {
 					originalProfile = { ...userProfile };
 
-					customAlert(response.data.success);
+					alertSuccess(response.data.success);
 					newPassword = '';
 				}
 			} catch (error) {
-				if (error instanceof axios.AxiosError) {
-					handleError(error.response.data);
-				} else {
-					customError('An error occurred during adding group');
-				}
+				handleError(error.response.data);
+				console.error('Unable to update user profile.', error);
 			}
 	}
 
 	onMount(async () => {
+		await getCurrentUser();
 		await checkIsAdmin();
-		await getUsername();
 		await getUserProfile();
 	});
 </script>
 
-<Toaster style="z-index: 12;" richColors />
-
-<!-- {#if !$page.url.pathname.endsWith('/login')} -->
 <Modal bind:showModal>
-	<!-- {#if modalType === 'editProfile'} -->
-	<div>
-		<h2>Edit Profile</h2>
-		<div class="form-group">
-			<label for="username">Username:</label>
-			<input type="text" bind:value={loggedinUsername} readonly name="groupName" />
-
-			<label for="email">Email:</label>
-			<input type="text" bind:value={userProfile.email} name="email" />
-
-			<label for="groupName">Password:</label>
-			<input
-				type="password"
-				bind:value={newPassword}
-				name="password"
-				placeholder="Enter your new password"
-			/>
+	<form on:submit|preventDefault={updateUserProfile}>
+		<div>
+			<h2>Edit Profile</h2>
+			<div class="form-group">
+				<label for="username">Username:</label>
+				<input type="text" bind:value={globalUsername} readonly />
+			</div>
+			<div class="form-group">
+				<label for="email">Email:</label>
+				<input type="text" bind:value={userProfile.email} />
+			</div>
+			<div class="form-group">
+				<label for="password">Password:</label>
+				<input
+					type="password"
+					bind:value={newPassword}
+					name="password"
+					placeholder="Enter your new password"
+				/>
+			</div>
 		</div>
 		<div class="modal-buttons">
-			<button type="submit" on:click={updateUserProfile}>SAVE CHANGES</button>
-			<button
-				type="button"
-				on:click={() => {
-					showModal = false;
-				}}>CANCEL</button
-			>
+			<button type="submit">SAVE CHANGES</button>
+			<button type="button" on:click={handleCancel}>CANCEL</button>
 		</div>
-	</div>
-	<!-- {/if} -->
+	</form>
 </Modal>
 
 <nav>
 	<ul>
-		<li class="nav-left">Hello, {$userStore}</li>
+		<li class="nav-left">Hello, {globalUsername}</li>
 		<div class="nav-center">
 			<li>
-				<a href="/home/applications" on:click={()=> {showKanban.set(false)}} >Applications</a>
+				<a href="/home/applications" on:click={handleClickApplications}>Applications</a>
 			</li>
 			{#if $authStore}
 				<li>
@@ -195,7 +206,7 @@
 			<!-- svelte-ignore a11y-no-static-element-interactions -->
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			<!-- svelte-ignore a11y-missing-attribute -->
-			<a on:click={editProfileModal}>Edit Profile</a>
+			<a on:click={handleClickEditProfile}>Edit Profile</a>
 
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			<!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -204,28 +215,38 @@
 		</li>
 	</ul>
 </nav>
-<!-- {/if} -->
 
 <slot></slot>
 
 <style>
+	form h2 {
+		text-align: center;
+		font-size: 1.3em;
+	}
 	.form-group {
 		display: flex;
-		flex-direction: column;
 		align-items: center;
-		margin-bottom: 15px;
+		justify-content: space-between;
+		width: 700px;
 	}
 
 	.form-group label {
-		width: 30%;
-		margin-right: 10px;
+		margin: 10px 20px;
+		font-weight: bold;
+		width: 190px;
+		font-size: 0.9em;
 	}
 
 	.form-group input {
-		width: 70%;
-		padding: 8px;
-		background-color: #f0f0f0;
-		border-radius: 5px;
+		margin: 10px 20px;
+		background-color: #dadada;
+		border: transparent;
+		height: 38px;
+		width: 100%;
+		padding-left: 10px;
+		padding-right: 10px;
+		outline: none;
+		border-radius: 4px;
 	}
 
 	.modal-buttons {
@@ -237,10 +258,13 @@
 
 	.modal-buttons button {
 		padding: 10px 40px 10px 40px;
+		width: 200px;
+		height: 40px;
 		cursor: pointer;
 		background-color: black;
 		color: #ffffff;
 		border: none;
+		margin-bottom: 20px;
 	}
 
 	nav {
@@ -256,13 +280,13 @@
 		display: flex;
 		list-style: none;
 		color: #ffffff;
-		/* padding: 10px; */
 		flex-grow: 1;
 		justify-content: space-between;
 		margin: 0;
 	}
 	a {
 		text-decoration: none;
+		margin-left: 10px;
 		color: #ffffff;
 	}
 	.nav-left {
@@ -276,5 +300,8 @@
 	.nav-right {
 		margin-right: 60px;
 		cursor: pointer;
+	}
+	input[readonly] {
+		background-color: #ffffff;
 	}
 </style>

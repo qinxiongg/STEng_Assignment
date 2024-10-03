@@ -1,10 +1,6 @@
-// Middlewares for route protection
 const query = require("../config/database");
 const jwt = require("jsonwebtoken");
-const { verifyJWT } = require("../services/authService"); //remove this
 var bcrypt = require("bcryptjs");
-
-// const bcrypt = require("bcrypt");
 
 const secretKey = process.env.JWT_SECRET;
 
@@ -97,7 +93,6 @@ const checkUserAccStatus = async (username) => {
 //   }
 // };
 
-// Middleware to protect routes and check group
 const verifyTokenWithIPAndBrowser =
   (requiredGroup) => async (req, res, next) => {
     const token = req.cookies.authToken;

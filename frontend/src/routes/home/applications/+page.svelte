@@ -8,7 +8,7 @@
 	import {
 		customError,
 		handleError,
-		customAlert,
+		alertSuccess,
 		handleUnauthorizedError
 	} from '$lib/errorHandler';
 
@@ -95,7 +95,7 @@
 
 				showModal = false;
 				getApplications();
-				customAlert(response.data.success);
+				alertSuccess(response.data.success);
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -122,7 +122,7 @@
 			console.log('response', response.status);
 
 			if (response.status === 200) {
-				customAlert(response.data.success);
+				alertSuccess(response.data.success);
 				editApplicationModal(app);
 				getApplications();
 			}
