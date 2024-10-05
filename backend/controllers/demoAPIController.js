@@ -42,7 +42,10 @@ const createTask = async (req, res) => {
       return res.status(401).json({ msgCode: msgCode.INVALID_CREDENTIALS });
     }
 
-    passwordMatch = await bcryptjs.compare(password, accountQuery.password);
+    const passwordMatch = await bcryptjs.compare(
+      password,
+      accountQuery.password
+    );
 
     if (!passwordMatch) {
       return res.status(401).json({ msgCode: msgCode.INVALID_CREDENTIALS });
@@ -101,7 +104,6 @@ const createTask = async (req, res) => {
 
     let currentDate = new Date();
     const taskCreateDate = Math.floor(currentDate.getTime() / 1000);
-    
 
     // check if state open is in Open
     if (taskState !== "Open") {
@@ -120,8 +122,6 @@ const createTask = async (req, res) => {
     if (!planExistQuery) {
       return res.status(400).json({ msgCode: msgCode.NOT_FOUND });
     }
-
-
 
     //  query if usergroup matches
     const result = await query(
@@ -152,18 +152,250 @@ const createTask = async (req, res) => {
       );
     }
 
-    return res.status(200).json({ msgCode: msgCode.SUCCESS });
+    const taskParameters = {
+      Task_id: taskId,
+      Task_plan: taskPlan,
+      Task_app_Acronym: appAcronym,
+      Task_name: taskName,
+      Task_description: taskDescription,
+      Task_notes: taskNotes,
+      Task_state: taskState,
+      Task_creator: taskCreator,
+      Task_owner: taskOwner,
+      Task_createDate: taskCreateDate,
+    };
+
+    return res
+      .status(200)
+      .json({ result: taskParameters, msgCode: msgCode.SUCCESS });
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
       return res.status(400).json({ msgCode: msgCode.ENTRY_EXISTS });
     }
-    return res.status(500).json({msgCode: msgCode.INTERNAL });
+    return res.status(500).json({ msgCode: msgCode.INTERNAL });
   }
 };
 
-const getTaskByState = async (req, res) => {};
+const getTaskByState = async (req, res) => {
+  const { username, password, appAcronym, taskState } = req.body;
 
-const promoteTask2Done = async (req, res) => {};
+  if (!username || !password) {
+    return res.status(401).json({ msgCode: msgCode.INVALID_INPUT });
+  }
+
+  if (!appAcronym || !taskState) {
+    return res.status(400).json({ msgCode: msgCode.INVALID_INPUT });
+  }
+
+  try {
+    const [accountQuery] = await query(
+      `SELECT * 
+      FROM accounts
+      WHERE username = ?`,
+      [username]
+    );
+
+    if (!accountQuery) {
+      return res.status(401).json({ msgCode: msgCode.INVALID_CREDENTIALS });
+    }
+
+    if (accountQuery.accountStatus === "Disabled") {
+      return res.status(401).json({ msgCode: msgCode.INVALID_CREDENTIALS });
+    }
+
+    const passwordMatch = await bcryptjs.compare(
+      password,
+      accountQuery.password
+    );
+
+    if (!passwordMatch) {
+      return res.status(401).json({ msgCode: msgCode.INVALID_CREDENTIALS });
+    }
+
+    const [applicationQuery] = await query(
+      `SELECT * 
+      FROM application
+      WHERE App_Acronym = ?`,
+      [appAcronym]
+    );
+
+    if (!applicationQuery) {
+      return res.status(400).json({ msgCode: msgCode.NOT_FOUND });
+    }
+
+    const tasks = await query(
+      `SELECT *
+      FROM task
+      WHERE Task_app_Acronym = ? AND Task_State = ?`,
+      [appAcronym, taskState]
+    );
+
+    // loop through task and fetch its respective plan color
+    for (let task of tasks) {
+      const planColorQuery = await query(
+        `SELECT Plan_color
+        FROM plan
+        WHERE Plan_MVP_Name = ?`,
+        [task.Task_plan]
+      );
+
+      // add the corresponding plan color value to task object, if no color set to null
+      task.Plan_color = planColorQuery[0] ? planColorQuery[0].Plan_color : null;
+    }
+
+    res.status(200).json({ result: tasks, msgCode: msgCode.SUCCESS });
+  } catch (error) {
+    return res.status(500).json({ msgCode: msgCode.INTERNAL });
+  }
+};
+
+const promoteTask2Done = async (req, res) => {
+  const { username, password, appAcronym, taskId, taskNotes } = req.body;
+
+  if (!username || !password) {
+    return res.status(401).json({ msgCode: msgCode.INVALID_INPUT });
+  }
+
+  if (!appAcronym || !taskId) {
+    return res.status(400).json({ msgCode: msgCode.INVALID_INPUT });
+  }
+
+  try {
+    const [accountQuery] = await query(
+      `SELECT *
+      FROM accounts
+      WHERE username = ?`,
+      [username]
+    );
+
+    if (!accountQuery) {
+      return res.status(401).json({ msgCode: msgCode.INVALID_CREDENTIALS });
+    }
+
+    if (accountQuery.accountStatus === "Disabled") {
+      return res.status(401).json({ msgCode: msgCode.INVALID_CREDENTIALS });
+    }
+
+    const passwordMatch = await bcryptjs.compare(
+      password,
+      accountQuery.password
+    );
+
+    if (!passwordMatch) {
+      return res.status(401).json({ msgCode: msgCode.INVALID_CREDENTIALS });
+    }
+
+    const [applicationQuery] = await query(
+      `SELECT *
+      FROM application
+      WHERE App_Acronym = ?`,
+      [appAcronym]
+    );
+
+    if (!applicationQuery) {
+      return res.status(400).json({ msgCode: msgCode.NOT_FOUND });
+    }
+
+    //fetch app permits for task at doing state
+    const [appPermitDoingQuery] = await query(
+      `SELECT App_permit_Doing
+    FROM Application
+    WHERE App_Acronym = ?`,
+      [appAcronym]
+    );
+
+    // Query user's usergroup
+    const userGroupQuery = await query(
+      `SELECT usergroup
+          FROM user_group
+          WHERE username = ?`,
+      [username]
+    );
+
+    // convert userGroupQuery into a single array
+    const userGroup = userGroupQuery.map((group) => group.usergroup);
+
+    console.log(userGroup);
+    console.log(appPermitDoingQuery.App_permit_Doing);
+
+    console.log(userGroup.includes(appPermitDoingQuery.App_permit_Doing));
+
+    // check if user has required group to promote task to Done state
+    if (!userGroup.includes(appPermitDoingQuery.App_permit_Doing)) {
+      return res.status(401).json({
+        msgCode: msgCode.NOT_AUTHORIZED,
+      });
+    }
+
+    // check if task state is in doing
+    const [TaskStateQuery] = await query(
+      `SELECT Task_state
+      FROM task
+      WHERE Task_id = ?`,
+      [taskId]
+    );
+
+    console.log(TaskStateQuery);
+
+    if (TaskStateQuery.Task_state === "Doing") {
+      await query(
+        `UPDATE task
+      SET Task_state = ?, Task_notes = ?, Task_owner = ?
+      WHERE Task_id = ?`,
+        ["Done", taskNotes, username, taskId]
+      );
+
+      const fetchPLEmailQuery = await query(
+        `SELECT a.email FROM accounts a
+      JOIN user_group u ON u.username = a.username
+      JOIN application app ON (u.usergroup = 'PL' OR
+      app.App_permit_Done = u.usergroup)
+      WHERE app.App_Acronym = ?
+      AND (u.usergroup = 'PL' OR
+      u.usergroup = app.App_permit_Done)`,
+        [Task_app_Acronym]
+      );
+
+      const emails = fetchPLEmailQuery.map((user) => user.email);
+
+      if (emails.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No user with PL or permit_Done found " });
+      }
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.email_user,
+          pass: process.env.pass,
+        },
+      });
+
+      const mailOptions = {
+        from: process.env.email_user,
+        to: emails.join(","),
+        subject: "Task for review",
+        text: `Task ID ${taskId} in application ${appAcronym} is pending for your review`,
+      };
+
+      transporter
+        .sendMail(mailOptions)
+        .then((e) => {
+          console.log(e.messageId);
+        })
+        .catch((e) => {
+          console.error(e);
+        });
+
+      return res.status(200).json({ msgCode: msgCode.SUCCESS });
+    } else {
+      return res.status(400).json({ msgCode: msgCode.INVALID_STATE_CHANGE });
+    }
+  } catch (error) {
+    return res.status(500).json({ msgCod44: msgCode.INTERNAL });
+  }
+};
 
 module.exports = {
   createTask,
