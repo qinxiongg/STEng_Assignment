@@ -1,6 +1,7 @@
 const query = require("../config/database");
 const bcryptjs = require("bcryptjs");
 const msgCode = require("../constants/msgCode");
+const nodemailer = require("nodemailer");
 
 const createTask = async (req, res) => {
   const {
@@ -292,6 +293,8 @@ const promoteTask2Done = async (req, res) => {
       [appAcronym]
     );
 
+    console.log("applicationQuery", applicationQuery);
+
     if (!applicationQuery) {
       return res.status(400).json({ msgCode: msgCode.NOT_FOUND });
     }
@@ -315,11 +318,6 @@ const promoteTask2Done = async (req, res) => {
     // convert userGroupQuery into a single array
     const userGroup = userGroupQuery.map((group) => group.usergroup);
 
-    console.log(userGroup);
-    console.log(appPermitDoingQuery.App_permit_Doing);
-
-    console.log(userGroup.includes(appPermitDoingQuery.App_permit_Doing));
-
     // check if user has required group to promote task to Done state
     if (!userGroup.includes(appPermitDoingQuery.App_permit_Doing)) {
       return res.status(401).json({
@@ -327,17 +325,29 @@ const promoteTask2Done = async (req, res) => {
       });
     }
 
-    // check if task state is in doing
-    const [TaskStateQuery] = await query(
-      `SELECT Task_state
+    // Check if task exists
+    const [taskQuery] = await query(
+      `SELECT *
       FROM task
       WHERE Task_id = ?`,
       [taskId]
     );
 
-    console.log(TaskStateQuery);
+    console.log("taskExistQuery", taskQuery);
 
-    if (TaskStateQuery.Task_state === "Doing") {
+    if (!taskQuery) {
+      res.status(400).json({ msgCode: msgCode.INVALID_INPUT });
+    }
+
+    // check if task state is in doing
+    // const [TaskStateQuery] = await query(
+    //   `SELECT Task_state
+    //   FROM task
+    //   WHERE Task_id = ?`,
+    //   [taskId]
+    // );
+
+    if (taskQuery.Task_state === "Doing") {
       await query(
         `UPDATE task
       SET Task_state = ?, Task_notes = ?, Task_owner = ?
@@ -345,7 +355,7 @@ const promoteTask2Done = async (req, res) => {
         ["Done", taskNotes, username, taskId]
       );
 
-      const fetchPLEmailQuery = await query(
+      const emailQuery = await query(
         `SELECT a.email FROM accounts a
       JOIN user_group u ON u.username = a.username
       JOIN application app ON (u.usergroup = 'PL' OR
@@ -353,16 +363,23 @@ const promoteTask2Done = async (req, res) => {
       WHERE app.App_Acronym = ?
       AND (u.usergroup = 'PL' OR
       u.usergroup = app.App_permit_Done)`,
-        [Task_app_Acronym]
+        [appAcronym]
       );
 
-      const emails = fetchPLEmailQuery.map((user) => user.email);
+      console.log("emailQuery", emailQuery);
 
-      if (emails.length === 0) {
-        return res
-          .status(404)
-          .json({ message: "No user with PL or permit_Done found " });
-      }
+      const emails = emailQuery.map((user) => user.email);
+
+      console.log("emails", emails);
+
+      //correct
+
+      // fix user management system
+      // if (emails.length === 0) {
+      //   return res
+      //     .status(404)
+      //     .json({ message: "No user with PL role or permit_Done found " });
+      // }
 
       const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -376,7 +393,8 @@ const promoteTask2Done = async (req, res) => {
         from: process.env.email_user,
         to: emails.join(","),
         subject: "Task for review",
-        text: `Task ID ${taskId} in application ${appAcronym} is pending for your review`,
+        text: `Task ID ${taskId} in application ${appAcronym} is pending for your review.
+        Please check the respective TMS.`,
       };
 
       transporter
@@ -393,7 +411,9 @@ const promoteTask2Done = async (req, res) => {
       return res.status(400).json({ msgCode: msgCode.INVALID_STATE_CHANGE });
     }
   } catch (error) {
-    return res.status(500).json({ msgCod44: msgCode.INTERNAL });
+    console.error("Error promoting task:", error); // Log the error
+
+    return res.status(500).json({ msgCode: msgCode.INTERNAL });
   }
 };
 

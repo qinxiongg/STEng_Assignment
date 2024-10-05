@@ -27,6 +27,7 @@
 				userStore.set(username);
 				alertSuccess(response.data.success);
 				goto('/home/applications');
+				
 			}
 		} catch (error) {
 			console.log('Unable to log in:', error.response.data.message);

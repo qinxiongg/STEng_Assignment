@@ -13,6 +13,8 @@
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
+	export let globalUsername;
+
 	let showModal = false;
 	let modalType = null;
 
@@ -52,7 +54,7 @@
 		Task_description: null,
 		Task_notes: '',
 		Task_state: 'Open',
-		Task_creator: `${$userStore}`,
+		Task_creator: globalUsername,
 		Task_owner: `${$userStore}`,
 		Task_createDate: null
 	};
@@ -151,6 +153,8 @@
 			selectedTask.Task_owner = $userStore;
 			selectedTask.Task_state = 'To do';
 		} else if (selectedTask.Task_state === 'To do' && statechangeaction === 'Take On') {
+			console.log($userStore);
+
 			stateBeforeStateChange = 'To do';
 			selectedTask.Task_owner = $userStore;
 			selectedTask.Task_state = 'Doing';
@@ -327,27 +331,26 @@
 	const updateTask = async () => {
 		try {
 			// if input field is empty then task notes is not updated
-				appendNewTaskNotes(false);
+			appendNewTaskNotes(false);
 
-				const response = await axios.put(
-					`${API_URL}/updateTask`,
-					{
-						Task_id: selectedTask.Task_id,
-						Task_plan: selectedTask.Task_plan,
-						Task_notes: selectedTask.Task_notes,
-						Task_state: selectedTask.Task_state,
-						Task_app_Acronym: selectedTask.Task_app_Acronym,
-						username: $userStore
-					},
-					{ withCredentials: true }
-				);
+			const response = await axios.put(
+				`${API_URL}/updateTask`,
+				{
+					Task_id: selectedTask.Task_id,
+					Task_plan: selectedTask.Task_plan,
+					Task_notes: selectedTask.Task_notes,
+					Task_state: selectedTask.Task_state,
+					Task_app_Acronym: selectedTask.Task_app_Acronym,
+					username: $userStore
+				},
+				{ withCredentials: true }
+			);
 
-				if (response.status === 200) {
-					alertSuccess(response.data.success);
-					getAllAppTasks();
-					selectedTask.task_plan = null;
-				}
-			
+			if (response.status === 200) {
+				alertSuccess(response.data.success);
+				getAllAppTasks();
+				selectedTask.task_plan = null;
+			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
 				handleError(error.response.data);
@@ -1029,6 +1032,6 @@
 	}
 	textarea {
 		width: 100%;
-		height: 100px
+		height: 100px;
 	}
 </style>

@@ -492,7 +492,6 @@ const changeTaskState = async (req, res) => {
     stateAfterStateChange,
   } = req.body;
 
-  console.log(req.body);
   try {
     await query("START TRANSACTION");
 
@@ -567,7 +566,6 @@ const changeTaskState = async (req, res) => {
         [Task_app_Acronym]
       );
 
-      console.log("findUserEmailWithPMAndDone", findUserEmailWithPMAndDone);
       const emails = findUserEmailWithPMAndDone.map((user) => user.email);
 
       if (emails.length === 0) {

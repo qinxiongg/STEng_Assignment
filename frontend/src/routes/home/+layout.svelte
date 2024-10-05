@@ -3,14 +3,15 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import Modal from '$lib/Modal.svelte';
-	import { authStore, showKanban } from '$lib/stores';
+	import { authStore, showKanban, userStore } from '$lib/stores';
 	import { alertSuccess, handleError, customError } from '$lib/errorHandler';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
+	export let globalUsername = '';
+
 	let isAdmin = false;
 	let showModal = false;
-	let globalUsername = '';
 	let globalEmail = '';
 
 	let userProfile = {
@@ -197,7 +198,7 @@
 	</ul>
 </nav>
 
-<slot></slot>
+<slot {globalUsername}></slot>
 
 <style>
 	form h2 {
