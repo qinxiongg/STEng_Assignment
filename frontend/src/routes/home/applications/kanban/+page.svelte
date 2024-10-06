@@ -13,7 +13,7 @@
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
-	export let globalUsername;
+	let globalUsername;
 
 	let showModal = false;
 	let modalType = null;
@@ -46,18 +46,7 @@
 		Plan_color: '#000000'
 	};
 
-	let newTask = {
-		Task_id: `${$kanbanAppAcronym}_${currentRNumber}`,
-		Task_plan: null,
-		Task_app_Acronym: $kanbanAppAcronym,
-		Task_name: null,
-		Task_description: null,
-		Task_notes: '',
-		Task_state: 'Open',
-		Task_creator: globalUsername,
-		Task_owner: `${$userStore}`,
-		Task_createDate: null
-	};
+	let newTask = {};
 
 	let tasks = [];
 	let openTasks = [];
@@ -69,10 +58,10 @@
 	let appPermits = {};
 	let userGroupForCheckingPermit = {};
 
-	$: {
-		console.log('user', userGroupForCheckingPermit);
-		console.log('permit', appPermits.App_permit_Open);
-	}
+	// $: {
+	// 	console.log('user', userGroupForCheckingPermit);
+	// 	console.log('permit', appPermits.App_permit_Open);
+	// }
 
 	// Disable save changes and close task button if plan is changed for tasks at "Done"
 	const handleTaskPlanChange = () => {
@@ -153,8 +142,6 @@
 			selectedTask.Task_owner = $userStore;
 			selectedTask.Task_state = 'To do';
 		} else if (selectedTask.Task_state === 'To do' && statechangeaction === 'Take On') {
-			console.log($userStore);
-
 			stateBeforeStateChange = 'To do';
 			selectedTask.Task_owner = $userStore;
 			selectedTask.Task_state = 'Doing';
@@ -261,11 +248,10 @@
 					Task_description: null,
 					Task_notes: '',
 					Task_state: 'Open',
-					Task_creator: `${$userStore}`,
-					Task_owner: `${$userStore}`,
+					Task_creator: globalUsername,
+					Task_owner: globalUsername,
 					Task_createDate: null
 				};
-				console.log(newTask);
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -412,7 +398,6 @@
 
 			if (response.status === 200) {
 				appPermits = response.data.appPermits;
-				// console.log(appPermits);
 				userGroupForCheckingPermit = response.data.userGroup;
 			}
 		} catch (error) {
@@ -425,10 +410,38 @@
 		}
 	};
 
+	const getCurrentUser = async () => {
+		try {
+			const response = await axios.get(`${API_URL}/getCurrentUser`, {
+				withCredentials: true
+			});
+
+			globalUsername = response.data.username;
+		} catch (error) {
+			handleError(error.response.data);
+			console.error('Failed to fetch current user', error);
+		}
+	};
+
 	onMount(async () => {
 		if ($kanbanAppAcronym === '') {
 			goto('/home/applications');
 		}
+
+		await getCurrentUser();
+
+		newTask = {
+			Task_id: `${$kanbanAppAcronym}_${currentRNumber}`,
+			Task_plan: null,
+			Task_app_Acronym: $kanbanAppAcronym,
+			Task_name: null,
+			Task_description: null,
+			Task_notes: '',
+			Task_state: 'Open',
+			Task_creator: globalUsername,
+			Task_owner: globalUsername,
+			Task_createDate: null
+		};
 
 		await getAppPermitsAndUserGroup();
 		await getAllAppTasks();
@@ -441,7 +454,7 @@
 	{#if modalType === 'createPlan'}
 		<div>
 			<form on:submit|preventDefault={createPlan}>
-				<div>
+				<div class="createPlan-container">
 					<h2>Create Plan</h2>
 					<div class="form-group">
 						<label for="Plan_app_Acronym">App Acronym</label>
@@ -917,7 +930,7 @@
 	}
 	h3 {
 		text-align: center;
-		font-size: 1em;
+		font-size: 1.5em;
 		background-color: #000000;
 		color: #ffffff;
 	}
@@ -947,7 +960,7 @@
 	}
 	form h2 {
 		text-align: center;
-		font-size: 1em;
+		font-size: 1.5em;
 	}
 	.form-group {
 		display: flex;
@@ -957,7 +970,8 @@
 		margin: 10px 20px;
 		width: 120px;
 		font-weight: bold;
-		font-size: 0.8em;
+		font-size: 1em;
+		align-self: center;
 	}
 	.form-group input {
 		margin: 10px 20px;
@@ -974,6 +988,9 @@
 	}
 	input[disabled] {
 		background-color: #ffffff;
+	}
+	.createPlan-container {
+		width: 700px;
 	}
 
 	.modal-buttons {

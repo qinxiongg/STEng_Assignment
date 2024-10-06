@@ -8,7 +8,7 @@
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
-	export let globalUsername = '';
+	let globalUsername = '';
 
 	let isAdmin = false;
 	let showModal = false;
@@ -198,7 +198,7 @@
 	</ul>
 </nav>
 
-<slot {globalUsername}></slot>
+<slot globalUsername></slot>
 
 <style>
 	form h2 {

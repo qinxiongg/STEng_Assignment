@@ -137,10 +137,9 @@
 
 	async function getApplications() {
 		try {
-			const response = await axios.get(
-				`${API_URL}/getApplications`,
-				{ withCredentials: true }
-			);
+			const response = await axios.get(`${API_URL}/getApplications`, {
+				withCredentials: true
+			});
 
 			if (response.status === 200) {
 				applications = response.data;
@@ -187,8 +186,6 @@
 				<div class="form-group">
 					<label for="App_Acronym">App Acronym</label>
 					<input type="text" bind:value={newApplication.App_Acronym} placeholder="Name" />
-				</div>
-				<div class="form-group">
 					<label for="App_Rnumber">App R-Number</label>
 					<input
 						type="text"
@@ -206,8 +203,6 @@
 				<div class="form-group">
 					<label for="App_startDate">Start Date</label>
 					<input type="date" bind:value={createAppStartDate} />
-				</div>
-				<div class="form-group">
 					<label for="App_endDate">End Date</label>
 					<input type="date" bind:value={createAppEndDate} />
 				</div>
@@ -433,17 +428,18 @@
 	}
 	form h2 {
 		text-align: center;
-		font-size: 1.3em;
+		font-size: 1.5em;
 	}
 	.form-group {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		width: 900px;
 	}
 	.form-group label {
 		margin: 10px 20px;
 		font-weight: bold;
-		width: 190px;
+		width: 150px;
 		font-size: 0.9em;
 	}
 	.form-group input,
@@ -457,6 +453,7 @@
 		padding-right: 10px;
 		outline: none;
 		border-radius: 4px;
+		flex: 3;
 	}
 	.form-group textarea {
 		margin: 10px 20px;
@@ -468,6 +465,7 @@
 		padding-left: 10px;
 		outline: none;
 		border-radius: 4px;
+		flex: 3;
 	}
 	.modal-buttons {
 		display: flex;
