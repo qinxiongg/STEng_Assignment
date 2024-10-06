@@ -10,9 +10,10 @@ const createTask = async (req, res) => {
     appAcronym,
     taskName,
     taskDescription,
-    taskNotes,
     taskPlan,
   } = req.body;
+
+  let { taskNotes } = req.body;
 
   console.log(req.body);
 
@@ -124,7 +125,17 @@ const createTask = async (req, res) => {
       return res.status(400).json({ msgCode: msgCode.NOT_FOUND });
     }
 
-    //  query if usergroup matches
+    // if task notes input is not empty than add timestamp to it
+    const day = String(currentDate.getDate()).padStart(2, "0");
+    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+    const year = currentDate.getFullYear();
+    let timestampDate = `${day}/${month}/${year}`;
+
+    if (taskNotes) {
+      taskNotes = `Date: ${timestampDate} \nCommented By: ${username}\n${taskNotes}\n\n [Task State: Open]\n####################\n\n`;
+    }
+
+    // insert into table if usergroup matches
     const result = await query(
       `INSERT INTO task(Task_id, Task_plan, Task_app_Acronym, Task_name,
       Task_description, Task_notes, Task_state, Task_creator, Task_owner, Task_createDate)
@@ -143,6 +154,13 @@ const createTask = async (req, res) => {
       ]
     );
 
+    const [resultOutputQuery] = await query(
+      `SELECT *
+      FROM task
+      WHERE Task_id = ?`,
+      [taskId]
+    );
+
     if (result.affectedRows > 0) {
       // increment app RNumber
       await query(
@@ -153,22 +171,22 @@ const createTask = async (req, res) => {
       );
     }
 
-    const taskParameters = {
-      Task_id: taskId,
-      Task_plan: taskPlan,
-      Task_app_Acronym: appAcronym,
-      Task_name: taskName,
-      Task_description: taskDescription,
-      Task_notes: taskNotes,
-      Task_state: taskState,
-      Task_creator: taskCreator,
-      Task_owner: taskOwner,
-      Task_createDate: taskCreateDate,
-    };
+    // const taskParameters = {
+    //   Task_id: taskId,
+    //   Task_plan: taskPlan,
+    //   Task_app_Acronym: appAcronym,
+    //   Task_name: taskName,
+    //   Task_description: taskDescription,
+    //   Task_notes: taskNotes,
+    //   Task_state: taskState,
+    //   Task_creator: taskCreator,
+    //   Task_owner: taskOwner,
+    //   Task_createDate: taskCreateDate,
+    // };
 
     return res
       .status(200)
-      .json({ result: taskParameters, msgCode: msgCode.SUCCESS });
+      .json({ result: resultOutputQuery, msgCode: msgCode.SUCCESS });
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
       return res.status(400).json({ msgCode: msgCode.ENTRY_EXISTS });
@@ -251,7 +269,8 @@ const getTaskByState = async (req, res) => {
 };
 
 const promoteTask2Done = async (req, res) => {
-  const { username, password, appAcronym, taskId, taskNotes } = req.body;
+  const { username, password, appAcronym, taskId } = req.body;
+  let { taskNotes } = req.body;
 
   if (!username || !password) {
     return res.status(401).json({ msgCode: msgCode.INVALID_INPUT });
@@ -348,6 +367,19 @@ const promoteTask2Done = async (req, res) => {
     // );
 
     if (taskQuery.Task_state === "Doing") {
+      // append new notes to current notes
+      const currentDate = new Date();
+
+      const day = String(currentDate.getDate()).padStart(2, "0");
+      const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+      const year = currentDate.getFullYear();
+
+      let timestampDate = `${day}/${month}/${year}`;
+
+      taskNotes =
+        `Date: ${timestampDate} \nCommented By: ${username}\n${taskNotes}\n\n[Task State changed from Doing to Done]\n##################\n` +
+        taskQuery.Task_notes;
+
       await query(
         `UPDATE task
       SET Task_state = ?, Task_notes = ?, Task_owner = ?
@@ -406,13 +438,24 @@ const promoteTask2Done = async (req, res) => {
           console.error(e);
         });
 
-      return res.status(200).json({ msgCode: msgCode.SUCCESS });
+      // Check updated task
+      const [resultOutputQuery] = await query(
+        `SELECT *
+      FROM task
+      WHERE Task_id = ?`,
+        [taskId]
+      );
+
+      return res
+        .status(200)
+        .json({ msgCode: msgCode.SUCCESS, result: resultOutputQuery });
+    } else if (taskQuery.taskState === "Done") {
+      return res.status(400).json({ msgCode: msgCode.ENTRY_EXISTS });
     } else {
       return res.status(400).json({ msgCode: msgCode.INVALID_STATE_CHANGE });
     }
   } catch (error) {
-    console.error("Error promoting task:", error); // Log the error
-
+    console.error("Error promoting task:", error);
     return res.status(500).json({ msgCode: msgCode.INTERNAL });
   }
 };
