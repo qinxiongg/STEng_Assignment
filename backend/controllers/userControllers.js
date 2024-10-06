@@ -104,6 +104,21 @@ const getCurrentUser = async (req, res) => {
       [username]
     );
 
+    // Query user's usergroup
+    const userGroupQuery = await query(
+      `SELECT usergroup
+          FROM user_group
+          WHERE username = ?`,
+      [username]
+    );
+
+    if (userGroupQuery.length === 0) {
+      return res.status(404).json({ message: "Usergroup not found" });
+    }
+
+    // convert usergroup result to an array
+    userGroup = userGroupQuery.map((group) => group.usergroup);
+
     if (result.length === 0) {
       return res.status(404).json({ message: "Unable to find user" });
     }
@@ -111,6 +126,7 @@ const getCurrentUser = async (req, res) => {
     const user = {
       username: result.username,
       email: result.email,
+      usergroup: userGroup,
     };
 
     return res.status(200).json(user);
@@ -367,7 +383,9 @@ const editUser = async (req, res) => {
         username,
       ]);
     }
-    return res.status(200).json({ success: "Credential successfully changed" });
+    return res
+      .status(200)
+      .json({ success: "Credentials successfully changed" });
   } catch (error) {
     return res.status(500).json({ message: "Database query error" });
   }

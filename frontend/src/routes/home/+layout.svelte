@@ -9,10 +9,9 @@
 	const API_URL = import.meta.env.VITE_API_URL;
 
 	let globalUsername = '';
-
+	let globalEmail = '';
 	let isAdmin = false;
 	let showModal = false;
-	let globalEmail = '';
 
 	let userProfile = {
 		username: '',
@@ -22,7 +21,7 @@
 
 	let currentProfile = {
 		username: globalUsername,
-		email: '',
+		email: globalEmail,
 		password: ''
 	};
 
@@ -62,6 +61,7 @@
 
 			globalUsername = response.data.username;
 			globalEmail = response.data.email;
+			console.log(response);
 		} catch (error) {
 			handleError(error.response.data);
 			console.error('Failed to fetch current user', error);
@@ -198,7 +198,7 @@
 	</ul>
 </nav>
 
-<slot globalUsername></slot>
+<slot></slot>
 
 <style>
 	form h2 {

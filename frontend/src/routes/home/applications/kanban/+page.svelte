@@ -56,12 +56,26 @@
 	let closedTasks = [];
 
 	let appPermits = {};
-	let userGroupForCheckingPermit = {};
+	let userGroupForCheckingPermit = [];
 
 	// $: {
 	// 	console.log('user', userGroupForCheckingPermit);
 	// 	console.log('permit', appPermits.App_permit_Open);
 	// }
+
+	const handleDisableNoteInput = (taskstate) => {
+		if (taskstate === 'Open') {
+			return userGroupForCheckingPermit.includes(appPermits.App_permit_Open);
+		} else if (taskstate === 'To do') {
+			return userGroupForCheckingPermit.includes(appPermits.App_permit_toDoList);
+		} else if (taskstate === 'Doing') {
+			return userGroupForCheckingPermit.includes(appPermits.App_permit_Doing);
+		} else if (taskstate === 'Done') {
+			return userGroupForCheckingPermit.includes(appPermits.App_permit_Done);
+		} else if (taskstate === 'Closed') {
+			return false;
+		}
+	};
 
 	// Disable save changes and close task button if plan is changed for tasks at "Done"
 	const handleTaskPlanChange = () => {
@@ -107,7 +121,7 @@
 		FormattedEpochToDate = TaskCreateDateDisplay.toLocaleDateString('en-GB', dateDisplay);
 	};
 
-	const appendNewTaskNotes = (statechange) => {
+	const appendNewTaskNotes = (input) => {
 		const currentDate = new Date();
 
 		const day = String(currentDate.getDate()).padStart(2, '0');
@@ -117,21 +131,17 @@
 		let timestampDate = `${day}/${month}/${year}`;
 
 		// if true then append state change notes
-		if (statechange) {
+		if (input === 'state change') {
 			// append task notes when task state changes
 			selectedTask.Task_notes =
-				`Date: ${timestampDate} \nCommented By: ${$userStore}\n${newTaskNote}\n\n[Task State changed from ${stateBeforeStateChange} to ${selectedTask.Task_state}]\n##################\n` +
+				`Date: ${timestampDate} \nCommented By: ${globalUsername}\n${newTaskNote}\n\n[Task State changed from ${stateBeforeStateChange} to ${selectedTask.Task_state}]\n\n###################################\n` +
 				selectedTask.Task_notes;
 			newTaskNote = '';
-		} else {
+		} else if (input === 'new notes') {
 			selectedTask.Task_notes =
-				`Date: ${timestampDate} \nCommented By: ${$userStore}\n${newTaskNote}\n\n [Task State: ${selectedTask.Task_state}]\n####################\n\n` +
+				`Date: ${timestampDate} \nCommented By: ${globalUsername}\n${newTaskNote}\n\n [Task State: ${selectedTask.Task_state}]\n\n###################################\n\n` +
 				selectedTask.Task_notes;
 			newTaskNote = '';
-
-			// // append task notes when save changes is clicked
-			// 	selectedTask.Task_notes += `Date: ${timestampDate} \nCommented By: ${$userStore}\n${newTaskNote}\n\n [Task State: ${selectedTask.Task_state}]\n\n`;
-			// 	newTaskNote = '';
 		}
 	};
 
@@ -139,24 +149,24 @@
 	const updateTaskOwnerAndState = (statechangeaction) => {
 		if (selectedTask.Task_state === 'Open' && statechangeaction === 'Release') {
 			stateBeforeStateChange = 'Open';
-			selectedTask.Task_owner = $userStore;
+			selectedTask.Task_owner = globalUsername;
 			selectedTask.Task_state = 'To do';
 		} else if (selectedTask.Task_state === 'To do' && statechangeaction === 'Take On') {
 			stateBeforeStateChange = 'To do';
-			selectedTask.Task_owner = $userStore;
+			selectedTask.Task_owner = globalUsername;
 			selectedTask.Task_state = 'Doing';
 		} else if (selectedTask.Task_state === 'Doing' && statechangeaction === 'To Review') {
 			stateBeforeStateChange = 'Doing';
 			stateAfterStateChange = 'Done';
 
-			selectedTask.Task_owner = $userStore;
+			selectedTask.Task_owner = globalUsername;
 			selectedTask.Task_state = 'Done';
 		} else if (selectedTask.Task_state === 'Doing' && statechangeaction === 'Forfeit Task') {
 			stateBeforeStateChange = 'Doing';
 			selectedTask.Task_state = 'To do';
 		} else if (selectedTask.Task_state === 'Done' && statechangeaction === 'Close Task') {
 			stateBeforeStateChange = 'Done';
-			selectedTask.Task_owner = $userStore;
+			selectedTask.Task_owner = globalUsername;
 			selectedTask.Task_state = 'Closed';
 		} else if (selectedTask.Task_state === 'Done' && statechangeaction === 'Reject Task') {
 			stateBeforeStateChange = 'Done';
@@ -317,7 +327,11 @@
 	const updateTask = async () => {
 		try {
 			// if input field is empty then task notes is not updated
-			appendNewTaskNotes(false);
+			if (!newTaskNote) {
+				// customError('Task notes input field is empty');
+				return;
+			}
+			appendNewTaskNotes('new notes');
 
 			const response = await axios.put(
 				`${API_URL}/updateTask`,
@@ -327,7 +341,7 @@
 					Task_notes: selectedTask.Task_notes,
 					Task_state: selectedTask.Task_state,
 					Task_app_Acronym: selectedTask.Task_app_Acronym,
-					username: $userStore
+					username: globalUsername
 				},
 				{ withCredentials: true }
 			);
@@ -351,7 +365,7 @@
 		try {
 			// Append new task notes when state change occurs
 			updateTaskOwnerAndState(statechangeaction);
-			appendNewTaskNotes(true);
+			appendNewTaskNotes('state change');
 
 			const response = await axios.put(
 				`${API_URL}/changeTaskState`,
@@ -362,7 +376,7 @@
 					Task_notes: selectedTask.Task_notes,
 					Task_owner: selectedTask.Task_owner,
 					Task_app_Acronym: selectedTask.Task_app_Acronym,
-					username: $userStore,
+					username: globalUsername,
 					stateBeforeStateChange: stateBeforeStateChange,
 					stateAfterStateChange: stateAfterStateChange
 				},
@@ -391,7 +405,7 @@
 				`${API_URL}/getAppPermitsAndUserGroup`,
 				{
 					App_Acronym: $kanbanAppAcronym,
-					username: $userStore
+					username: globalUsername
 				},
 				{ withCredentials: true }
 			);
@@ -444,6 +458,7 @@
 		};
 
 		await getAppPermitsAndUserGroup();
+		console.log(userGroupForCheckingPermit);
 		await getAllAppTasks();
 		await getApplicationPlans();
 		await getAppRNumber();
@@ -497,21 +512,21 @@
 		<div>
 			<form on:submit|preventDefault={createTask}>
 				<h3>{$kanbanAppAcronym}</h3>
-				<div class="createTask-container">
+				<div class="task-container">
 					<div class="createTask-left">
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_id">Task ID</label>
 							<input type="text" bind:value={$kanbanAppAcronym} readonly />
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_name">Task Name</label>
 							<input type="text" bind:value={newTask.Task_name} />
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_description">Task Description</label>
 							<textarea bind:value={newTask.Task_description} />
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_plan">Plan Name</label>
 							<select bind:value={newTask.Task_plan}>
 								{#each plansByAppAcronym as plan}
@@ -519,26 +534,30 @@
 								{/each}
 							</select>
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_state">Task State</label>
 							<input type="text" bind:value={newTask.Task_state} readonly />
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_creator">Task Creator</label>
 							<input type="text" bind:value={newTask.Task_creator} readonly />
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_owner">Task Owner</label>
 							<input type="text" bind:value={newTask.Task_owner} readonly />
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_createDate">Task Create Date</label>
 							<input type="text" bind:value={createTaskDateDisplay} readonly />
 						</div>
 					</div>
 					<div class="createTask-right">
-						<div class="createTask-notes"><b>Notes</b></div>
-						<textarea bind:value={newTask.Task_notes} placeholder="Comments" />
+						<div class="createTask-notes"><h2>Notes</h2></div>
+						<textarea
+							class="notes-input"
+							bind:value={newTask.Task_notes}
+							placeholder="Comments"
+						/>
 					</div>
 				</div>
 
@@ -557,21 +576,21 @@
 		<div>
 			<form on:submit|preventDefault={updateTask}>
 				<h3>{selectedTask.Task_id}</h3>
-				<div class="createTask-container">
+				<div class="task-container">
 					<div class="createTask-left">
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_id">Task ID</label>
 							<input type="text" bind:value={selectedTask.Task_id} disabled />
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_name">Task Name</label>
 							<input type="text" bind:value={selectedTask.Task_name} disabled />
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_description">Task Description</label>
 							<textarea bind:value={selectedTask.Task_description} disabled />
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_plan">Plan Name</label>
 							{#if (selectedTask.Task_state === 'Open' && userGroupForCheckingPermit.includes(appPermits.App_permit_Open)) || (selectedTask.Task_state === 'Done' && userGroupForCheckingPermit.includes(appPermits.App_permit_Done))}
 								<select
@@ -588,19 +607,19 @@
 								<input bind:value={selectedTask.Task_plan} disabled />
 							{/if}
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_state">Task State</label>
 							<input type="text" bind:value={selectedTask.Task_state} disabled />
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_creator">Task Creator</label>
 							<input type="text" bind:value={selectedTask.Task_creator} disabled />
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_owner">Task Owner</label>
 							<input type="text" bind:value={selectedTask.Task_owner} disabled />
 						</div>
-						<div class="form-group">
+						<div class="task-formgroup">
 							<label for="Task_createDate">Task Create Date</label>
 							<input type="text" bind:value={FormattedEpochToDate} disabled />
 						</div>
@@ -608,7 +627,12 @@
 					<div class="createTask-right">
 						<b>Notes</b>
 						<div class="createTask-notes">{selectedTask.Task_notes}</div>
-						<textarea bind:value={newTaskNote} placeholder="Comments" />
+						<textarea
+							class="notes-input"
+							bind:value={newTaskNote}
+							placeholder="Comments"
+							disabled={!handleDisableNoteInput(selectedTask.Task_state)}
+						/>
 					</div>
 				</div>
 
@@ -727,26 +751,30 @@
 
 <div class="middle-container">
 	<h1 class="middle-left">Task Management Board: {$kanbanAppAcronym}</h1>
-	<button
-		class="middle-right"
-		on:click={() => {
-			showModal = true;
-			modalType = 'createPlan';
-		}}>+ CREATE PLAN</button
-	>
+	{#if userGroupForCheckingPermit.includes('PM')}
+		<button
+			class="middle-right"
+			on:click={() => {
+				showModal = true;
+				modalType = 'createPlan';
+			}}>+ CREATE PLAN</button
+		>
+	{/if}
 </div>
 <div class="kanban-container">
 	<div class="kanban-column">
 		<div class="kanban-header">
 			<h2>Open</h2>
-			<button
-				class="createTaskButton"
-				on:click={() => {
-					showModal = true;
-					modalType = 'createTask';
-					getCurrentDate();
-				}}>+ CREATE TASK</button
-			>
+			{#if userGroupForCheckingPermit.includes('PL')}
+				<button
+					class="createTaskButton"
+					on:click={() => {
+						showModal = true;
+						modalType = 'createTask';
+						getCurrentDate();
+					}}>+ CREATE TASK</button
+				>
+			{/if}
 		</div>
 		<div class="task-card-container">
 			{#each openTasks as task}
@@ -907,7 +935,6 @@
 		margin-bottom: 20px;
 		display: flex;
 		flex-direction: column;
-		overflow-y: scroll;
 		height: calc(100vh - 190px);
 	}
 	.kanban-header {
@@ -922,30 +949,63 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+		overflow-y: auto;
 	}
-	.createTask-container {
+	.task-container {
 		display: flex;
-		justify-content: center;
-		width: 1000px;
+		justify-content: space-between;
+		width: 1100px;
 	}
+
+	.task-formgroup {
+		display: flex;
+		justify-content: space-between;
+	}
+	.task-formgroup label {
+		margin: 10px 20px;
+		width: 150px;
+		font-weight: bold;
+		font-size: 1em;
+		align-self: center;
+	}
+	.task-formgroup input,
+	select {
+		margin: 10px 20px;
+		background-color: #dadada;
+		border: transparent;
+		height: 38px;
+		width: 100%;
+		padding-left: 10px;
+		outline: none;
+		border-radius: 4px;
+		font-size: 1.1em;
+	}
+
 	h3 {
 		text-align: center;
 		font-size: 1.5em;
 		background-color: #000000;
 		color: #ffffff;
+		padding: 5px 0px 5px 0px;
+		margin-top: 1px;
 	}
 	.createTask-right {
 		border-left: 1px solid black;
+		padding-left: 40px;
+		padding-right: 20px;
 	}
 	.createTask-right textarea {
 		width: 500px;
 		height: 100px;
 		resize: none;
 		background-color: lightgrey;
+		margin-left: 0px;
+		margin-top: 30px;
+		height: 100px;
 	}
 	.createTask-notes {
 		width: 500px;
-		height: 300px;
+		height: 350px;
 		white-space: pre-wrap;
 		overflow-y: auto;
 	}
@@ -1029,13 +1089,6 @@
 	.task-card-contents p {
 		font-size: 1.2em;
 	}
-	/* .task-changestate-btn {
-		background-color: #00a400;
-		color: #ffffff;
-		width: 195px;
-		height: 40px;
-		cursor: pointer;
-	} */
 	h4 {
 		font-size: 1.5em;
 		margin: 0px;
@@ -1046,9 +1099,17 @@
 		background-color: #0095ff;
 		color: #ffffff;
 		border-radius: 5px;
+		display: inline-block;
+		width: 50px;
+		text-align: center;
 	}
 	textarea {
 		width: 100%;
 		height: 100px;
+		resize: none;
+		margin-left: 10px;
+	}
+	textarea[disabled] {
+		background-color: #ffffff;
 	}
 </style>

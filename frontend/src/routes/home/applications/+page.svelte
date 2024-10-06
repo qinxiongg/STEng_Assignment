@@ -17,6 +17,8 @@
 	let showModal = false;
 	let modalType = null;
 
+	let globalUserGroup = [];
+
 	let applications = [];
 	let allUserGroups = [];
 	let selectedAppToEdit = null;
@@ -41,19 +43,32 @@
 	}
 
 	// Set authStore to true if user is admin
-	async function checkIsAdmin() {
-		try {
-			const response = await axios.get(`${API_URL}/checkIsAdmin`, { withCredentials: true });
-			let isAdmin = false;
+	// async function checkIsAdmin() {
+	// 	try {
+	// 		const response = await axios.get(`${API_URL}/checkIsAdmin`, { withCredentials: true });
+	// 		let isAdmin = false;
 
-			if (response.status === 200) {
-				isAdmin = response.data.isAdmin;
-				authStore.set(response.data.isAdmin);
-			}
+	// 		if (response.status === 200) {
+	// 			isAdmin = response.data.isAdmin;
+	// 			authStore.set(response.data.isAdmin);
+	// 		}
+	// 	} catch (error) {
+	// 		console.error('Error at checkIsAdmin:', error);
+	// 	}
+	// }
+
+	const getCurrentUser = async () => {
+		try {
+			const response = await axios.get(`${API_URL}/getCurrentUser`, {
+				withCredentials: true
+			});
+
+			globalUserGroup = response.data.usergroup;
 		} catch (error) {
-			console.error('Error at checkIsAdmin:', error);
+			console.error('Failed to fetch current user', error);
+			handleError(error.response.data);
 		}
-	}
+	};
 
 	async function getAllGroups() {
 		try {
@@ -172,7 +187,7 @@
 	}
 
 	onMount(async () => {
-		await checkIsAdmin();
+		await getCurrentUser();
 		await getApplications();
 		await getAllGroups();
 	});
@@ -349,16 +364,18 @@
 
 <div class="middle-container">
 	<h1 class="middle-left">Applications</h1>
-	<button
-		class="middle-right"
-		on:click={() => {
-			showModal = true;
-			modalType = 'createApplication';
-			for (let key in newApplication) {
-				newApplication[key] = null;
-			}
-		}}>+ CREATE APP</button
-	>
+	{#if globalUserGroup.includes('PL')}
+		<button
+			class="middle-right"
+			on:click={() => {
+				showModal = true;
+				modalType = 'createApplication';
+				for (let key in newApplication) {
+					newApplication[key] = null;
+				}
+			}}>+ CREATE APP</button
+		>
+	{/if}
 </div>
 <div class="application-container">
 	{#each applications as app}
