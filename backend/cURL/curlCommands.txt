@@ -1,3 +1,5 @@
+// cURL (Windows 11)
+
 // cURL for create task
 $body = @{
     username = "PL"
@@ -51,3 +53,23 @@ $response = Invoke-WebRequest -Uri "http://localhost:3000/api/demo/promoteTask2D
 
 # Output the full response
 $response
+
+
+
+//////// cURL  (Windows 10)
+$response = Invoke-WebRequest -Uri "http://localhost:3000/api/demo/CreateTask" `
+    -Method POST `
+    -Headers @{ "Content-Type" = "application/json" } `
+    -Body '{
+        "username": "PL",
+        "password": "abc123!!",
+        "appAcronym": "App1",
+        "taskName": "test1",
+        "taskDescription": "",
+        "taskNotes": "",
+        "taskPlan": "plan"
+    }' `
+    -UseBasicParsing
+
+# Output the response content
+$response.Content

@@ -3,22 +3,33 @@ const bcryptjs = require("bcryptjs");
 const msgCode = require("../constants/msgCode");
 const nodemailer = require("nodemailer");
 
-const createTask = async (req, res) => {
-  const {
-    username,
-    password,
-    appAcronym,
-    taskName,
-    taskDescription,
-    taskPlan,
-  } = req.body;
+const CreateTask = async (req, res) => {
+  const { username, password, appAcronym, taskName, taskDescription } =
+    req.body;
 
-  let { taskNotes } = req.body;
+  let { taskPlan, taskNotes } = req.body;
 
-  console.log(req.body);
+  const allowedFields = [
+    "username",
+    "password",
+    "appAcronym",
+    "taskName",
+    "taskDescription",
+    "taskPlan",
+    "taskNotes",
+  ];
+
+  const bodyFields = Object.keys(req.body);
+  const hasExtraFields = bodyFields.some(
+    (field) => !allowedFields.includes(field)
+  );
+
+  if (hasExtraFields) {
+    return res.status(400).json({ msgCode: msgCode.INVALID_KEY });
+  }
 
   if (!username || !password) {
-    return res.status(401).json({ msgCode: msgCode.INVALID_INPUT });
+    return res.status(400).json({ msgCode: msgCode.INVALID_INPUT });
   }
 
   if (!appAcronym || !taskName) {
@@ -30,6 +41,8 @@ const createTask = async (req, res) => {
   }
 
   try {
+    await query("START TRANSACTION");
+
     const [accountQuery] = await query(
       `SELECT * FROM accounts
       WHERE username = ?`,
@@ -37,7 +50,7 @@ const createTask = async (req, res) => {
     );
     // catch invalid username
     if (!accountQuery) {
-      return res.status(401).json({ msgCode: msgCode.INVALID_CREDENTIALS });
+      return res.status(400).json({ msgCode: msgCode.INVALID_CREDENTIALS });
     }
 
     if (accountQuery.accountStatus == "Disabled") {
@@ -84,9 +97,28 @@ const createTask = async (req, res) => {
 
     // check if user has required group to create task
     if (!UserGroup.includes(appPermits.App_permit_Create)) {
-      return res.status(400).json({
+      return res.status(403).json({
         msgCode: msgCode.NOT_AUTHORIZED,
       });
+    }
+
+    if (taskPlan === "") {
+      taskPlan = null;
+    }
+
+    if (taskPlan && taskPlan !== null) {
+      const planExistQuery = await query(
+        `SELECT *
+        FROM plan
+        WHERE Plan_MVP_Name = ?`,
+        [taskPlan]
+      );
+
+      console.log("planExistQuery", planExistQuery);
+
+      if (planExistQuery.length === 0) {
+        return res.status(400).json({ msgCode: msgCode.NOT_FOUND });
+      }
     }
 
     // Query app RNumber
@@ -99,7 +131,7 @@ const createTask = async (req, res) => {
     );
 
     // initialise other variables to populate the tables
-    const taskState = "Open";
+    const taskState = "open";
     const taskCreator = username;
     const taskOwner = username;
     const taskId = `${appAcronym}_${appRNumberQuery.App_Rnumber}`;
@@ -108,22 +140,13 @@ const createTask = async (req, res) => {
     const taskCreateDate = Math.floor(currentDate.getTime() / 1000);
 
     // check if state open is in Open
-    if (taskState !== "Open") {
+    if (taskState !== "open") {
       return res.status(400).json({ msgCode: msgCode.INVALID_STATE_CHANGE });
     }
 
-    const [planExistQuery] = await query(
-      `SELECT *
-      FROM plan
-      WHERE Plan_MVP_Name = ? AND Plan_app_Acronym = ?`,
-      [taskPlan, appAcronym]
-    );
+    console.log("taskPlan", taskPlan);
 
-    console.log("planExistQuery", planExistQuery);
-
-    if (!planExistQuery) {
-      return res.status(400).json({ msgCode: msgCode.NOT_FOUND });
-    }
+    // console.log("planExistQuery", planExistQuery);
 
     // if task notes input is not empty than add timestamp to it
     const day = String(currentDate.getDate()).padStart(2, "0");
@@ -132,7 +155,7 @@ const createTask = async (req, res) => {
     let timestampDate = `${day}/${month}/${year}`;
 
     if (taskNotes) {
-      taskNotes = `Date: ${timestampDate} \nCommented By: ${username}\n${taskNotes}\n\n [Task State: Open]\n####################\n\n`;
+      taskNotes = `Date: ${timestampDate} \nCommented By: ${username}\n${taskNotes}\n\n [Task State: open]\n####################\n\n`;
     }
 
     // insert into table if usergroup matches
@@ -184,22 +207,45 @@ const createTask = async (req, res) => {
     //   Task_createDate: taskCreateDate,
     // };
 
+    const taskParameters = {
+      Task_id: taskId,
+    };
+
+    await query("COMMIT");
+
     return res
       .status(200)
-      .json({ result: resultOutputQuery, msgCode: msgCode.SUCCESS });
+      .json({ msgCode: msgCode.SUCCESS, result: taskParameters });
   } catch (error) {
-    if (error.code === "ER_DUP_ENTRY") {
-      return res.status(400).json({ msgCode: msgCode.ENTRY_EXISTS });
-    }
+    await query("ROLLBACK");
+
+    // if (error.code === "ER_DUP_ENTRY") {
+    //   return res.status(400).json({ msgCode: msgCode.ENTRY_EXISTS });
+    // }
     return res.status(500).json({ msgCode: msgCode.INTERNAL });
   }
 };
 
-const getTaskByState = async (req, res) => {
+const GetTaskByState = async (req, res) => {
+  if (Object.keys(req.query).length !== 0) {
+    return res.status(400).json({ msgCode: msgCode.INVALID_INPUT });
+  }
+
   const { username, password, appAcronym, taskState } = req.body;
 
+  const allowedFields = ["username", "password", "appAcronym", "taskState"];
+
+  const bodyFields = Object.keys(req.body);
+  const hasExtraFields = bodyFields.some(
+    (field) => !allowedFields.includes(field)
+  );
+
+  if (hasExtraFields) {
+    return res.status(400).json({ msgCode: msgCode.INVALID_KEY });
+  }
+
   if (!username || !password) {
-    return res.status(401).json({ msgCode: msgCode.INVALID_INPUT });
+    return res.status(400).json({ msgCode: msgCode.INVALID_INPUT });
   }
 
   if (!appAcronym || !taskState) {
@@ -207,6 +253,8 @@ const getTaskByState = async (req, res) => {
   }
 
   try {
+    await query("START TRANSACTION");
+
     const [accountQuery] = await query(
       `SELECT * 
       FROM accounts
@@ -231,6 +279,7 @@ const getTaskByState = async (req, res) => {
       return res.status(401).json({ msgCode: msgCode.INVALID_CREDENTIALS });
     }
 
+    // check if app exists
     const [applicationQuery] = await query(
       `SELECT * 
       FROM application
@@ -240,6 +289,12 @@ const getTaskByState = async (req, res) => {
 
     if (!applicationQuery) {
       return res.status(400).json({ msgCode: msgCode.NOT_FOUND });
+    }
+
+    // check if the task state belong to the 5 states
+    const validTaskStates = ["open", "todo", "doing", "done", "closed"];
+    if (!validTaskStates.includes(taskState)) {
+      return res.status(400).json({ msgCode: msgCode.INVALID_INPUT });
     }
 
     const tasks = await query(
@@ -262,18 +317,42 @@ const getTaskByState = async (req, res) => {
       task.Plan_color = planColorQuery[0] ? planColorQuery[0].Plan_color : null;
     }
 
-    res.status(200).json({ result: tasks, msgCode: msgCode.SUCCESS });
+    await query("COMMIT");
+
+    res.status(200).json({ msgCode: msgCode.SUCCESS, result: tasks });
   } catch (error) {
+    await query("ROLLBACK");
     return res.status(500).json({ msgCode: msgCode.INTERNAL });
   }
 };
 
-const promoteTask2Done = async (req, res) => {
+const PromoteTask2Done = async (req, res) => {
+  if (Object.keys(req.query).length !== 0) {
+    return res.status(400).json({ msgCode: msgCode.INVALID_INPUT });
+  }
+
   const { username, password, appAcronym, taskId } = req.body;
   let { taskNotes } = req.body;
 
+  const allowedFields = [
+    "username",
+    "password",
+    "appAcronym",
+    "taskId",
+    "taskNotes",
+  ];
+
+  const bodyFields = Object.keys(req.body);
+  const hasExtraFields = bodyFields.some(
+    (field) => !allowedFields.includes(field)
+  );
+
+  if (hasExtraFields) {
+    return res.status(400).json({ msgCode: msgCode.INVALID_KEY });
+  }
+
   if (!username || !password) {
-    return res.status(401).json({ msgCode: msgCode.INVALID_INPUT });
+    return res.status(400).json({ msgCode: msgCode.INVALID_INPUT });
   }
 
   if (!appAcronym || !taskId) {
@@ -339,7 +418,7 @@ const promoteTask2Done = async (req, res) => {
 
     // check if user has required group to promote task to Done state
     if (!userGroup.includes(appPermitDoingQuery.App_permit_Doing)) {
-      return res.status(401).json({
+      return res.status(403).json({
         msgCode: msgCode.NOT_AUTHORIZED,
       });
     }
@@ -352,7 +431,7 @@ const promoteTask2Done = async (req, res) => {
       [taskId]
     );
 
-    console.log("taskExistQuery", taskQuery);
+    // console.log("taskExistQuery", taskQuery);
 
     if (!taskQuery) {
       res.status(400).json({ msgCode: msgCode.INVALID_INPUT });
@@ -366,7 +445,7 @@ const promoteTask2Done = async (req, res) => {
     //   [taskId]
     // );
 
-    if (taskQuery.Task_state === "Doing") {
+    if (taskQuery.Task_state === "doing") {
       // append new notes to current notes
       const currentDate = new Date();
 
@@ -377,14 +456,18 @@ const promoteTask2Done = async (req, res) => {
       let timestampDate = `${day}/${month}/${year}`;
 
       taskNotes =
-        `Date: ${timestampDate} \nCommented By: ${username}\n${taskNotes}\n\n[Task State changed from Doing to Done]\n##################\n` +
+        `Date: ${timestampDate} \nCommented By: ${username}\n${taskNotes}\n\n[Task State changed from doing to done]\n##################\n` +
         taskQuery.Task_notes;
+
+      const taskStateDone = "done";
+
+      await query("START TRANSACTION");
 
       await query(
         `UPDATE task
       SET Task_state = ?, Task_notes = ?, Task_owner = ?
       WHERE Task_id = ?`,
-        ["Done", taskNotes, username, taskId]
+        [taskStateDone, taskNotes, username, taskId]
       );
 
       const emailQuery = await query(
@@ -403,8 +486,6 @@ const promoteTask2Done = async (req, res) => {
       const emails = emailQuery.map((user) => user.email);
 
       console.log("emails", emails);
-
-      //correct
 
       // fix user management system
       // if (emails.length === 0) {
@@ -438,30 +519,36 @@ const promoteTask2Done = async (req, res) => {
           console.error(e);
         });
 
-      // Check updated task
-      const [resultOutputQuery] = await query(
-        `SELECT *
-      FROM task
-      WHERE Task_id = ?`,
-        [taskId]
-      );
+      // // Check updated task
+      // const [resultOutputQuery] = await query(
+      //   `SELECT *
+      // FROM task
+      // WHERE Task_id = ?`,
+      //   [taskId]
+      // );
+
+      const resultOutputQuery = {
+        Task_id: taskId,
+        Task_state: taskStateDone,
+      };
+
+      await query("COMMIT");
 
       return res
         .status(200)
         .json({ msgCode: msgCode.SUCCESS, result: resultOutputQuery });
-    } else if (taskQuery.taskState === "Done") {
-      return res.status(400).json({ msgCode: msgCode.ENTRY_EXISTS });
     } else {
       return res.status(400).json({ msgCode: msgCode.INVALID_STATE_CHANGE });
     }
   } catch (error) {
+    await query("ROLLBACK");
     console.error("Error promoting task:", error);
     return res.status(500).json({ msgCode: msgCode.INTERNAL });
   }
 };
 
 module.exports = {
-  createTask,
-  getTaskByState,
-  promoteTask2Done,
+  CreateTask,
+  GetTaskByState,
+  PromoteTask2Done,
 };

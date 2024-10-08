@@ -64,15 +64,15 @@
 	// }
 
 	const handleDisableNoteInput = (taskstate) => {
-		if (taskstate === 'Open') {
+		if (taskstate === 'open') {
 			return userGroupForCheckingPermit.includes(appPermits.App_permit_Open);
-		} else if (taskstate === 'To do') {
+		} else if (taskstate === 'todo') {
 			return userGroupForCheckingPermit.includes(appPermits.App_permit_toDoList);
-		} else if (taskstate === 'Doing') {
+		} else if (taskstate === 'doing') {
 			return userGroupForCheckingPermit.includes(appPermits.App_permit_Doing);
-		} else if (taskstate === 'Done') {
+		} else if (taskstate === 'done') {
 			return userGroupForCheckingPermit.includes(appPermits.App_permit_Done);
-		} else if (taskstate === 'Closed') {
+		} else if (taskstate === 'closed') {
 			return false;
 		}
 	};
@@ -80,7 +80,7 @@
 	// Disable save changes and close task button if plan is changed for tasks at "Done"
 	const handleTaskPlanChange = () => {
 		trackTaskPlanChange =
-			originalTaskPlan !== selectedTask.Task_plan && selectedTask.Task_state === 'Done';
+			originalTaskPlan !== selectedTask.Task_plan && selectedTask.Task_state === 'done';
 	};
 
 	function getCurrentDate() {
@@ -147,30 +147,30 @@
 
 	// task change state and owner logic when task is promoted/demoted
 	const updateTaskOwnerAndState = (statechangeaction) => {
-		if (selectedTask.Task_state === 'Open' && statechangeaction === 'Release') {
-			stateBeforeStateChange = 'Open';
+		if (selectedTask.Task_state === 'open' && statechangeaction === 'Release') {
+			stateBeforeStateChange = 'open';
 			selectedTask.Task_owner = globalUsername;
-			selectedTask.Task_state = 'To do';
-		} else if (selectedTask.Task_state === 'To do' && statechangeaction === 'Take On') {
-			stateBeforeStateChange = 'To do';
+			selectedTask.Task_state = 'todo';
+		} else if (selectedTask.Task_state === 'todo' && statechangeaction === 'Take On') {
+			stateBeforeStateChange = 'todo';
 			selectedTask.Task_owner = globalUsername;
-			selectedTask.Task_state = 'Doing';
-		} else if (selectedTask.Task_state === 'Doing' && statechangeaction === 'To Review') {
-			stateBeforeStateChange = 'Doing';
-			stateAfterStateChange = 'Done';
+			selectedTask.Task_state = 'doing';
+		} else if (selectedTask.Task_state === 'doing' && statechangeaction === 'To Review') {
+			stateBeforeStateChange = 'doing';
+			stateAfterStateChange = 'done';
 
 			selectedTask.Task_owner = globalUsername;
-			selectedTask.Task_state = 'Done';
-		} else if (selectedTask.Task_state === 'Doing' && statechangeaction === 'Forfeit Task') {
-			stateBeforeStateChange = 'Doing';
-			selectedTask.Task_state = 'To do';
-		} else if (selectedTask.Task_state === 'Done' && statechangeaction === 'Close Task') {
-			stateBeforeStateChange = 'Done';
+			selectedTask.Task_state = 'done';
+		} else if (selectedTask.Task_state === 'doing' && statechangeaction === 'Forfeit Task') {
+			stateBeforeStateChange = 'doing';
+			selectedTask.Task_state = 'todo';
+		} else if (selectedTask.Task_state === 'done' && statechangeaction === 'Close Task') {
+			stateBeforeStateChange = 'done';
 			selectedTask.Task_owner = globalUsername;
-			selectedTask.Task_state = 'Closed';
-		} else if (selectedTask.Task_state === 'Done' && statechangeaction === 'Reject Task') {
-			stateBeforeStateChange = 'Done';
-			selectedTask.Task_state = 'Doing';
+			selectedTask.Task_state = 'closed';
+		} else if (selectedTask.Task_state === 'done' && statechangeaction === 'Reject Task') {
+			stateBeforeStateChange = 'done';
+			selectedTask.Task_state = 'doing';
 		}
 	};
 
@@ -257,7 +257,7 @@
 					Task_name: null,
 					Task_description: null,
 					Task_notes: '',
-					Task_state: 'Open',
+					Task_state: 'open',
 					Task_creator: globalUsername,
 					Task_owner: globalUsername,
 					Task_createDate: null
@@ -308,11 +308,11 @@
 				tasks = response.data;
 
 				//Filter tasks based on state
-				openTasks = tasks.filter((task) => task.Task_state === 'Open');
-				toDoTasks = tasks.filter((task) => task.Task_state === 'To do');
-				doingTasks = tasks.filter((task) => task.Task_state === 'Doing');
-				doneTasks = tasks.filter((task) => task.Task_state === 'Done');
-				closedTasks = tasks.filter((task) => task.Task_state === 'Closed');
+				openTasks = tasks.filter((task) => task.Task_state === 'open');
+				toDoTasks = tasks.filter((task) => task.Task_state === 'todo');
+				doingTasks = tasks.filter((task) => task.Task_state === 'doing');
+				doneTasks = tasks.filter((task) => task.Task_state === 'done');
+				closedTasks = tasks.filter((task) => task.Task_state === 'closed');
 			}
 		} catch (error) {
 			if (error instanceof axios.AxiosError) {
@@ -451,7 +451,7 @@
 			Task_name: null,
 			Task_description: null,
 			Task_notes: '',
-			Task_state: 'Open',
+			Task_state: 'open',
 			Task_creator: globalUsername,
 			Task_owner: globalUsername,
 			Task_createDate: null
@@ -592,7 +592,7 @@
 						</div>
 						<div class="task-formgroup">
 							<label for="Task_plan">Plan Name</label>
-							{#if (selectedTask.Task_state === 'Open' && userGroupForCheckingPermit.includes(appPermits.App_permit_Open)) || (selectedTask.Task_state === 'Done' && userGroupForCheckingPermit.includes(appPermits.App_permit_Done))}
+							{#if (selectedTask.Task_state === 'open' && userGroupForCheckingPermit.includes(appPermits.App_permit_Open)) || (selectedTask.Task_state === 'done' && userGroupForCheckingPermit.includes(appPermits.App_permit_Done))}
 								<select
 									bind:value={selectedTask.Task_plan}
 									on:change={handleTaskPlanChange}
@@ -637,7 +637,7 @@
 				</div>
 
 				<div class="modal-buttons">
-					{#if selectedTask.Task_state == 'Open' && userGroupForCheckingPermit.includes(appPermits.App_permit_Open)}
+					{#if selectedTask.Task_state == 'open' && userGroupForCheckingPermit.includes(appPermits.App_permit_Open)}
 						<button
 							type="button"
 							style="background-color:#00A400; border:solid #00A400;"
@@ -655,7 +655,7 @@
 								? 'grey'
 								: '#000000'};">Save Changes</button
 						>
-					{:else if selectedTask.Task_state == 'To do' && userGroupForCheckingPermit.includes(appPermits.App_permit_toDoList)}
+					{:else if selectedTask.Task_state == 'todo' && userGroupForCheckingPermit.includes(appPermits.App_permit_toDoList)}
 						<button
 							type="button"
 							style="background-color:#00A400; border:solid #00A400;"
@@ -673,7 +673,7 @@
 								? 'grey'
 								: '#000000'};">Save Changes</button
 						>
-					{:else if selectedTask.Task_state == 'Doing' && userGroupForCheckingPermit.includes(appPermits.App_permit_Doing)}
+					{:else if selectedTask.Task_state == 'doing' && userGroupForCheckingPermit.includes(appPermits.App_permit_Doing)}
 						<button
 							type="submit"
 							style="background-color:#00A400; border:solid #00A400;"
@@ -699,7 +699,7 @@
 								? 'grey'
 								: '#000000'};">Save Changes</button
 						>
-					{:else if selectedTask.Task_state == 'Done' && userGroupForCheckingPermit.includes(appPermits.App_permit_Done)}
+					{:else if selectedTask.Task_state == 'done' && userGroupForCheckingPermit.includes(appPermits.App_permit_Done)}
 						<button
 							type="submit"
 							style="background-color:{trackTaskPlanChange ? 'grey' : '#00A400'}; 

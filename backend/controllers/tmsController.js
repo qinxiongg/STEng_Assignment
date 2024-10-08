@@ -438,7 +438,7 @@ const updateTask = async (req, res) => {
       case "Open":
         requiredPermit = appPermits.App_permit_Open;
         break;
-      case "To do":
+      case "Todo":
         requiredPermit = appPermits.App_permit_toDoList;
         break;
       case "Doing":
@@ -523,7 +523,7 @@ const changeTaskState = async (req, res) => {
       case "Open":
         requiredPermit = appPermits.App_permit_Open;
         break;
-      case "To do":
+      case "Todo":
         requiredPermit = appPermits.App_permit_toDoList;
         break;
       case "Doing":
