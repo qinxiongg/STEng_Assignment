@@ -1,16 +1,3 @@
 # Ignore node_modules and other unnecessary files
 node_modules
-npm-debug.log
-.DS_Store
-*.log
-Dockerfile
-.dockerignore
-
-# Ignore local development files
 .env
-.vscode
-.git
-.gitignore
-
-# Ignore OS-specific files
-Thumbs.db
