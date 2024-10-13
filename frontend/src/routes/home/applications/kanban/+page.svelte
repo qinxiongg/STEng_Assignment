@@ -965,7 +965,7 @@
 		margin: 10px 20px;
 		width: 150px;
 		font-weight: bold;
-		font-size: 1em;
+		font-size: 0.9em;
 		align-self: center;
 	}
 	.task-formgroup input,
@@ -973,12 +973,12 @@
 		margin: 10px 20px;
 		background-color: #dadada;
 		border: transparent;
-		height: 38px;
+		height: 30px;
 		width: 100%;
 		padding-left: 10px;
 		outline: none;
 		border-radius: 4px;
-		font-size: 1.1em;
+		font-size: 0.9em;
 	}
 
 	h3 {
@@ -1005,7 +1005,7 @@
 	}
 	.createTask-notes {
 		width: 500px;
-		height: 350px;
+		height: 300px;
 		white-space: pre-wrap;
 		overflow-y: auto;
 	}

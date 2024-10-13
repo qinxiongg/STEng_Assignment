@@ -191,7 +191,6 @@ const createPlan = async (req, res) => {
       ]
     );
 
-    
     return res.status(201).json({ success: "Successfully created plan" });
   } catch (error) {
     console.error("Error inserting data into database.", error);
@@ -272,7 +271,6 @@ const createTask = async (req, res) => {
 
     // Determine which permit to check based on task state
 
-    
     // let requiredPermit = "";
     // switch (Task_state) {
     //   case "Open":
@@ -435,16 +433,16 @@ const updateTask = async (req, res) => {
     // Determine which permit to check based on task state
     let requiredPermit = "";
     switch (Task_state) {
-      case "Open":
+      case "open":
         requiredPermit = appPermits.App_permit_Open;
         break;
-      case "Todo":
+      case "todo":
         requiredPermit = appPermits.App_permit_toDoList;
         break;
-      case "Doing":
+      case "doing":
         requiredPermit = appPermits.App_permit_Doing;
         break;
-      case "Done":
+      case "done":
         requiredPermit = appPermits.App_permit_Done;
         break;
       default:
@@ -517,24 +515,28 @@ const changeTaskState = async (req, res) => {
     // convert usergroup result to an array
     UserGroup = getUserGroup.map((group) => group.usergroup);
 
+    console.log("stateBeforeStateChange", stateBeforeStateChange);
+
     // Determine which permit to check based on task state
     let requiredPermit = "";
     switch (stateBeforeStateChange) {
-      case "Open":
+      case "open":
         requiredPermit = appPermits.App_permit_Open;
         break;
-      case "Todo":
+      case "todo":
         requiredPermit = appPermits.App_permit_toDoList;
         break;
-      case "Doing":
+      case "doing":
         requiredPermit = appPermits.App_permit_Doing;
         break;
-      case "Done":
+      case "done":
         requiredPermit = appPermits.App_permit_Done;
         break;
       default:
         return res.status(400).json({ message: "Invalid task state" });
     }
+
+    console.log("requiredPermit", requiredPermit);
 
     // check if user has required group to create task
     if (!UserGroup.includes(requiredPermit)) {
@@ -554,7 +556,10 @@ const changeTaskState = async (req, res) => {
 
     await query("COMMIT");
 
-    if (stateBeforeStateChange === "Doing" && stateAfterStateChange === "Done") {
+    if (
+      stateBeforeStateChange === "Doing" &&
+      stateAfterStateChange === "Done"
+    ) {
       const findUserEmailWithPMAndDone = await query(
         `SELECT a.email FROM accounts a
       JOIN user_group u ON u.username = a.username

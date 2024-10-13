@@ -4,8 +4,8 @@ FROM node:20-alpine
 # Set working directory in the container (Created bu Docker if it doesn't exist)
 WORKDIR /app
 
-# Copy package.json to the working directory
-COPY package.json ./
+# Step 3: Copy the package.json and package-lock.json files
+COPY package*.json ./
 
 # Install dependencies
 RUN npm install

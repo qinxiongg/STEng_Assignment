@@ -3,11 +3,14 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const connection = mysql.createConnection({
-  // host: process.env.host,
-  host: "host.docker.internal",
+  host: process.env.host,
   user: process.env.user,
   password: process.env.password,
   database: process.env.database,
+  // host: "host.docker.internal",
+  //   user: "root",
+  //   password: "root",
+  //   database: "nodelogin",
 });
 
 connection.connect((err) => {
