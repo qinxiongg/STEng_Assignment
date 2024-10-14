@@ -1,0 +1,16 @@
+// Compress and zip node_modules.tgz
+7z a -p"password" -mhe=on node_modules.7z node_modules.tgz
+
+// Compress and zip .env file
+7z a -p"password" -mhe=on env.7z .env
+
+// Compress and zip image tar file
+7z a -p"password" -mhe=on demo.7z demo.tar
+
+// Compress and zip npm packed modules
+7z a -p"password" -mhe=on backend-1.0.0.7z backend-1.0.0.tgz
+
+// Build dockerfile airgap
+docker build -f Dockerfile.Airgap -t demo:Airgap .
+
+

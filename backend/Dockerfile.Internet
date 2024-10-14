@@ -1,7 +1,7 @@
 # Specify a base image
 FROM node:20-alpine
 
-# Set working directory in the container (Created bu Docker if it doesn't exist)
+# Set working directory in the container (Created by Docker if it doesn't exist)
 WORKDIR /app
 
 # Step 3: Copy the package.json and package-lock.json files
