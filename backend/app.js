@@ -5,11 +5,13 @@ const userRoutes = require("./routes/userRoute.js");
 const tmsRoutes = require("./routes/tmsRoutes.js");
 const demoAPIRoutes = require("./routes/demoAPIRoutes.js");
 // const msgCode = require("././backend/constants/msgCode.js");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const app = express();
 // const { verifyTokenWithIPAndBrowser,} = require("./middleware/authMiddleware.js");
 
-const port = 3000;
+const port = process.env.port;
 
 app.use(
   cors({

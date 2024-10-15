@@ -19,8 +19,8 @@ RUN diff /app/package.json /app/node_modules/backend/package.json || exit 1
 # Step 7: Copy all contents in recursive folder to root node_module, then delete the source directory after the copy.
 RUN cp -r /app/node_modules/backend/node_modules/* /app/node_modules/ && rm -rf /app/node_modules/backend
 
-# Step 8: Expose the necessary port
-EXPOSE 3000
+# # Step 8: Expose the necessary port
+EXPOSE 3000 
 
 # Step 9: Create a non-login user and group (without home directory)
 RUN adduser -D -H appuser
